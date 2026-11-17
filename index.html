@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جَمعة — ألعاب جماعية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#0d0a1d">
+<style>
+:root{
+  --bg:#0d0a1d; --bg2:#151033; --panel:#1b1540; --line:#2c2462; --text:#f4f1ff; --dim:#a79fd0; --faint:#6d65a0;
+  --coral:#ff6b6b; --amber:#ffc94d; --teal:#2ec4b6; --violet:#7b61ff; --pink:#ff5fa2; --green:#3ddc84;
+  --tv-font:'Tajawal',system-ui,sans-serif; --display:'Lalezar','Tajawal',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(1200px 600px at 85% -10%,#2a1f6b 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#3b1347 0%,transparent 55%),var(--bg);
+  color:var(--text);font-family:var(--tv-font);min-height:100vh}
+button{font-family:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid #ffffff10}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-size:24px;
+  background:conic-gradient(from 210deg,var(--coral),var(--amber),var(--teal),var(--violet),var(--coral));box-shadow:0 6px 18px #ff6b6b40}
+.brand h1{margin:0;font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.5px}
+.brand small{color:var(--dim);font-size:12px;display:block;margin-top:-4px}
+.topbar .sp{flex:1}
+.chip-btn{background:#ffffff0d;border:1px solid #ffffff1a;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700}
+.chip-btn:hover{background:#ffffff1a}
+.chip-btn.primary{background:linear-gradient(90deg,var(--violet),var(--pink));border:none}
+.store-badge{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.store-badge i{width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block}
+.store-badge.ok i{background:var(--green)}
+
+/* ---------- layout ---------- */
+.stage-wrap{display:grid;grid-template-columns:1fr 330px;gap:22px;padding:22px;align-items:start}
+@media (max-width:1100px){.stage-wrap{grid-template-columns:1fr}}
+.tv-col{min-width:0}
+.tv-bezel{background:#05040c;border-radius:22px;padding:12px;box-shadow:0 30px 80px #00000080,inset 0 0 0 1px #ffffff12}
+.tv-viewport{position:relative;width:100%;overflow:hidden;border-radius:12px;background:#000}
+#tv{position:absolute;top:0;right:0;width:1280px;height:720px;transform-origin:top right;overflow:hidden;
+  background:radial-gradient(900px 500px at 90% 0%,#3a2a8f 0%,transparent 60%),radial-gradient(700px 500px at 0% 100%,#5a1e5e 0%,transparent 60%),linear-gradient(180deg,#140f33,#0c0921);}
+.tv-stand{width:180px;height:14px;margin:0 auto;background:linear-gradient(#1a1730,#0b0a16);border-radius:0 0 10px 10px}
+.below-tv{display:flex;gap:18px;align-items:center;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.hint{color:var(--faint);font-size:13px;text-align:center}
+kbd{background:#ffffff14;border:1px solid #ffffff22;border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-family:inherit;font-size:12px;color:var(--dim)}
+
+/* remote */
+.remote{display:flex;align-items:center;gap:14px;background:linear-gradient(180deg,#221c48,#16122f);border:1px solid #ffffff14;border-radius:999px;padding:8px 14px}
+.dpad{display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:3px}
+.dpad button{border:none;border-radius:10px;background:#ffffff12;font-size:14px}
+.dpad button:hover{background:#ffffff26}
+.dpad .ok{border-radius:50%;background:var(--violet);font-weight:800;font-size:12px}
+.remote .back{border:none;border-radius:999px;background:#ffffff12;padding:8px 14px;font-weight:700}
+
+/* ---------- TV screens ---------- */
+.screen{position:absolute;inset:0;padding:48px 64px;display:flex;flex-direction:column}
+.screen.enter{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tv-head{display:flex;align-items:center;gap:16px}
+.tv-title{font-family:var(--display);font-size:56px;line-height:1.1;margin:0}
+.tv-sub{color:var(--dim);font-size:22px;margin:4px 0 0}
+.f{outline:none;transition:transform .16s ease,box-shadow .16s ease,background .16s}
+.f.focus{transform:scale(1.06);box-shadow:0 0 0 4px #fff,0 18px 40px #00000070;z-index:2}
+.tv-btn{border:none;border-radius:18px;padding:16px 30px;font-size:24px;font-weight:800;background:#ffffff14;color:#fff}
+.tv-btn.go{background:linear-gradient(90deg,var(--coral),var(--amber));color:#2a1200}
+.tv-btn.alt{background:linear-gradient(90deg,var(--violet),var(--pink))}
+.tv-btn[disabled]{opacity:.4}
+.tv-row{display:flex;gap:18px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;background:#ffffff12;border:1px solid #ffffff1c;border-radius:999px;padding:6px 16px;font-size:18px;color:var(--dim)}
+
+/* home */
+.home-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:auto;margin-bottom:auto}
+.game-card{border:none;border-radius:28px;height:300px;padding:28px;text-align:right;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;color:#fff}
+.game-card .ico{position:absolute;top:22px;left:24px;font-size:84px;filter:drop-shadow(0 10px 20px #0005)}
+.game-card h3{font-family:var(--display);font-weight:400;font-size:40px;margin:0}
+.game-card p{margin:6px 0 0;font-size:18px;opacity:.85;line-height:1.5}
+.gc1{background:linear-gradient(150deg,#ff8a5b,#ff3d7f)}
+.gc2{background:linear-gradient(150deg,#5b8cff,#7b3dff)}
+.gc3{background:linear-gradient(150deg,#22c1a3,#127a8f)}
+.gc4{background:linear-gradient(150deg,#3a3168,#221b4a);box-shadow:inset 0 0 0 2px #ffffff1a}
+.home-foot{display:flex;justify-content:space-between;color:var(--faint);font-size:16px}
+
+/* lobby */
+.lobby{display:grid;grid-template-columns:400px 1fr;gap:44px;flex:1;margin-top:28px;min-height:0}
+.join-card{background:#ffffff0c;border:1px solid #ffffff18;border-radius:28px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.qr{background:#fff;border-radius:18px;padding:14px;width:220px;height:220px;display:grid;place-items:center}
+.qr img,.qr canvas{width:192px!important;height:192px!important}
+.room-code{font-family:var(--display);font-size:54px;letter-spacing:8px;line-height:1;direction:ltr}
+.join-card .small{color:var(--dim);font-size:17px;line-height:1.6}
+.players-area{display:flex;flex-direction:column;min-height:0}
+.players-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px;align-content:start;flex:1}
+.pcard{background:#ffffff0d;border:1px solid #ffffff16;border-radius:22px;padding:16px 10px;text-align:center;position:relative;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.avatar{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;font-size:40px;margin:0 auto 8px;box-shadow:0 8px 20px #0005}
+.pcard .nm{font-size:22px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .via{font-size:14px;color:var(--dim)}
+.pcard.empty{border-style:dashed;color:var(--faint);display:grid;place-items:center;min-height:150px;font-size:18px;animation:none}
+.add-card{border:2px dashed #ffffff30;background:transparent;border-radius:22px;color:var(--dim);font-size:20px;font-weight:700;min-height:150px}
+
+/* categories */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:30px}
+.cat{border:none;border-radius:22px;padding:22px;background:#ffffff10;text-align:right;color:#fff;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
+.cat .e{font-size:48px}
+.cat .n{font-size:26px;font-weight:800}
+.cat .c{font-size:15px;color:var(--dim)}
+.empty-state{margin:auto;text-align:center;color:var(--dim);font-size:24px;line-height:1.7}
+
+/* game common */
+.topline{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.timer{font-family:var(--display);font-size:42px;min-width:120px;text-align:center;background:#ffffff12;border-radius:18px;padding:4px 18px;direction:ltr}
+.timer.low{color:var(--coral);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.bar{height:10px;background:#ffffff14;border-radius:99px;overflow:hidden;margin-top:14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--coral));border-radius:99px;transition:width 1s linear}
+.minis{display:flex;gap:8px;flex-wrap:wrap}
+.mini{display:flex;align-items:center;gap:6px;background:#ffffff10;border-radius:999px;padding:4px 12px 4px 6px;font-size:17px;font-weight:700}
+.mini .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:17px}
+.mini.done{background:#3ddc8426;box-shadow:inset 0 0 0 2px #3ddc8466}
+
+/* QA */
+.question{font-size:46px;font-weight:800;line-height:1.45;margin:30px 0 26px;text-align:center}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.opt{border:none;border-radius:22px;padding:22px 26px;font-size:30px;font-weight:800;color:#fff;display:flex;align-items:center;gap:16px;text-align:right;min-height:96px}
+.opt .k{width:50px;height:50px;border-radius:14px;background:#0003;display:grid;place-items:center;font-family:var(--display);font-size:28px;flex:none}
+.o0{background:#e8466b}.o1{background:#3e7bfa}.o2{background:#f2a516}.o3{background:#1fb589}
+.opt.dim{opacity:.25;filter:grayscale(.6)}
+.opt.right{box-shadow:0 0 0 5px #fff,0 0 40px #3ddc84aa}
+.reveal-list{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.res{display:flex;align-items:center;gap:8px;border-radius:999px;padding:6px 14px 6px 8px;font-size:19px;font-weight:700;background:#ffffff10}
+.res.ok{background:#3ddc8430}.res.no{background:#ff6b6b26}
+.res .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:18px}
+.award{border:none;border-radius:999px;padding:8px 16px 8px 10px;font-size:19px;font-weight:700;background:#ffffff14;display:flex;align-items:center;gap:8px}
+.award.on{background:var(--green);color:#062b14}
+
+/* charades */
+.actor-hero{margin:auto;text-align:center}
+.actor-hero .avatar{width:150px;height:150px;font-size:84px}
+.actor-hero h2{font-family:var(--display);font-weight:400;font-size:64px;margin:16px 0 4px}
+.actor-hero p{font-size:24px;color:var(--dim);margin:0}
+.word-box{font-family:var(--display);font-size:80px;background:#fff;color:#1b1540;border-radius:26px;padding:10px 46px;display:inline-block;margin-top:20px}
+.word-hidden{font-size:24px;color:var(--dim);border:2px dashed #ffffff30;border-radius:22px;padding:22px 30px;display:inline-block;margin-top:20px}
+.guessers{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.guesser{border:none;border-radius:22px;padding:12px 18px;background:#ffffff12;display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800}
+.guesser .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:26px}
+.big-timer{font-family:var(--display);font-size:140px;line-height:1;direction:ltr}
+.toast{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-family:var(--display);font-size:90px;color:#fff;text-shadow:0 10px 40px #000a;pointer-events:none;animation:toast 1.1s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
+
+/* scores */
+.board{display:flex;flex-direction:column;gap:12px;margin-top:26px}
+.row{display:grid;grid-template-columns:56px 60px 220px 1fr 110px;align-items:center;gap:14px;font-size:26px;font-weight:800}
+.row .rk{font-family:var(--display);font-size:36px;color:var(--dim);text-align:center}
+.row .av{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:30px}
+.row .track{height:26px;background:#ffffff10;border-radius:99px;overflow:hidden}
+.row .track i{display:block;height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.2,.9,.3,1)}
+.row .pts{font-family:var(--display);font-size:36px;text-align:left;direction:ltr}
+.row.first .rk{color:var(--amber)}
+
+/* modal on tv */
+.tv-modal{position:absolute;inset:0;background:#0009;display:grid;place-items:center;z-index:5}
+.tv-modal .box{background:#1d1745;border:1px solid #ffffff22;border-radius:28px;padding:34px;width:720px}
+.tv-modal h3{font-family:var(--display);font-weight:400;font-size:40px;margin:0 0 16px}
+.tv-input{width:100%;font-size:30px;padding:14px 20px;border-radius:16px;border:2px solid #ffffff30;background:#0d0a1d;color:#fff}
+.tv-input:focus,.tv-input.focus{border-color:var(--amber);outline:none}
+.sugg{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.sugg button{border:none;border-radius:999px;background:#ffffff14;padding:8px 18px;font-size:20px;font-weight:700}
+
+/* ---------- phones ---------- */
+.phones-col h2{font-size:16px;color:var(--dim);margin:2px 0 10px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.phones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.phones-col{min-width:0}
+.phone{min-width:0}
+@media (max-width:1100px){.phones{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+.phone{background:#05040c;border-radius:26px;padding:7px;box-shadow:0 14px 30px #0007,inset 0 0 0 1px #ffffff18}
+.phone .scr{height:290px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,#1d1648,#120e2c);display:flex;flex-direction:column;padding:12px;position:relative}
+.phone .notch{width:54px;height:6px;background:#000;border-radius:9px;margin:0 auto 8px}
+.phone .ph-title{font-weight:800;font-size:14px;text-align:center;margin-bottom:8px}
+.phone .ph-dim{color:var(--dim);font-size:12px;text-align:center;line-height:1.5}
+.phone input{width:100%;border-radius:10px;border:1px solid #ffffff2a;background:#0d0a1d;color:#fff;padding:8px;font-size:14px;text-align:center}
+.phone .avs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:8px 0}
+.phone .avs button{border:none;border-radius:9px;background:#ffffff10;font-size:17px;padding:4px 0}
+.phone .avs button.sel{background:var(--violet)}
+.phone .pbtn{border:none;border-radius:12px;padding:10px;font-weight:800;font-size:14px;background:linear-gradient(90deg,var(--coral),var(--amber));color:#2a1200;width:100%;margin-top:auto}
+.phone .pbtn.ghost{background:#ffffff14;color:#fff}
+.phone .popts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:auto}
+.phone .popts button{border:none;border-radius:12px;min-height:62px;font-size:12px;font-weight:800;color:#fff;padding:6px;line-height:1.3}
+.phone .center{margin:auto;text-align:center}
+.phone .big{font-size:44px}
+.phone .pword{font-family:var(--display);font-size:30px;background:#fff;color:#1b1540;border-radius:14px;padding:6px 10px;margin:8px 0}
+.phone .who{display:flex;align-items:center;gap:6px;justify-content:center;font-size:12px;color:var(--dim);margin-bottom:6px}
+.phone .who .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px}
+.phone-add{border:2px dashed #ffffff26;background:transparent;border-radius:26px;color:var(--dim);font-weight:700;min-height:120px}
+.note{background:#ffffff08;border:1px solid #ffffff14;border-radius:16px;padding:12px 14px;color:var(--dim);font-size:13px;line-height:1.7;margin-top:14px}
+
+/* ---------- admin ---------- */
+.admin{position:fixed;inset:0;background:#0b0918f2;backdrop-filter:blur(6px);z-index:50;display:none;flex-direction:column}
+.admin.open{display:flex}
+.admin-head{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid #ffffff12}
+.admin-head h2{margin:0;font-family:var(--display);font-weight:400;font-size:30px}
+.admin-body{display:grid;grid-template-columns:330px 1fr;flex:1;min-height:0}
+.cat-list{border-left:1px solid #ffffff12;overflow:auto;padding:16px}
+.cat-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;cursor:pointer;margin-bottom:6px;background:#ffffff06}
+.cat-item:hover{background:#ffffff10}
+.cat-item.sel{background:#7b61ff33;box-shadow:inset 0 0 0 1px #7b61ff88}
+.cat-item .e{font-size:24px}
+.cat-item .n{font-weight:800;flex:1}
+.cat-item .t{font-size:11px;color:var(--dim)}
+.tag{font-size:11px;border-radius:999px;padding:2px 8px;background:#ffffff12;color:var(--dim)}
+.tag.qa{background:#3e7bfa33;color:#a9c4ff}.tag.ch{background:#ff6b6b2e;color:#ffb0b0}
+.switch{width:38px;height:22px;border-radius:99px;background:#ffffff22;position:relative;border:none;flex:none}
+.switch::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.switch.on{background:var(--green)}
+.switch.on::after{right:19px}
+.editor{overflow:auto;padding:20px 26px}
+.card2{background:#ffffff08;border:1px solid #ffffff14;border-radius:18px;padding:16px;margin-bottom:16px}
+.card2 h4{margin:0 0 10px;font-size:16px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.form-row > *{flex:1;min-width:120px}
+.in{background:#0d0a1d;border:1px solid #ffffff22;border-radius:10px;color:#fff;padding:9px 12px;font-size:14px}
+.in:focus{outline:none;border-color:var(--violet)}
+textarea.in{width:100%;min-height:90px;resize:vertical;line-height:1.6}
+.btn{border:none;border-radius:10px;padding:9px 16px;font-weight:800;font-size:14px;background:#ffffff14;flex:none!important;min-width:0!important}
+.btn.pri{background:linear-gradient(90deg,var(--violet),var(--pink))}
+.btn.ok{background:var(--green);color:#062b14}
+.btn.danger{background:#ff6b6b26;color:#ffb0b0}
+.items{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.item{display:flex;align-items:center;gap:10px;background:#ffffff08;border-radius:10px;padding:8px 12px;font-size:14px}
+.item .q{flex:1}
+.item .a{color:var(--green);font-size:12px}
+.item .x{border:none;background:none;color:var(--faint);font-size:16px}
+.item .x:hover{color:var(--coral)}
+.muted{color:var(--dim);font-size:13px;line-height:1.7}
+.status-line{font-size:13px;color:var(--amber);min-height:18px;margin-top:8px}
+footer{color:var(--faint);font-size:12px;text-align:center;padding:10px 0 22px}
+
+/* ---------- v2 additions ---------- */
+.home-grid{grid-template-columns:repeat(4,1fr);gap:22px}
+.game-card{height:205px;padding:20px 24px}
+.game-card .ico{font-size:66px;top:18px;left:20px}
+.game-card h3{font-size:34px}
+.game-card p{font-size:16px}
+.gc5{background:linear-gradient(150deg,#8b5cf6,#d946ef)}
+.gc6{background:linear-gradient(150deg,#f59e0b,#ef4444)}
+.gc7{background:linear-gradient(150deg,#06b6d4,#3b82f6)}
+.quit{border:none;border-radius:999px;padding:8px 18px;font-size:18px;font-weight:800;background:#ffffff14;color:#ffb0b0}
+.tv-btn.ghost{background:#ffffff10}
+.live-dot{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 0 0 #3ddc8488;animation:live 1.6s infinite}
+@keyframes live{70%{box-shadow:0 0 0 10px #3ddc8400}100%{box-shadow:0 0 0 0 #3ddc8400}}
+.banner{position:absolute;top:18px;left:50%;transform:translateX(-50%);background:#3ddc84;color:#062b14;font-weight:800;font-size:20px;border-radius:999px;padding:8px 22px;z-index:6;animation:fadeIn .3s}
+.confirm .box{text-align:center}
+.confirm p{font-size:22px;color:var(--dim);margin:0 0 22px}
+/* salfa */
+.role-panel{margin:auto;text-align:center}
+.role-card{display:inline-block;background:#fff;color:#1b1540;border-radius:28px;padding:22px 46px;margin-top:18px;font-family:var(--display);font-size:64px}
+.role-card.imp{background:linear-gradient(135deg,#ff5f6d,#7b2ff7);color:#fff}
+.seen-list{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.seen{border:none;border-radius:20px;padding:10px 16px;background:#ffffff12;display:flex;align-items:center;gap:10px;font-size:21px;font-weight:800}
+.seen .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:22px}
+.seen.ok{background:#3ddc8426;box-shadow:inset 0 0 0 2px #3ddc8466}
+.pairs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:24px auto 0;max-width:900px}
+.pair{background:#ffffff0d;border-radius:18px;padding:12px 18px;font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px;justify-content:center}
+.pair .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:20px}
+.pill.topic{background:#ffc94d1f;color:#ffe08a;border-color:#ffc94d55}
+.vote-chip .cnt{background:#0004;border-radius:999px;padding:0 10px;font-family:var(--display);font-size:22px}
+.guess-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1000px;margin:20px auto 0}
+.guess-grid button{border:none;border-radius:18px;padding:18px;font-size:26px;font-weight:800;background:#ffffff14}
+.guess-grid button.right{background:var(--green);color:#062b14}
+.guess-grid button.wrong{background:#ff6b6b55}
+/* fib */
+.fib-q{font-size:44px;font-weight:800;line-height:1.5;text-align:center;margin:26px 0 10px}
+.fib-q .blank{display:inline-block;min-width:150px;border-bottom:5px solid var(--amber);margin:0 8px}
+.fib-choices{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px}
+.fib-c{border-radius:20px;padding:16px 22px;background:#ffffff12;font-size:28px;font-weight:800;display:flex;flex-direction:column;gap:6px}
+.fib-c.truth{background:#3ddc8433;box-shadow:inset 0 0 0 3px #3ddc84}
+.fib-c .meta{font-size:17px;font-weight:600;color:var(--dim);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fib-c .meta .av{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:15px}
+/* draw */
+.draw-wrap{display:grid;grid-template-columns:1fr 300px;gap:22px;flex:1;min-height:0;margin-top:16px}
+.canvas-box{background:#fff;border-radius:22px;overflow:hidden;position:relative}
+.canvas-box canvas{width:100%;height:100%;display:block}
+.canvas-box .ov{position:absolute;inset:0;display:grid;place-items:center;color:#1b1540aa;font-size:26px;font-weight:800;pointer-events:none}
+.feed{background:#ffffff0c;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.feed .g{font-size:18px;background:#ffffff0c;border-radius:12px;padding:6px 10px;display:flex;gap:8px;align-items:center}
+.feed .g.ok{background:#3ddc8433}
+.feed .g .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;flex:none}
+/* phones v2 */
+.phone .ptext{width:100%;border-radius:10px;border:1px solid #ffffff2a;background:#0d0a1d;color:#fff;padding:8px;font-size:13px}
+.phone .plist{display:flex;flex-direction:column;gap:5px;margin-top:auto;overflow:auto}
+.phone .plist button{border:none;border-radius:10px;padding:7px;font-size:12px;font-weight:800;background:#ffffff14;color:#fff;display:flex;align-items:center;gap:6px}
+.phone .plist button.sel{background:var(--violet)}
+.phone .plist .av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px}
+.phone canvas{background:#fff;border-radius:10px;width:100%;height:96px;touch-action:none;cursor:crosshair;flex:none}
+.phone .tools .tb.on{background:var(--violet)}
+.phone .tools .sz{display:grid;place-items:center;width:20px;height:20px;padding:0!important}
+.phone .tools .sz i{display:block;border-radius:50%;background:#fff}
+.phone .tools{gap:3px;margin-top:4px;flex-wrap:wrap;justify-content:center}
+.phone .tools .tb{padding:3px 5px}
+.phone .tools{display:flex;gap:5px;margin-top:6px;align-items:center}
+.phone .tools .sw{width:12px;height:12px;flex:none;border-radius:50%;border:2px solid transparent;padding:0;box-shadow:0 0 0 1px #ffffff30}
+.phone .tools .sw.sel{border-color:#fff}
+.phone .tools .tb{border:none;border-radius:8px;background:#ffffff14;font-size:11px;font-weight:800;padding:4px 6px;white-space:nowrap;flex:none}
+.phone .fb{font-size:11px;text-align:center;margin-top:4px;min-height:14px}
+
+/* ---------- TV mode (inside the Android TV app) ---------- */
+body.tvmode{background:#000;overflow:hidden}
+body.tvmode .topbar,body.tvmode .phones-col,body.tvmode .below-tv,body.tvmode .tv-stand,body.tvmode footer{display:none!important}
+body.tvmode .stage-wrap{display:block;padding:0}
+body.tvmode .tv-bezel{padding:0;border-radius:0;box-shadow:none;background:#000}
+body.tvmode .tv-viewport{border-radius:0;margin:0 auto}
+.tv-join{background:#ffffff0c;border:1px solid #ffffff18;border-radius:28px;padding:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+
+.brand-img{width:44px;height:44px;border-radius:12px;box-shadow:0 6px 18px #7b61ff40}
+/* lighter rendering on the TV */
+body.tvmode #tv{will-change:transform}
+body.tvmode .live-dot{animation:none}
+body.tvmode .f.focus{box-shadow:0 0 0 4px #fff}
+body.tvmode .game-card .ico{filter:none}
+body.tvmode .avatar{box-shadow:none}
+body.tvmode .screen.enter{animation-duration:.2s}
+
+.cat-item.off{opacity:.55}
+.cat-item .mv{display:flex;flex-direction:column;gap:2px}
+.cat-item .mv button{border:none;background:#ffffff10;border-radius:6px;font-size:9px;padding:2px 6px;color:var(--dim)}
+.cat-item .mv button:disabled{opacity:.25}
+.card2.newcat{background:#7b61ff14;border-color:#7b61ff44}
+
+/* ---------- intro ---------- */
+#intro{position:fixed;inset:0;z-index:100;background:radial-gradient(900px 600px at 50% 45%,#2a1f6b 0%,#0d0a1d 70%);display:grid;place-items:center;overflow:hidden;transition:opacity .5s ease}
+#intro.out{opacity:0;pointer-events:none}
+#intro > *{position:absolute;left:50%;top:50%;opacity:0}
+#intro .i-glow{width:70vmin;height:70vmin;margin:-35vmin 0 0 -35vmin;border-radius:50%;background:conic-gradient(from 0deg,#ff6b6b,#ffc94d,#2ec4b6,#7b61ff,#ff6b6b);filter:blur(60px)}
+#intro .i-ring{width:46vmin;height:46vmin;margin:-31vmin 0 0 -23vmin;border-radius:50%;border:3px solid #ffffff22}
+#intro .i-mark{width:44vmin;margin:-30vmin 0 0 -22vmin}
+#intro .i-word{width:36vmin;margin:6vmin 0 0 -18vmin}
+#intro .i-bar{height:6px;width:40vmin;margin:23vmin 0 0 -20vmin;border-radius:9px;background:linear-gradient(90deg,#ff6b6b,#ffc94d,#2ec4b6,#7b61ff);transform-origin:right}
+#intro .i-by{margin:27vmin 0 0 0;transform:translateX(-50%);color:#a79fd0;font-size:2.2vmin;letter-spacing:2px}
+#intro.play .i-glow{animation:iGlow 2.6s ease forwards}
+#intro.play .i-ring{animation:iRing 1.4s .25s cubic-bezier(.2,.9,.3,1) forwards}
+#intro.play .i-mark{animation:iMark .9s .15s cubic-bezier(.2,1.5,.4,1) forwards}
+#intro.play .i-word{animation:iWord .7s .75s cubic-bezier(.2,1.2,.4,1) forwards}
+#intro.play .i-bar{animation:iBar .7s 1.15s ease forwards}
+#intro.play .i-by{animation:iBy .6s 1.5s ease forwards}
+@keyframes iGlow{0%{opacity:0;transform:scale(.4) rotate(0)}40%{opacity:.35}100%{opacity:.22;transform:scale(1.05) rotate(120deg)}}
+@keyframes iRing{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(2.2)}}
+@keyframes iMark{0%{opacity:0;transform:scale(.5) translateY(4vmin)}100%{opacity:1;transform:none}}
+@keyframes iWord{0%{opacity:0;transform:translateY(5vmin) scale(.9)}100%{opacity:1;transform:none}}
+@keyframes iBar{0%{opacity:1;transform:scaleX(0)}100%{opacity:1;transform:scaleX(1)}}
+@keyframes iBy{to{opacity:1}}
+</style>
+</head>
+<body>
+
+<img class="brand-img" src="logo.webp" alt="" style="display:none">
+<div class="stage-wrap">
+  <div class="tv-col">
+    <div class="tv-bezel"><div class="tv-viewport" id="viewport"><div id="tv"></div></div></div>
+  </div>
+</div>
+<div id="intro">
+  <div class="i-glow"></div>
+  <div class="i-ring"></div>
+  <img class="i-mark" src="mark.webp" alt="">
+  <img class="i-word" src="word.webp" alt="جَمعة">
+  <div class="i-bar"></div>
+  <div class="i-by" dir="ltr">© 2026 WAEL</div>
+</div>
+<div id="admin" style="display:none"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   جَمعة · W-Party — © 2026 WAEL. All rights reserved.
+   ============================================================ */
+
+// ---------------------------------------------------------- helpers
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+const norm = s => String(s || "").replace(/[ً-ْـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي")
+  .toLowerCase().split(/\s+/).map(w => w.replace(/^ال(?=..)/, "")).join("").replace(/[^\p{L}\p{N}]/gu, "");
+const AVATARS = ["🦊","🐼","🐯","🦁","🐸","🐵","🦄","🐙","🐧","🐨","🐻","🐰","🦉","🐲","🐳"];
+const COLORS = ["#ff6b6b","#ffc94d","#2ec4b6","#7b61ff","#ff5fa2","#3e7bfa","#3ddc84","#f2a516","#c05bff","#14b8d4"];
+const INK = ["#1b1540","#e8466b","#f2a516","#ffd43b","#1fb589","#3e7bfa","#8b5cf6","#8d5a3b","#ffffff"];
+const LOGO = document.querySelector(".brand-img").src;
+const LETTERS = ["أ","ب","ج","د","هـ","و","ز","ح"];
+let ROOM = "····";
+
+const GAMES = {
+  charades: {name: "بدون كلام", icon: "🎭", min: 2, minPhones: 0, unit: "كلمة", desc: "مثّل الكلمة بدون ما تتكلم وخلّ الباقين يخمّنونها"},
+  qa:       {name: "سؤال وجواب", icon: "❓", min: 1, minPhones: 0, unit: "سؤال", desc: "أسرع إجابة صحيحة من الجوال تاخذ نقاط أكثر"},
+  salfa:    {name: "برا السالفة", icon: "🕵️", min: 3, minPhones: 0, unit: "كلمة", desc: "الكل يعرف الكلمة إلا واحد… اكشفوه!"},
+  fib:      {name: "اكذب صح", icon: "🤥", min: 2, minPhones: 2, unit: "سؤال", desc: "اكتب كذبة مقنعة ولا تنخدع بكذبات الباقين"},
+  draw:     {name: "ارسم وخمّن", icon: "🎨", min: 2, minPhones: 1, unit: "كلمة", desc: "ارسم بجوالك والرسمة تطلع على التلفزيون"},
+};
+const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن"};
+
+// ---------------------------------------------------------- sound
+let actx = null;
+function beep(type) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = {ok: [[660, .09], [880, .14]], bad: [[220, .2]], tick: [[1200, .03]], join: [[520, .07], [780, .1]], end: [[440, .12], [330, .12], [220, .25]]}[type] || [];
+    let t = actx.currentTime;
+    for (const [f, d] of seq) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = f; o.type = "triangle";
+      g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d); t += d * .9;
+    }
+  } catch (e) { /* audio not allowed */ }
+}
+
+// ---------------------------------------------------------- question bank (live from the cloud, built-in copy as fallback)
+const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}];
+const Bank = {
+  cats: STARTER.map(c => Object.assign({}, c, {items: c.items.slice()})), mode: "local", loaded: false, listeners: [],
+  onChange(fn) { this.listeners.push(fn); },
+  emit(kind) { this.listeners.forEach(fn => fn(kind)); },
+  fromCloud(v) {
+    if (!v) { this.emit("init"); return; }
+    const first = !this.loaded; this.loaded = true; this.mode = "db";
+    this.cats = Object.entries(v).map(([id, c]) => Object.assign({id}, c, {items: Array.isArray(c.items) ? c.items.filter(Boolean) : Object.values(c.items || {})}))
+      .filter(c => c.type && c.name);
+    this.cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name), "ar"));
+    this.emit(first ? "init" : "remote");
+  },
+  get(id) { return this.cats.find(c => c.id === id); },
+  usable(type) { return this.cats.filter(c => c.type === type && c.enabled && (c.items || []).length); }
+};
+
+// ---------------------------------------------------------- no-repeat memory (played items are not shown again)
+const USED_KEY = "jamaa-used-v1";
+const Used = {
+  set: new Set((() => { try { return JSON.parse(localStorage.getItem(USED_KEY) || "[]"); } catch (e) { return []; } })()),
+  key(type, it) { return type + ":" + norm(it.q || it.w); },
+  has(type, it) { return this.set.has(this.key(type, it)); },
+  add(type, it) { this.set.add(this.key(type, it)); this.save(); },
+  forget(type, items) { items.forEach(it => this.set.delete(this.key(type, it))); this.save(); },
+  count(type, items) { return items.filter(it => this.has(type, it)).length; },
+  save() { try { localStorage.setItem(USED_KEY, JSON.stringify([...this.set].slice(-5000))); } catch (e) { } }
+};
+// fresh (never played) items of a category; when all were played, start the category over
+function freshItems(cat, type, n) {
+  let pool = cat.items.filter(it => !Used.has(type, it));
+  if (!pool.length) { Used.forget(type, cat.items); pool = cat.items.slice(); setTimeout(() => showBanner("🔁 خلصت كل عناصر «" + cat.name + "» — بدأنا من جديد"), 400); }
+  pool = shuffle(pool);
+  return n ? pool.slice(0, n) : pool;
+}
+
+// ---------------------------------------------------------- state
+const S = {
+  screen: "home", next: null, players: [], game: null, modal: null, toast: null, banner: null, reveal: null,
+  settings: {qaCount: 7, qaSeconds: 20, chSeconds: 60, salfaRounds: 3, salfaSeconds: 120, fibCount: 5, fibSeconds: 90, drawSeconds: 80}
+};
+let phones = [];
+const playerById = id => S.players.find(p => p.id === id);
+const phonePlayers = () => S.players.filter(p => p.phone);
+function addPlayer(name, avatar, viaPhone) {
+  const p = {id: uid("p"), name: name.trim().slice(0, 14) || "لاعب", avatar: avatar || AVATARS[S.players.length % AVATARS.length],
+    color: COLORS[S.players.length % COLORS.length], score: 0, phone: !!viaPhone};
+  S.players.push(p); beep("join"); return p;
+}
+function award(pid, pts) { const p = playerById(pid); if (p) p.score += pts; }
+function showToast(text) { S.toast = {text, id: Math.random()}; render(); setTimeout(() => { S.toast = null; render(); }, 1100); }
+function showBanner(text) { S.banner = text; render(); clearTimeout(showBanner.t); showBanner.t = setTimeout(() => { S.banner = null; render(); }, 3500); }
+
+function go(screen) { S.screen = screen; S.modal = null; S.reveal = null; render(true); }
+function back() {
+  if (S.modal === "quit") { closeQuit(); return; }
+  if (S.modal) { S.modal = null; render(true); return; }
+  if (S.reveal) { S.reveal = null; render(true); return; }
+  if (S.screen === "lobby" || S.screen === "scores") go("home");
+  else if (S.screen === "cats") go("lobby");
+  else if (S.game) openQuit();
+}
+function chooseGame(type) { S.next = type; go("lobby"); }
+
+// quit / cancel at any time
+function openQuit() { if (!S.game) { go("home"); return; } pauseTimer(); S.modal = "quit"; render(true); }
+function closeQuit() { S.modal = null; resumeTimer(); render(true); }
+function quitGame() { stopTimer(); S.game = null; S.modal = null; go("home"); }
+
+// ---------------------------------------------------------- timers (pausable)
+let timerId = null;
+function startTimer(seconds, onEnd) {
+  stopTimer();
+  const g = S.game; if (!g) return;
+  g.endsAt = Date.now() + seconds * 1000; g.total = g.total && g.resuming ? g.total : seconds; g.onEnd = onEnd; g.resuming = false;
+  timerId = setInterval(() => {
+    const left = timeLeft();
+    if (left <= 5 && left > 0) beep("tick");
+    if (left <= 0) { stopTimer(); const f = S.game && S.game.onEnd; if (f) f(); }
+    tick();
+  }, 1000);
+}
+function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
+function pauseTimer() { const g = S.game; if (g && timerId) { g.pausedMs = Math.max(0, g.endsAt - Date.now()); stopTimer(); } }
+function resumeTimer() { const g = S.game; if (g && g.pausedMs != null) { const ms = g.pausedMs; g.pausedMs = null; g.resuming = true; startTimer(ms / 1000, g.onEnd); } }
+function timeLeft() { const g = S.game; if (!g || !g.endsAt) return 0; if (g.pausedMs != null) return Math.ceil(g.pausedMs / 1000); return Math.max(0, Math.ceil((g.endsAt - Date.now()) / 1000)); }
+
+// ---------------------------------------------------------- QA
+function startQA(cat) {
+  const items = freshItems(cat, "qa", S.settings.qaCount);
+  S.game = {type: "qa", cat, items, idx: -1, phase: "question", answers: {}, awarded: {}};
+  S.screen = "qa"; nextQuestion();
+}
+function nextQuestion() {
+  const g = S.game; g.idx++;
+  if (g.idx >= g.items.length) { endGame(); return; }
+  const it = g.items[g.idx];
+  Used.add("qa", it);
+  g.options = shuffle([it.a, ...(it.w || []).slice(0, 3)]);
+  g.correct = g.options.indexOf(it.a);
+  g.phase = "question"; g.answers = {}; g.awarded = {}; g.total = 0;
+  startTimer(S.settings.qaSeconds, revealAnswer);
+  render(true);
+}
+function phoneAnswer(pid, choice) {
+  const g = S.game; if (!g || g.type !== "qa" || g.phase !== "question" || g.answers[pid]) return;
+  g.answers[pid] = {choice, left: timeLeft()};
+  const pp = phonePlayers();
+  if (pp.length && pp.every(p => g.answers[p.id])) { revealAnswer(); return; }
+  render();
+}
+function revealAnswer() {
+  const g = S.game; if (!g || g.phase !== "question") return;
+  stopTimer(); g.phase = "reveal";
+  let any = false;
+  for (const [pid, a] of Object.entries(g.answers)) {
+    if (a.choice === g.correct) { const pts = 100 + Math.round(50 * a.left / S.settings.qaSeconds); a.pts = pts; award(pid, pts); any = true; }
+  }
+  beep(any ? "ok" : "bad"); render(true);
+}
+function toggleAward(pid, pts = 100) {
+  const g = S.game; if (!g) return;
+  g.awarded = g.awarded || {};
+  if (g.awarded[pid]) { award(pid, -pts); delete g.awarded[pid]; } else { award(pid, pts); g.awarded[pid] = true; beep("ok"); }
+  render();
+}
+
+// ---------------------------------------------------------- charades
+function startCharades(cat) {
+  S.game = {type: "charades", cat, pool: freshItems(cat, "charades"), order: shuffle(S.players.map(p => p.id)), turn: 0, phase: "ready", peek: false, turnPts: 0, guessed: 0};
+  S.screen = "charades"; render(true);
+}
+function chActor() { const g = S.game; return g && playerById(g.order[g.turn]); }
+function nextWord(g) { if (!g.pool.length) g.pool = freshItems(g.cat, g.type); const it = g.pool.pop(); Used.add(g.type, it); g.word = it.w; g.peek = false; g.wordNo = (g.wordNo || 0) + 1; }
+function chStart() {
+  const g = S.game; g.phase = "acting"; g.turnPts = 0; g.guessed = 0; g.total = 0; nextWord(g);
+  startTimer(S.settings.chSeconds, () => { const gg = S.game; if (gg) { gg.phase = "turnEnd"; beep("end"); render(true); } });
+  render(true);
+}
+function chGuessed(pid) {
+  const g = S.game; if (!g || g.phase !== "acting") return;
+  award(pid, 100); award(chActor().id, 50); g.turnPts += 50; g.guessed++;
+  beep("ok"); showToast("صح! 🎉"); nextWord(g); render(true);
+}
+function chSkip() { const g = S.game; if (!g || g.phase !== "acting") return; beep("bad"); nextWord(g); render(true); }
+function chNextTurn() {
+  const g = S.game; g.turn++;
+  if (g.turn >= g.order.length) { endGame(); return; }
+  g.phase = "ready"; g.peek = false; render(true);
+}
+
+// ---------------------------------------------------------- برا السالفة
+function startSalfa(cat) {
+  S.game = {type: "salfa", cat, pool: freshItems(cat, "salfa"), round: 0, rounds: Math.max(1, S.settings.salfaRounds)};
+  S.screen = "salfa"; salfaRound();
+}
+function salfaRound() {
+  const g = S.game; g.round++;
+  if (g.round > g.rounds) { endGame(); return; }
+  if (!g.pool.length) g.pool = freshItems(g.cat, "salfa");
+  { const it = g.pool.pop(); Used.add("salfa", it); g.word = it.w; g.topic = it.t || g.cat.name; }
+  g.impostor = S.players[Math.floor(Math.random() * S.players.length)].id;
+  g.phase = "roles"; g.seen = {}; g.votes = {}; g.accused = null; g.guessPick = null; g.total = 0;
+  const ids = shuffle(S.players.map(p => p.id));
+  g.pairs = ids.map((id, i) => [id, ids[(i + 1) % ids.length]]);
+  S.reveal = null; render(true);
+}
+function salfaRoleText(pid) { const g = S.game; return pid === g.impostor ? "أنت برا السالفة 🤫" : g.word; }
+function salfaSeen(pid) { const g = S.game; if (!g || g.phase !== "roles") return; g.seen[pid] = true; S.reveal = null; render(true); }
+function salfaAsk() {
+  const g = S.game; g.phase = "ask";
+  startTimer(S.settings.salfaSeconds, salfaVote);
+  render(true);
+}
+function salfaVote() { const g = S.game; if (!g) return; stopTimer(); g.phase = "vote"; g.total = 0; beep("end"); render(true); }
+function salfaPhoneVote(pid, target) { const g = S.game; if (!g || g.phase !== "vote" || pid === target) return; g.votes[pid] = target; render(); }
+function salfaAccuse(pid) {
+  const g = S.game; if (!g || g.phase !== "vote") return;
+  g.accused = pid;
+  if (pid === g.impostor) {
+    S.players.forEach(p => { if (p.id !== g.impostor) award(p.id, 100); });
+    const others = shuffle(g.cat.items.map(i => i.w).filter(w => w !== g.word)).slice(0, 5);
+    g.guessOpts = shuffle([g.word, ...others]);
+    g.phase = "guess"; beep("ok");
+  } else { award(g.impostor, 200); g.phase = "result"; beep("bad"); }
+  render(true);
+}
+function salfaGuess(i) {
+  const g = S.game; if (!g || g.phase !== "guess") return;
+  g.guessPick = i;
+  if (g.guessOpts[i] === g.word) { award(g.impostor, 150); beep("ok"); } else beep("bad");
+  g.phase = "result"; render(true);
+}
+
+// ---------------------------------------------------------- اكذب صح
+function startFib(cat) {
+  const items = freshItems(cat, "fib", S.settings.fibCount);
+  S.game = {type: "fib", cat, items, idx: -1};
+  S.screen = "fib"; fibNext();
+}
+function fibNext() {
+  const g = S.game; g.idx++;
+  if (g.idx >= g.items.length) { endGame(); return; }
+  Used.add("fib", g.items[g.idx]);
+  g.phase = "write"; g.lies = {}; g.votes = {}; g.choices = []; g.total = 0; g.reject = {};
+  startTimer(S.settings.fibSeconds, fibToVote);
+  render(true);
+}
+function fibSubmit(pid, text) {
+  const g = S.game; if (!g || g.type !== "fib" || g.phase !== "write") return "closed";
+  text = String(text || "").trim().slice(0, 40);
+  if (!text) return "empty";
+  if (norm(text) === norm(g.items[g.idx].a)) { g.reject[pid] = true; render(); return "truth"; }
+  g.lies[pid] = text; delete g.reject[pid];
+  if (phonePlayers().every(p => g.lies[p.id])) { fibToVote(); return "ok"; }
+  render(); return "ok";
+}
+function fibToVote() {
+  const g = S.game; if (!g || g.phase !== "write") return;
+  stopTimer();
+  const truth = g.items[g.idx].a, map = new Map();
+  for (const [pid, t] of Object.entries(g.lies)) {
+    const k = norm(t); if (!map.has(k)) map.set(k, {text: t, owners: [], truth: false}); map.get(k).owners.push(pid);
+  }
+  g.choices = shuffle([...map.values(), {text: truth, owners: [], truth: true}]);
+  g.phase = "vote"; g.total = 0; g.endsAt = null;
+  render(true);
+}
+function fibUnvote(pid) { const g = S.game; if (g && g.phase === "vote") { delete g.votes[pid]; render(); } }
+function fibVote(pid, i) {
+  const g = S.game; if (!g || g.phase !== "vote" || g.votes[pid] != null) return;
+  if (g.choices[i] && g.choices[i].owners.includes(pid)) return;
+  g.votes[pid] = i;
+  if (phonePlayers().every(p => g.votes[p.id] != null)) { fibReveal(); return; }
+  render();
+}
+function fibReveal() {
+  const g = S.game; if (!g || g.phase !== "vote") return;
+  stopTimer();
+  for (const [pid, i] of Object.entries(g.votes)) {
+    const c = g.choices[i]; if (!c) continue;
+    if (c.truth) award(pid, 100); else c.owners.forEach(o => award(o, 50));
+  }
+  g.phase = "reveal"; beep("ok"); render(true);
+}
+
+// ---------------------------------------------------------- ارسم وخمّن
+const SIZES = {s: 3, m: 7, l: 14};
+function startDraw(cat) {
+  const drawers = shuffle(phonePlayers().map(p => p.id));
+  S.game = {type: "draw", cat, pool: freshItems(cat, "draw"), order: drawers, turn: 0, phase: "ready", ops: [], color: INK[0], size: "m", tool: "brush", feed: [], turnPts: 0, guessed: 0};
+  S.screen = "draw"; render(true);
+}
+function drawer() { const g = S.game; return g && playerById(g.order[g.turn]); }
+function drStart() {
+  const g = S.game; g.phase = "drawing"; g.turnPts = 0; g.guessed = 0; g.feed = []; g.total = 0; drNewWord();
+  startTimer(S.settings.drawSeconds, () => { const gg = S.game; if (gg) { gg.phase = "turnEnd"; beep("end"); render(true); } });
+  render(true);
+}
+function drNewWord() { const g = S.game; nextWord(g); g.ops = []; repaintAll(); }
+function drCorrect(pid) {
+  const g = S.game; if (!g || g.phase !== "drawing") return;
+  award(pid, 100); award(drawer().id, 50); g.turnPts += 50; g.guessed++;
+  g.feed.unshift({pid, text: "✅ " + g.word, ok: true});
+  beep("ok"); showToast("صح! 🎉"); drNewWord(); render(true);
+}
+function drGuess(pid, text) {
+  const g = S.game; if (!g || g.phase !== "drawing" || !text.trim()) return false;
+  if (norm(text) === norm(g.word)) { drCorrect(pid); return true; }
+  g.feed.unshift({pid, text: text.trim().slice(0, 24), ok: false}); g.feed = g.feed.slice(0, 9);
+  render(); return false;
+}
+function drSkip() { const g = S.game; if (!g || g.phase !== "drawing") return; beep("bad"); drNewWord(); render(true); }
+function drNextTurn() {
+  const g = S.game; g.turn++;
+  if (g.turn >= g.order.length) { endGame(); return; }
+  g.phase = "ready"; g.ops = []; render(true);
+}
+// painting: ops = strokes {k:"s",c,w,p:[[x,y]..]} and bucket fills {k:"f",c,x,y}; coordinates 0..1
+function drawCanvases() { return [$("#tvCanvas"), ...document.querySelectorAll("[data-ph-canvas]")].filter(Boolean); }
+function strokeSeg(ctx, op, from) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = op.c; ctx.lineWidth = op.w * (W / 300);
+  ctx.beginPath();
+  const pts = op.p, start = Math.max(0, from - 1);
+  ctx.moveTo(pts[start][0] * W, pts[start][1] * H);
+  if (pts.length === 1) ctx.lineTo(pts[0][0] * W + .1, pts[0][1] * H);
+  for (let i = start + 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * W, pts[i][1] * H);
+  ctx.stroke();
+}
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function floodFill(ctx, fx, fy, hex) {
+  const W = ctx.canvas.width, H = ctx.canvas.height, x0 = Math.floor(fx * W), y0 = Math.floor(fy * H);
+  if (x0 < 0 || y0 < 0 || x0 >= W || y0 >= H) return;
+  const img = ctx.getImageData(0, 0, W, H), d = img.data, [r1, g1, b1] = hexRgb(hex);
+  const i0 = (y0 * W + x0) * 4, r0 = d[i0], g0 = d[i0 + 1], b0 = d[i0 + 2];
+  if (Math.abs(r0 - r1) + Math.abs(g0 - g1) + Math.abs(b0 - b1) < 12) return;
+  const match = p => { const k = p * 4; return Math.abs(d[k] - r0) + Math.abs(d[k + 1] - g0) + Math.abs(d[k + 2] - b0) <= 110; };
+  const seen = new Uint8Array(W * H), stack = [x0, y0];
+  while (stack.length) {
+    const y = stack.pop(), x = stack.pop();
+    if (seen[y * W + x]) continue;
+    let lx = x, rx = x;
+    while (lx > 0 && !seen[y * W + lx - 1] && match(y * W + lx - 1)) lx--;
+    while (rx < W - 1 && !seen[y * W + rx + 1] && match(y * W + rx + 1)) rx++;
+    for (let xx = lx; xx <= rx; xx++) {
+      const q = y * W + xx; seen[q] = 1; const k = q * 4; d[k] = r1; d[k + 1] = g1; d[k + 2] = b1; d[k + 3] = 255;
+      if (y > 0 && !seen[q - W] && match(q - W)) stack.push(xx, y - 1);
+      if (y < H - 1 && !seen[q + W] && match(q + W)) stack.push(xx, y + 1);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function paintFull(canvas, ops) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d", {willReadFrequently: true});
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (const op of ops || []) { if (op.k === "f") floodFill(ctx, op.x, op.y, op.c); else strokeSeg(ctx, op, 0); }
+}
+function repaintAll() { const g = S.game, ops = g && g.type === "draw" ? g.ops : []; drawCanvases().forEach(c => paintFull(c, ops)); }
+
+// ---------------------------------------------------------- game start / end
+function startGame(type, cat) {
+  cat = {id: cat.id, name: cat.name, emoji: cat.emoji, type: cat.type, items: cat.items.slice()};
+  if (!cat.items.length) return;
+  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw})[type](cat);
+}
+function endGame() { stopTimer(); S.game = null; beep("end"); go("scores"); }
+function gameReady(type) {
+  const G = GAMES[type]; if (!G) return {ok: true};
+  if (S.players.length < G.min) return {ok: false, why: `تحتاج ${G.min} لاعبين على الأقل`};
+  if (phonePlayers().length < G.minPhones) return {ok: false, why: `تحتاج ${G.minPhones === 1 ? "لاعب واحد" : G.minPhones + " لاعبين"} على الأقل من الجوال`};
+  return {ok: true};
+}
+
+// ---------------------------------------------------------- TV rendering
+const tv = $("#tv");
+function av(p, cls = "av") { return p ? `<span class="${cls}" style="background:${p.color}">${p.avatar}</span>` : ""; }
+function head(info, extra = "") {
+  return `<div class="topline"><div class="tv-row"><span class="pill">${info}</span>${extra}</div>
+    <button class="quit f" data-f="x-quit" data-act="openQuit">✕ إنهاء اللعبة</button></div>`;
+}
+function catPill() { const g = S.game; return `${esc(g.cat.emoji || "")} ${esc(g.cat.name)}`; }
+
+function screenHome() {
+  const n = S.players.length;
+  const card = (cls, key, act, v, icon, title, desc) => `<button class="game-card ${cls} f" data-f="${key}" data-act="${act}" data-v="${v}"><span class="ico">${icon}</span><h3>${title}</h3><p>${desc}</p></button>`;
+  return `<div class="screen">
+    <div class="topline"><div class="tv-head"><img src="${LOGO}" alt="جَمعة" style="width:120px;height:120px;border-radius:30px;box-shadow:0 10px 30px #0006">
+      <div><p class="tv-sub" style="font-size:24px;color:#fff;font-weight:800;margin:0">ألعاب الجَمعات 🎉</p><p class="tv-sub" style="font-size:19px">كل واحد يلعب من جواله أو بالريموت</p></div></div>
+      <span class="pill"><span class="live-dot"></span> ${Bank.mode === "db" ? "الأسئلة متزامنة أونلاين" : ONLINE ? "متصل" : "بدون إنترنت"}</span></div>
+    <div class="home-grid" style="margin-top:20px">
+      ${card("gc1", "g-charades", "choose", "charades", "🎭", "بدون كلام", GAMES.charades.desc)}
+      ${card("gc2", "g-qa", "choose", "qa", "❓", "سؤال وجواب", GAMES.qa.desc)}
+      ${card("gc5", "g-salfa", "choose", "salfa", "🕵️", "برا السالفة", GAMES.salfa.desc)}
+      ${card("gc6", "g-fib", "choose", "fib", "🤥", "اكذب صح", GAMES.fib.desc)}
+      ${card("gc7", "g-draw", "choose", "draw", "🎨", "ارسم وخمّن", GAMES.draw.desc)}
+      ${card("gc3", "g-sc", "go", "scores", "🏆", "النقاط", "ترتيب اللاعبين ومجموع نقاطهم")}
+      ${card("gc4", "g-pl", "choose", "", "👥", "اللاعبين", n ? n + " لاعبين في الغرفة" : "أضف اللاعبين بالباركود أو الريموت")}
+    </div>
+    <div class="home-foot" style="margin-top:auto"><span>رمز الغرفة: <b style="direction:ltr;display:inline-block">${ROOM}</b></span><span>© 2026 WAEL</span></div>
+  </div>`;
+}
+
+function screenLobby() {
+  const ps = S.players, G = GAMES[S.next], title = G ? `${G.icon} ${G.name}` : "👥 اللاعبين";
+  const ready = gameReady(S.next);
+  const cards = ps.map(p => `<div class="pcard">${av(p, "avatar")}<div class="nm">${esc(p.name)}</div><div class="via">${p.phone ? "📱 من الجوال" : "🎮 بالريموت"}</div></div>`).join("");
+  const empties = Array.from({length: Math.max(0, 3 - ps.length)}, () => `<div class="pcard empty">بانتظار لاعب...</div>`).join("");
+  return `<div class="screen">
+    <div class="topline"><div><h1 class="tv-title">${title}</h1><p class="tv-sub">${G ? esc(G.desc) : "صوّروا الباركود بالجوال واكتبوا أسماءكم"}</p></div>
+      <div class="tv-row">${G ? `<button class="tv-btn go f" data-f="l-go" data-act="toCats" ${ready.ok ? 'data-auto="1"' : "disabled"}>متابعة ←</button>` : ""}</div></div>
+    <div class="lobby">
+      ${!ONLINE ? `<div class="tv-join"><div style="font-size:80px">🎮</div><h3 class="tv-title" style="font-size:36px">أضيفوا أسماءكم بالريموت</h3>
+        <div class="small" style="color:var(--dim);font-size:19px;line-height:1.7">الانضمام بالجوال يحتاج اتصال بالإنترنت<br>تأكد من اتصال التلفزيون 📶</div></div>` : `<div class="join-card">
+        <div class="qr" id="qr"></div>
+        <div class="small">امسح الباركود أو افتح<br><b style="direction:ltr;display:inline-block">waelapp.github.io/jamaa</b> واكتب الرمز</div>
+        <div class="room-code">${ROOM}</div>
+      </div>`}
+      <div class="players-area">
+        <div class="tv-row" style="justify-content:space-between"><span class="pill">👥 ${ps.length} لاعبين · 📱 ${phonePlayers().length} جوال</span>${G && !ready.ok ? `<span class="pill">⚠️ ${ready.why}</span>` : ""}</div>
+        <div class="players-grid">${cards}${empties}<button class="add-card f" data-f="l-add" data-act="addRemote" ${ready.ok && G ? "" : 'data-auto="1"'}>＋ إضافة لاعب بالريموت</button></div>
+      </div>
+    </div></div>`;
+}
+
+function screenCats() {
+  const type = S.next, G = GAMES[type], cats = Bank.usable(type);
+  const empty = Bank.cats.filter(c => c.type === type && c.enabled && !(c.items || []).length);
+  const tiles = cats.map(c => { const fresh = c.items.length - Used.count(type, c.items);
+      return `<button class="cat f" data-f="c-${esc(c.id)}" data-act="pickCat" data-v="${esc(c.id)}"><span class="e">${esc(c.emoji || "⭐")}</span><span><div class="n">${esc(c.name)}</div><div class="c">${fresh ? fresh + " " + G.unit + " جديدة" : "🔁 انلعبت كلها — بتبدأ من جديد"}</div></span></button>`; }).join("")
+    + empty.map(c => `<div class="cat" style="opacity:.45"><span class="e">${esc(c.emoji || "⭐")}</span><span><div class="n">${esc(c.name)}</div><div class="c">فاضي — أضف له من لوحة التحكم</div></span></div>`).join("");
+  const random = cats.length > 1 ? `<button class="cat f" data-f="c-rand" data-act="pickCat" data-v="__random" style="background:linear-gradient(150deg,#ffffff18,#ffffff08)"><span class="e">🎲</span><span><div class="n">عشوائي</div><div class="c">من كل الفئات</div></span></button>` : "";
+  return `<div class="screen">
+    <h1 class="tv-title">اختر الفئة</h1><p class="tv-sub">${G.icon} ${G.name} · الفئات المفعّلة من لوحة التحكم</p>
+    ${cats.length ? `<div class="cat-grid">${tiles}${random}</div>` : `<div class="empty-state">لا توجد فئات مفعّلة لـ«${G.name}» بعد<br>أضفها من ⚙️ لوحة التحكم على جهازك — وتظهر هنا فوراً</div>`}
+  </div>`;
+}
+
+function screenQA() {
+  const g = S.game, it = g.items[g.idx], left = timeLeft(), rev = g.phase === "reveal";
+  const opts = g.options.map((o, i) => `<button class="opt o${i} ${rev ? (i === g.correct ? "right" : "dim") : ""} ${rev ? "" : "f"}" ${rev ? "" : `data-f="o${i}" data-act="reveal"`}><span class="k">${LETTERS[i]}</span><span>${esc(o)}</span></button>`).join("");
+  let bottom;
+  if (!rev) {
+    const minis = phonePlayers().map(p => `<span class="mini ${g.answers[p.id] ? "done" : ""}">${av(p)}${esc(p.name)}</span>`).join("");
+    bottom = `<div class="tv-row" style="justify-content:space-between;margin-top:22px"><div class="minis">${minis || '<span class="pill">بدون جوالات: جاوبوا بصوت عالي</span>'}</div>
+      <button class="tv-btn alt f" data-f="q-rev" data-act="reveal" data-auto="1">كشف الإجابة</button></div>`;
+  } else {
+    const res = Object.entries(g.answers).map(([pid, a]) => { const p = playerById(pid); if (!p) return ""; const ok = a.choice === g.correct;
+      return `<span class="res ${ok ? "ok" : "no"}">${av(p)}${esc(p.name)} ${ok ? "+" + a.pts : "✗"}</span>`; }).join("");
+    const remote = S.players.filter(p => !p.phone);
+    const awards = remote.length ? `<div class="tv-row" style="justify-content:center;margin-top:12px;flex-wrap:wrap"><span class="pill">من جاوب صح بصوته؟</span>${remote.map(p => `<button class="award f ${g.awarded[p.id] ? "on" : ""}" data-f="aw-${p.id}" data-act="award" data-v="${p.id}">${av(p)}${esc(p.name)} +100</button>`).join("")}</div>` : "";
+    bottom = `<div class="reveal-list">${res}</div>${awards}
+      <div class="tv-row" style="justify-content:center;margin-top:16px"><button class="tv-btn go f" data-f="q-next" data-act="nextQ" data-auto="1">${g.idx + 1 >= g.items.length ? "النتائج 🏆" : "السؤال التالي ←"}</button></div>`;
+  }
+  return `<div class="screen">
+    ${head(`${catPill()} · سؤال ${g.idx + 1} من ${g.items.length}`, `<div class="timer ${left <= 5 && !rev ? "low" : ""}" id="tTimer">${rev ? "✓" : left}</div>`)}
+    <div class="bar"><i id="tBar" style="width:${rev ? 0 : (left / S.settings.qaSeconds) * 100}%"></i></div>
+    <div class="question" style="margin:24px 0 22px">${esc(it.q)}</div>
+    <div class="opts">${opts}</div>${bottom}</div>`;
+}
+
+function screenCharades() {
+  const g = S.game, actor = chActor(), left = timeLeft();
+  const info = `${catPill()} · الدور ${g.turn + 1} من ${g.order.length}`;
+  if (g.phase === "ready") {
+    return `<div class="screen">${head(info)}
+      <div class="actor-hero">${av(actor, "avatar")}<h2>دور ${esc(actor.name)} 🎭</h2>
+        <p>${actor.phone ? "الكلمات بتظهر في جوالك — مثّلها بدون ولا كلمة!" : "الكلمة بتظهر هنا لما تضغط «👁 الكلمة» — خلّ الباقين يغمضون"}</p>
+        <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-start" data-act="chStart" data-auto="1">ابدأ ⏱ ${S.settings.chSeconds} ثانية</button></div></div></div>`;
+  }
+  if (g.phase === "turnEnd") {
+    const last = g.turn + 1 >= g.order.length;
+    return `<div class="screen">${head(info)}
+      <div class="actor-hero">${av(actor, "avatar")}<h2>انتهى الوقت! ⏰</h2><p>${esc(actor.name)} مثّل ${g.guessed} كلمات وجاب +${g.turnPts} نقطة</p>
+        <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-next" data-act="chNextTurn" data-auto="1">${last ? "النتائج 🏆" : "الدور التالي ←"}</button></div></div></div>`;
+  }
+  const others = S.players.filter(p => p.id !== actor.id);
+  const word = g.peek ? `<div class="word-box">${esc(g.word)}</div>` : `<div class="word-hidden">${actor.phone ? "📱 الكلمة في جوال " + esc(actor.name) : "الكلمة مخفية — اضغط «👁 الكلمة» للممثل فقط"}</div>`;
+  return `<div class="screen">${head(info, `<span class="pill">${av(actor)} ${esc(actor.name)} يمثّل · ${g.guessed} كلمات</span>`)}
+    <div style="text-align:center;margin-top:10px"><div class="big-timer ${left <= 10 ? "timer low" : ""}" id="tTimer" style="${left <= 10 ? "background:none" : ""}">${left}</div>
+      <div class="bar" style="max-width:700px;margin:14px auto 0"><i id="tBar" style="width:${(left / S.settings.chSeconds) * 100}%"></i></div>${word}</div>
+    <div style="margin-top:auto"><p class="tv-sub" style="text-align:center;margin-bottom:12px">مين خمّنها؟</p>
+      <div class="guessers">${others.map((p, i) => `<button class="guesser f" data-f="gs-${p.id}" data-act="chGuessed" data-v="${p.id}" ${i === 0 ? 'data-auto="1"' : ""}>${av(p)}${esc(p.name)}</button>`).join("")}
+        <button class="guesser f" data-f="ch-skip" data-act="chSkip" style="background:#ff6b6b2e">⏭ تخطي</button>
+        ${actor.phone ? "" : `<button class="guesser f" data-f="ch-peek" data-act="chPeek" style="background:#ffffff22">👁 الكلمة</button>`}</div></div></div>`;
+}
+
+function screenSalfa() {
+  const g = S.game, info = `الجولة ${g.round} من ${g.rounds}`;
+  const imp = playerById(g.impostor);
+  const topic = `<span class="pill topic">🧭 الموضوع: <b>${esc(g.topic)}</b></span>`;
+  if (g.phase === "roles") {
+    if (S.reveal) {
+      const p = playerById(S.reveal), isImp = p.id === g.impostor;
+      return `<div class="screen">${head(info, topic)}<div class="role-panel">${av(p, "avatar")}<h2 class="tv-title" style="font-size:44px;margin-top:10px">لـ${esc(p.name)} فقط 👀</h2>
+        <div class="role-card ${isImp ? "imp" : ""}">${esc(salfaRoleText(p.id))}</div><p class="tv-sub" style="margin-top:10px">الموضوع: <b style="color:var(--amber)">${esc(g.topic)}</b></p>
+        <p class="tv-sub" style="margin-top:14px">${isImp ? "حاول تعرف الكلمة من أسئلتهم بدون ما تنكشف!" : "لا تقولها! اسأل وجاوب بذكاء"}</p>
+        <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn go f" data-f="r-hide" data-act="salfaSeen" data-v="${p.id}" data-auto="1">خلاص شفت ✓ إخفاء</button></div></div></div>`;
+    }
+    const all = S.players.every(p => g.seen[p.id]);
+    const fu = S.players.find(p => !p.phone && !g.seen[p.id]), firstUnseen = fu && fu.id;
+    const chips = S.players.map(p => p.phone
+      ? `<span class="seen ${g.seen[p.id] ? "ok" : ""}">${av(p)}${esc(p.name)} 📱</span>`
+      : `<button class="seen f ${g.seen[p.id] ? "ok" : ""}" data-f="sr-${p.id}" data-act="salfaReveal" data-v="${p.id}" ${!g.seen[p.id] && p.id === firstUnseen ? 'data-auto="1"' : ""}>${av(p)}${esc(p.name)} 👁</button>`).join("");
+    return `<div class="screen">${head(info, topic)}<div class="role-panel"><div style="font-size:80px">🕵️</div><h2 class="tv-title">الموضوع: <span style="color:var(--amber)">${esc(g.topic)}</span></h2><p class="tv-sub" style="font-size:26px;margin-bottom:6px">كل واحد يشوف دوره السري — واحد منكم برا السالفة!</p>
+      <p class="tv-sub">أصحاب الجوالات يشوفونه في جوالاتهم · لاعبين الريموت: اختر اسمك والباقين يغمضون</p>
+      <div class="seen-list">${chips}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="s-ask" data-act="salfaAsk" ${all ? 'data-auto="1"' : ""}>${all ? "الكل شاف — ابدأوا الأسئلة ←" : "ابدأ الأسئلة على أي حال ←"}</button></div></div></div>`;
+  }
+  if (g.phase === "ask") {
+    const left = timeLeft();
+    const pairs = g.pairs.map(([a, b]) => { const A = playerById(a), B = playerById(b); return `<div class="pair">${av(A)}${esc(A.name)} <span style="color:var(--amber)">يسأل ←</span> ${av(B)}${esc(B.name)}</div>`; }).join("");
+    return `<div class="screen">${head(info, topic + `<div class="timer ${left <= 10 ? "low" : ""}" id="tTimer">${left}</div>`)}
+      <div class="bar"><i id="tBar" style="width:${(left / S.settings.salfaSeconds) * 100}%"></i></div>
+      <h2 class="tv-title" style="text-align:center;margin-top:22px;font-size:46px">الموضوع: <span style="color:var(--amber)">${esc(g.topic)}</span> — اسألوا بعض بدون ما تفضحون الكلمة 🤐</h2>
+      <div class="pairs">${pairs}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:auto"><button class="tv-btn alt f" data-f="s-vote" data-act="salfaVote" data-auto="1">🗳 التصويت الآن</button></div></div>`;
+  }
+  if (g.phase === "vote") {
+    const counts = {}; Object.values(g.votes).forEach(t => counts[t] = (counts[t] || 0) + 1);
+    const voted = phonePlayers().map(p => `<span class="mini ${g.votes[p.id] ? "done" : ""}">${av(p)}${esc(p.name)}</span>`).join("");
+    const order = S.players.slice().sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    return `<div class="screen">${head(info, topic)}
+      <h2 class="tv-title" style="text-align:center;margin-top:16px">مين برا السالفة؟ 🕵️</h2>
+      <p class="tv-sub" style="text-align:center">صوّتوا من الجوالات — بعدين اختاروا المتهم النهائي بالريموت</p>
+      <div class="minis" style="justify-content:center;margin-top:14px">${voted}</div>
+      <div class="guessers" style="margin-top:auto">${order.map((p, i) => `<button class="guesser vote-chip f" data-f="ac-${p.id}" data-act="salfaAccuse" data-v="${p.id}" ${i === 0 ? 'data-auto="1"' : ""}>${av(p)}${esc(p.name)} <span class="cnt">${counts[p.id] || 0}</span></button>`).join("")}</div></div>`;
+  }
+  if (g.phase === "guess") {
+    return `<div class="screen">${head(info, topic)}<div style="text-align:center;margin-top:20px">${av(imp, "avatar")}
+      <h2 class="tv-title" style="margin-top:10px">كشفتوه! 🎉 ${esc(imp.name)} برا السالفة</h2>
+      <p class="tv-sub">آخر فرصة له: يخمّن الكلمة ويكسب 150 نقطة ${imp.phone ? "(يختار من جواله أو هنا)" : ""}</p></div>
+      <div class="guess-grid">${g.guessOpts.map((w, i) => `<button class="f" data-f="gw-${i}" data-act="salfaGuess" data-v="${i}" ${i === 0 ? 'data-auto="1"' : ""}>${esc(w)}</button>`).join("")}</div></div>`;
+  }
+  const caught = g.accused === g.impostor, last = g.round >= g.rounds;
+  const guessed = g.guessPick != null && g.guessOpts[g.guessPick] === g.word;
+  return `<div class="screen">${head(info, topic)}<div class="role-panel">${av(imp, "avatar")}
+    <h2 class="tv-title" style="margin-top:10px">${caught ? (guessed ? "كشفتوه… بس خمّن الكلمة! 😏" : "كشفتوه! 🎉") : "برا السالفة فاز! 😈"}</h2>
+    <p class="tv-sub">${esc(imp.name)} كان برا السالفة · الكلمة كانت</p><div class="role-card">${esc(g.word)}</div>
+    <p class="tv-sub" style="margin-top:12px">${caught ? "الكل +100" + (guessed ? " · " + esc(imp.name) + " +150" : "") : esc(imp.name) + " +200"}</p>
+    <div class="tv-row" style="justify-content:center;margin-top:20px"><button class="tv-btn go f" data-f="s-next" data-act="salfaNext" data-auto="1">${last ? "النتائج 🏆" : "الجولة التالية ←"}</button></div></div></div>`;
+}
+
+function screenFib() {
+  const g = S.game, it = g.items[g.idx], left = timeLeft(), info = `${catPill()} · سؤال ${g.idx + 1} من ${g.items.length}`;
+  const q = esc(it.q).replace(/_{2,}/, g.phase === "reveal" ? `<span class="blank" style="color:var(--green)">${esc(it.a)}</span>` : `<span class="blank"></span>`);
+  const timer = g.phase !== "write" ? "" : `<div class="timer ${left <= 10 ? "low" : ""}" id="tTimer">${left}</div>`;
+  let body;
+  if (g.phase === "write") {
+    const chips = phonePlayers().map(p => `<span class="mini ${g.lies[p.id] ? "done" : ""}">${av(p)}${esc(p.name)}</span>`).join("");
+    body = `<p class="tv-sub" style="text-align:center">📱 كل واحد يكتب كذبة مقنعة في جواله… والحقيقة مخفية بينها!</p>
+      <div class="minis" style="justify-content:center;margin-top:20px">${chips}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:auto"><button class="tv-btn alt f" data-f="f-go" data-act="fibToVote" data-auto="1">الكل كتب؟ للتصويت ←</button></div>`;
+  } else if (g.phase === "vote") {
+    const chips = phonePlayers().map(p => `<span class="mini ${g.votes[p.id] != null ? "done" : ""}">${av(p)}${esc(p.name)}</span>`).join("");
+    const left2 = phonePlayers().filter(p => g.votes[p.id] == null).length;
+    body = `<p class="tv-sub" style="text-align:center;margin:0">🗣 ناقشوا بينكم… مين كذّاب ومين صادق؟ وكل واحد يختار من جواله — النتيجة تظهر لما الكل يختار</p>
+      <div class="fib-choices">${g.choices.map((c, i) => `<div class="fib-c"><span><span class="pill" style="font-size:16px;padding:2px 10px">${LETTERS[i]}</span> ${esc(c.text)}</span></div>`).join("")}</div>
+      <div class="tv-row" style="justify-content:space-between;margin-top:auto"><div class="tv-row"><div class="minis">${chips}</div><span class="pill">${left2 ? "باقي " + left2 + " ما اختاروا" : "الكل اختار"}</span></div>
+        <button class="tv-btn ghost f" data-f="f-rev" data-act="fibReveal">كشف الآن</button></div>`;
+  } else {
+    body = `<div class="fib-choices">${g.choices.map((c, i) => {
+      const voters = Object.entries(g.votes).filter(([, v]) => v === i).map(([pid]) => playerById(pid)).filter(Boolean);
+      const owners = c.owners.map(playerById).filter(Boolean);
+      return `<div class="fib-c ${c.truth ? "truth" : ""}"><span>${c.truth ? "✅ " : "🤥 "}${esc(c.text)}</span>
+        <span class="meta">${c.truth ? "الحقيقة" : "كذبة " + owners.map(o => av(o) + esc(o.name)).join(" و ") + (voters.length ? ` · +${50 * voters.length}` : "")}
+        ${voters.length ? " · انخدع: " + voters.map(v => av(v)).join("") : ""}</span></div>`; }).join("")}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:auto"><button class="tv-btn go f" data-f="f-next" data-act="fibNext" data-auto="1">${g.idx + 1 >= g.items.length ? "النتائج 🏆" : "السؤال التالي ←"}</button></div>`;
+  }
+  return `<div class="screen">${head(info, timer)}${g.phase !== "write" ? "" : `<div class="bar"><i id="tBar" style="width:${(left / (g.total || 1)) * 100}%"></i></div>`}
+    <div class="fib-q">${q}</div>${body}</div>`;
+}
+
+function screenDraw() {
+  const g = S.game, d = drawer(), left = timeLeft(), info = `${catPill()} · الدور ${g.turn + 1} من ${g.order.length}`;
+  if (g.phase === "ready") {
+    return `<div class="screen">${head(info)}<div class="actor-hero">${av(d, "avatar")}<h2>دور ${esc(d.name)} يرسم 🎨</h2>
+      <p>الكلمة بتطلع في جوالك — ارسمها والرسمة تظهر هنا مباشرة. ممنوع الكتابة والأرقام!</p>
+      <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="d-start" data-act="drStart" data-auto="1">ابدأ ⏱ ${S.settings.drawSeconds} ثانية</button></div></div></div>`;
+  }
+  if (g.phase === "turnEnd") {
+    const last = g.turn + 1 >= g.order.length;
+    return `<div class="screen">${head(info)}<div class="actor-hero">${av(d, "avatar")}<h2>انتهى الوقت! ⏰</h2><p>${esc(d.name)} رسم ${g.guessed} كلمات وجاب +${g.turnPts} نقطة</p>
+      <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="d-next" data-act="drNextTurn" data-auto="1">${last ? "النتائج 🏆" : "الدور التالي ←"}</button></div></div></div>`;
+  }
+  const others = S.players.filter(p => p.id !== d.id && !p.phone);
+  const feed = g.feed.map(f => { const p = playerById(f.pid); return `<div class="g ${f.ok ? "ok" : ""}">${av(p)}<b>${esc(p ? p.name : "")}:</b> ${esc(f.text)}</div>`; }).join("");
+  return `<div class="screen">${head(info, `<span class="pill">${av(d)} ${esc(d.name)} يرسم · ${g.guessed} كلمات</span><div class="timer ${left <= 10 ? "low" : ""}" id="tTimer">${left}</div>`)}
+    <div class="draw-wrap"><div class="canvas-box"><canvas id="tvCanvas" width="900" height="480"></canvas>${g.ops.length ? "" : `<div class="ov">بانتظار الرسمة من جوال ${esc(d.name)}… ✏️</div>`}</div>
+      <div class="feed"><div class="tv-sub" style="font-size:18px;margin:0 0 4px">💬 التخمينات</div>${feed || '<div class="muted" style="font-size:16px">اكتبوا تخميناتكم في الجوال</div>'}</div></div>
+    <div class="guessers" style="margin-top:14px">${others.map(p => `<button class="guesser f" data-f="dg-${p.id}" data-act="drCorrect" data-v="${p.id}">${av(p)}${esc(p.name)} خمّنها</button>`).join("")}
+      <button class="guesser f" data-f="d-skip" data-act="drSkip" data-auto="1" style="background:#ff6b6b2e">⏭ كلمة ثانية</button></div></div>`;
+}
+
+function screenScores() {
+  const ps = S.players.slice().sort((a, b) => b.score - a.score), max = Math.max(1, ...ps.map(p => p.score));
+  const rows = ps.map((p, i) => `<div class="row ${i === 0 && p.score > 0 ? "first" : ""}"><span class="rk">${i === 0 && p.score > 0 ? "👑" : i + 1}</span>${av(p)}<span>${esc(p.name)}</span>
+    <span class="track"><i style="width:${(p.score / max) * 100}%;background:${p.color}"></i></span><span class="pts">${p.score}</span></div>`).join("");
+  return `<div class="screen">
+    <div class="topline"><div><h1 class="tv-title">🏆 النقاط</h1><p class="tv-sub">${ps.length ? "ترتيب اللاعبين" : "ما فيه لاعبين بعد"}</p></div>
+      <div class="tv-row"><button class="tv-btn f" data-f="s-reset" data-act="resetScores">تصفير النقاط</button><button class="tv-btn go f" data-f="s-home" data-act="go" data-v="home" data-auto="1">القائمة الرئيسية</button></div></div>
+    <div class="board">${rows}</div></div>`;
+}
+
+function modalAddPlayer() {
+  const sugg = []; for (let n = 1; sugg.length < 6 && n < 99; n++) { const nm = "لاعب " + n; if (!S.players.some(p => p.name === nm)) sugg.push(nm); }
+  return `<div class="tv-modal"><div class="box"><h3>إضافة لاعب بالريموت</h3>
+    <input class="tv-input" id="remoteName" maxlength="14" placeholder="اكتب الاسم بالكيبورد...">
+    <div class="sugg">${sugg.map(n => `<button class="f" data-f="sg-${esc(n)}" data-act="addNamed" data-v="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+    <div class="tv-row"><button class="tv-btn go f" data-f="m-add" data-act="addTyped">إضافة</button><button class="tv-btn f" data-f="m-cancel" data-act="closeModal">إلغاء</button></div></div></div>`;
+}
+function modalQuit() {
+  return `<div class="tv-modal confirm"><div class="box"><h3>إنهاء اللعبة؟</h3><p>الوقت متوقف الحين. النقاط اللي جمعتوها تبقى محفوظة.</p>
+    <div class="tv-row" style="justify-content:center"><button class="tv-btn f" data-f="qq-yes" data-act="quitGame" style="background:#ff6b6b">نعم، للرئيسية 🏠</button>
+    <button class="tv-btn go f" data-f="qq-no" data-act="closeQuit" data-auto="1">كمّلوا اللعب ▶</button></div></div></div>`;
+}
+
+let lastScreenKey = "";
+function render(resetFocus) {
+  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, scores: screenScores};
+  if (S.game && !map[S.screen]) S.screen = "home";
+  const keep = focusKey();
+  tv.innerHTML = (map[S.screen] || screenHome)()
+    + (S.modal === "addPlayer" ? modalAddPlayer() : S.modal === "quit" ? modalQuit() : "")
+    + (S.toast ? `<div class="toast">${esc(S.toast.text)}</div>` : "")
+    + (S.banner ? `<div class="banner">${esc(S.banner)}</div>` : "");
+  const g = S.game;
+  const screenKey = S.screen + (g ? `${g.phase}|${g.idx}|${g.turn}|${g.round}` : "") + (S.modal || "") + (S.reveal || "");
+  if (S.screen + (g ? g.phase : "") !== lastScreenKey.split("#")[0]) { const sc = tv.querySelector(".screen"); if (sc) sc.classList.add("enter"); }
+  if (S.screen === "lobby") drawQR();
+  if (S.screen === "draw") paintFull($("#tvCanvas"), g ? g.ops : []);
+  restoreFocus(resetFocus || screenKey !== lastScreenKey.split("#")[1] ? null : keep);
+  lastScreenKey = S.screen + (g ? g.phase : "") + "#" + screenKey;
+  if (S.modal === "addPlayer") { const inp = $("#remoteName"); if (inp && document.activeElement !== inp) inp.focus({preventScroll: true}); }
+  renderPhones();
+}
+function tick() {
+  const g = S.game, left = timeLeft(), t = $("#tTimer"), b = $("#tBar");
+  if (t && g && g.phase !== "reveal") { t.textContent = left; t.classList.toggle("low", left <= 10); }
+  if (b && g && g.total) b.style.width = (left / g.total) * 100 + "%";
+  renderPhones();
+}
+
+function drawQR() {
+  const el = $("#qr"); if (!el) return;
+  const url = SITE + "join.html?r=" + ROOM;
+  try { new QRCode(el, {text: url, width: 192, height: 192, colorDark: "#1b1540", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M}); }
+  catch (e) { el.innerHTML = `<div style="color:#1b1540;font-weight:800;font-size:40px">${ROOM}</div>`; }
+}
+
+// ---------------------------------------------------------- remote focus navigation
+let cur = null;
+function focusKey() { return cur && cur.isConnected ? cur.dataset.f : null; }
+function focusables() {
+  let list = [...tv.querySelectorAll(".f")].filter(el => !el.disabled && el.offsetParent !== null);
+  if (S.modal) list = list.filter(el => el.closest(".tv-modal"));
+  return list;
+}
+function setFocus(el) { if (cur) cur.classList.remove("focus"); cur = el; if (el) el.classList.add("focus"); }
+function restoreFocus(key) {
+  const list = focusables();
+  let el = key && list.find(e => e.dataset.f === key);
+  if (!el) el = list.find(e => e.dataset.auto) || list.find(e => e.dataset.f !== "x-quit") || list[0] || null;
+  setFocus(el);
+}
+function moveFocus(dir) {
+  const list = focusables();
+  if (!cur || !cur.isConnected || !list.includes(cur)) { restoreFocus(null); return; }
+  const scale = tvScale();
+  const r0 = cur.getBoundingClientRect(), cx = (r0.left + r0.right) / 2, cy = (r0.top + r0.bottom) / 2;
+  let best = null, bestScore = Infinity;
+  for (const el of list) {
+    if (el === cur) continue;
+    const r = el.getBoundingClientRect(), x = (r.left + r.right) / 2, y = (r.top + r.bottom) / 2;
+    const dx = (x - cx) / scale, dy = (y - cy) / scale;
+    let main, side;
+    if (dir === "ArrowRight") { if (dx <= 4) continue; main = dx; side = Math.abs(dy); }
+    else if (dir === "ArrowLeft") { if (dx >= -4) continue; main = -dx; side = Math.abs(dy); }
+    else if (dir === "ArrowDown") { if (dy <= 4) continue; main = dy; side = Math.abs(dx); }
+    else { if (dy >= -4) continue; main = -dy; side = Math.abs(dx); }
+    const score = main + side * 2.2;
+    if (score < bestScore) { bestScore = score; best = el; }
+  }
+  if (best) { setFocus(best); beep("tick"); }
+}
+function pressKey(key) {
+  if (key === "Enter") { if (cur && cur.isConnected) cur.click(); else restoreFocus(null); }
+  else if (key === "Escape" || key === "Backspace") back();
+  else moveFocus(key);
+}
+document.addEventListener("keydown", e => {
+  const inField = e.target.matches && e.target.matches("input,textarea,select");
+  if (inField && !e.target.closest("#tv")) return;
+  if (inField) {
+    if (e.key === "Enter") { e.preventDefault(); act("addTyped"); }
+    else if (e.key === "Escape") { e.preventDefault(); back(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); e.target.blur(); moveFocus("ArrowDown"); }
+    return;
+  }
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Escape", "Backspace"].includes(e.key)) { e.preventDefault(); pressKey(e.key); }
+});
+document.querySelectorAll(".remote [data-key]").forEach(b => b.addEventListener("click", () => pressKey(b.dataset.key)));
+
+// ---------------------------------------------------------- TV actions
+function act(name, v, el) {
+  switch (name) {
+    case "choose": chooseGame(v || null); break;
+    case "go": go(v); break;
+    case "toCats": if (gameReady(S.next).ok) go("cats"); break;
+    case "addRemote": S.modal = "addPlayer"; render(true); break;
+    case "closeModal": S.modal = null; render(true); break;
+    case "addNamed": addPlayer(v, null, false); S.modal = null; render(true); break;
+    case "addTyped": { const inp = $("#remoteName"); const n = inp && inp.value.trim(); if (n) { addPlayer(n, null, false); S.modal = null; render(true); } else if (inp) inp.focus(); break; }
+    case "pickCat": {
+      let cat;
+      if (v === "__random") { const cs = Bank.usable(S.next); cat = {id: "__random", name: "عشوائي", emoji: "🎲", type: S.next, items: cs.flatMap(c => c.items.map(it => Object.assign({t: c.name}, it)))}; }
+      else cat = Bank.get(v);
+      if (cat) startGame(S.next, cat);
+      break;
+    }
+    case "openQuit": openQuit(); break;
+    case "closeQuit": closeQuit(); break;
+    case "quitGame": quitGame(); break;
+    case "reveal": revealAnswer(); break;
+    case "nextQ": nextQuestion(); break;
+    case "award": toggleAward(v); break;
+    case "chStart": chStart(); break;
+    case "chGuessed": chGuessed(v); break;
+    case "chSkip": chSkip(); break;
+    case "chPeek": S.game.peek = !S.game.peek; render(); break;
+    case "chNextTurn": chNextTurn(); break;
+    case "salfaReveal": S.reveal = v; render(true); break;
+    case "salfaSeen": salfaSeen(v); break;
+    case "salfaAsk": salfaAsk(); break;
+    case "salfaVote": salfaVote(); break;
+    case "salfaAccuse": salfaAccuse(v); break;
+    case "salfaGuess": salfaGuess(+v); break;
+    case "salfaNext": salfaRound(); break;
+    case "fibToVote": fibToVote(); break;
+    case "fibReveal": fibReveal(); break;
+    case "fibNext": fibNext(); break;
+    case "drStart": drStart(); break;
+    case "drCorrect": drCorrect(v); break;
+    case "drSkip": drSkip(); break;
+    case "drNextTurn": drNextTurn(); break;
+    case "resetScores": S.players.forEach(p => p.score = 0); render(); break;
+  }
+}
+tv.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
+  if (el.classList.contains("f")) setFocus(el);
+  act(el.dataset.act, el.dataset.v, el);
+});
+
+// ---------------------------------------------------------- TV scaling
+const TV_MODE = true;
+if (TV_MODE) document.body.classList.add("tvmode");
+function tvScale() { return TV_MODE ? Math.min(window.innerWidth / 1280, window.innerHeight / 720) : $("#viewport").clientWidth / 1280; }
+function fitTV() {
+  const vp = $("#viewport"), s = tvScale();
+  if (TV_MODE) { vp.style.width = 1280 * s + "px"; vp.style.marginTop = Math.max(0, (window.innerHeight - 720 * s) / 2) + "px"; }
+  vp.style.height = 720 * s + "px"; tv.style.transform = `scale(${s})`;
+}
+// hooks for the Android TV app (remote buttons)
+window.tvKey = function (key) {
+  const intro = $("#intro"); if (intro && !intro.classList.contains("out")) { intro.classList.add("out"); setTimeout(() => intro.remove(), 600); return true; }
+  const a = document.activeElement;
+  if (a && a.matches && a.matches("input,textarea") && a.closest("#tv")) {
+    if (key === "Enter") act("addTyped");
+    else if (key === "ArrowDown") { a.blur(); moveFocus("ArrowDown"); }
+    return true;
+  }
+  pressKey(key); return true;
+};
+window.tvBack = function () {
+  if (S.screen === "home" && !S.modal) return false;
+  back(); return true;
+};
+window.addEventListener("resize", fitTV);
+
+// ---------------------------------------------------------- phones (real phones joined by QR, through Firebase)
+function phoneHTML(ph) {
+  const p = ph.pid && playerById(ph.pid);
+  if (!p) {
+    return `<div class="ph-title">جَمعة · غرفة ${ROOM}</div><div class="ph-dim">اكتب اسمك واختر شخصيتك</div>
+      <input data-phone-input="draft" data-enter="join" placeholder="اسمك" maxlength="14">
+      <div class="avs">${AVATARS.slice(0, 10).map(a => `<button data-ph-act="av" data-v="${a}" class="${ph.avatar === a ? "sel" : ""}">${a}</button>`).join("")}</div>
+      <button class="pbtn" data-ph-act="join">انضم للعبة</button>`;
+  }
+  const who = `<div class="who">${av(p)}<b>${esc(p.name)}</b> · ${p.score} نقطة</div>`;
+  const center = (big, title, dim = "") => `<div class="center"><div class="big">${big}</div><div class="ph-title">${title}</div><div class="ph-dim">${dim}</div></div>`;
+  const g = S.game;
+  if (S.modal === "quit" && g) return who + center("⏸", "اللعبة متوقفة", "انتظر قرار التلفزيون");
+  if (g && g.type === "qa") {
+    const a = g.answers[p.id];
+    if (g.phase === "question") {
+      if (a) return who + center("✅", "تم إرسال إجابتك", "انتظر الباقين...");
+      return who + `<div class="ph-dim" style="font-size:12px;color:#fff">${esc(g.items[g.idx].q)}</div><div class="ph-dim">⏱ ${timeLeft()}</div>
+        <div class="popts">${g.options.map((o, i) => `<button class="o${i}" data-ph-act="ans" data-v="${i}">${LETTERS[i]} · ${esc(o)}</button>`).join("")}</div>`;
+    }
+    const ok = a && a.choice === g.correct;
+    return who + center(!a ? "⌛" : ok ? "🎉" : "😅", !a ? "ما جاوبت" : ok ? "صح! +" + a.pts : "خطأ", "الإجابة: " + esc(g.options[g.correct]));
+  }
+  if (g && g.type === "charades") {
+    const actor = chActor();
+    if (actor && actor.id === p.id) {
+      if (g.phase === "ready") return who + center("🎭", "دورك تمثّل!", "اضغط «ابدأ» في التلفزيون<br>والكلمة تظهر هنا");
+      if (g.phase === "acting") return who + `<div class="center"><div class="ph-dim">مثّل بدون كلام 🤫 · ⏱ ${timeLeft()}</div><div class="pword">${esc(g.word)}</div></div>
+        <button class="pbtn ghost" data-ph-act="chSkip">⏭ تخطي الكلمة</button>`;
+      return who + center("⏰", "انتهى وقتك", "+" + g.turnPts + " نقطة");
+    }
+    return who + center(g.phase === "acting" ? "🤔" : "👀", g.phase === "acting" ? "خمّن وقولها بصوت عالي!" : "تابع التلفزيون", actor ? esc(actor.name) + " يمثّل" : "");
+  }
+  if (g && g.type === "salfa") {
+    if (g.phase === "roles") {
+      if (g.seen[p.id]) return who + center("🤐", "احفظ دورك", "انتظر الباقين يشوفون أدوارهم");
+      const imp = p.id === g.impostor;
+      return who + `<div class="center"><div class="ph-dim">🧭 الموضوع: <b style="color:var(--amber)">${esc(g.topic)}</b></div><div class="ph-dim">دورك السري 🤫</div><div class="pword" style="${imp ? "background:linear-gradient(135deg,#ff5f6d,#7b2ff7);color:#fff;font-size:20px" : ""}">${esc(salfaRoleText(p.id))}</div>
+        <div class="ph-dim">${imp ? "حاول تعرف الكلمة بدون ما تنكشف!" : "لا تقولها لأحد!"}</div></div><button class="pbtn" data-ph-act="seen">شفت دوري ✓</button>`;
+    }
+    if (g.phase === "ask") return who + center("💬", "الموضوع: " + esc(g.topic), p.id === g.impostor ? "أنت برا السالفة 🤫 · ⏱ " + timeLeft() : "الكلمة: " + esc(g.word) + " · ⏱ " + timeLeft());
+    if (g.phase === "vote") {
+      const mine = g.votes[p.id];
+      return who + `<div class="ph-title">مين برا السالفة؟</div><div class="plist">${S.players.filter(x => x.id !== p.id).map(x => `<button class="${mine === x.id ? "sel" : ""}" data-ph-act="vote" data-v="${x.id}">${av(x)}${esc(x.name)}</button>`).join("")}</div>`;
+    }
+    if (g.phase === "guess") {
+      if (p.id === g.impostor) return who + `<div class="ph-title">خمّن الكلمة! 🎯</div><div class="plist">${g.guessOpts.map((w, i) => `<button data-ph-act="sguess" data-v="${i}">${esc(w)}</button>`).join("")}</div>`;
+      return who + center("🎯", "انكشف!", "ينتظر تخمينه للكلمة...");
+    }
+    return who + center(g.accused === g.impostor ? "🎉" : "😈", g.accused === g.impostor ? "انكشف برا السالفة" : "برا السالفة فاز", "الكلمة: " + esc(g.word));
+  }
+  if (g && g.type === "fib") {
+    if (g.phase === "write") {
+      if (g.lies[p.id]) return who + center("✍️", "كذبتك جاهزة", "«" + esc(g.lies[p.id]) + "»");
+      return who + `<div class="ph-dim" style="color:#fff;font-size:12px">${esc(g.items[g.idx].q)}</div><div class="ph-dim">اكتب كذبة مقنعة</div>
+        <input class="ptext" data-phone-input="lie" data-enter="lie" maxlength="40" placeholder="كذبتك...">
+        <div class="fb" style="color:var(--amber)">${g.reject[p.id] ? "هذا الجواب الصحيح! 😄 اكتب كذبة ثانية" : ""}</div>
+        <button class="pbtn" data-ph-act="lie">أرسل الكذبة</button>`;
+    }
+    if (g.phase === "vote") {
+      if (g.votes[p.id] != null) return who + center("🗳", "اخترت: " + LETTERS[g.votes[p.id]], "«" + esc(g.choices[g.votes[p.id]].text) + "» — انتظر الباقين") + `<button class="pbtn ghost" data-ph-act="funvote">↩ غيّرت رأيي</button>`;
+      return who + `<div class="ph-title">وين الحقيقة؟ 🤔</div><div class="plist">${g.choices.map((c, i) => c.owners.includes(p.id) ? "" : `<button data-ph-act="fvote" data-v="${i}">${LETTERS[i]} · ${esc(c.text)}</button>`).join("")}</div>`;
+    }
+    const v = g.votes[p.id], ok = v != null && g.choices[v] && g.choices[v].truth;
+    const fooled = Object.values(g.votes).filter(i => g.choices[i] && g.choices[i].owners.includes(p.id)).length;
+    return who + center(ok ? "🎯" : "😅", ok ? "لقيت الحقيقة! +100" : v == null ? "ما صوّت" : "انخدعت!", fooled ? `خدعت ${fooled} · +${fooled * 50}` : "ما أحد صدّق كذبتك");
+  }
+  if (g && g.type === "draw") {
+    const d = drawer();
+    if (d && d.id === p.id) {
+      if (g.phase === "ready") return who + center("🎨", "دورك ترسم!", "اضغط «ابدأ» في التلفزيون");
+      if (g.phase === "drawing") return `<div class="ph-dim">ارسم: <b style="color:#fff;font-size:15px">${esc(g.word)}</b></div>
+        <canvas data-ph-canvas width="300" height="190" data-color="${g.color}" data-w="${SIZES[g.size] || 7}" data-tool="${g.tool}" data-wid="${g.wordNo || 0}"></canvas>
+        <div class="tools" style="justify-content:center">${INK.map(c => `<button class="sw ${g.color === c ? "sel" : ""}" style="background:${c}" data-ph-act="ink" data-v="${c}"></button>`).join("")}</div>
+        <div class="tools"><button class="tb ${g.tool === "brush" ? "on" : ""}" data-ph-act="tool" data-v="brush">🖌</button><button class="tb ${g.tool === "fill" ? "on" : ""}" data-ph-act="tool" data-v="fill">🪣</button>
+          ${["s", "m", "l"].map(k => `<button class="tb sz ${g.size === k && g.tool === "brush" ? "on" : ""}" data-ph-act="size" data-v="${k}"><i style="width:${{s: 4, m: 8, l: 13}[k]}px;height:${{s: 4, m: 8, l: 13}[k]}px"></i></button>`).join("")}</div>
+        <div class="tools"><button class="tb" style="flex:1" data-ph-act="undo">↩ تراجع</button><button class="tb" style="flex:1" data-ph-act="clear">🧽 مسح</button><button class="tb" style="flex:1" data-ph-act="drSkip">⏭</button></div>`;
+      return who + center("⏰", "انتهى وقتك", "+" + g.turnPts + " نقطة");
+    }
+    if (g.phase === "drawing") return who + `<div class="center"><div class="big">🤔</div><div class="ph-title">وش يرسم ${esc(d ? d.name : "")}؟</div></div>
+      <input class="ptext" data-phone-input="guess" data-enter="guess" maxlength="24" placeholder="اكتب تخمينك...">
+      <div class="fb" style="color:var(--dim)">${esc(ph.fb)}</div><button class="pbtn" data-ph-act="guess">خمّن</button>`;
+    return who + center("👀", "تابع التلفزيون", d ? esc(d.name) + " بيرسم" : "");
+  }
+  const rank = S.players.slice().sort((a, b) => b.score - a.score).findIndex(x => x.id === p.id) + 1;
+  return who + center(p.avatar, "أنت في الغرفة ✅", S.screen === "scores" ? "ترتيبك: " + rank : "انتظر بدء اللعبة على التلفزيون");
+}
+const phoneCache = {};
+function renderPhones() {
+  if (!roomRef) return;
+  for (const ph of phones) {
+    const html = phoneHTML(ph);
+    if (phoneCache[ph.id] === html) continue;
+    phoneCache[ph.id] = html;
+    roomRef.child("views/" + ph.id).set({h: html, t: Date.now()});
+  }
+}
+function phoneAct(ph, a, v) {
+  const g = S.game;
+  if (a === "ans") return phoneAnswer(ph.pid, +v);
+  if (a === "chSkip") return chSkip();
+  if (a === "seen") return salfaSeen(ph.pid);
+  if (a === "vote") return salfaPhoneVote(ph.pid, v);
+  if (a === "sguess") { if (g && g.impostor === ph.pid) salfaGuess(+v); return; }
+  if (a === "lie") { const r = fibSubmit(ph.pid, ph.lie); if (r === "ok") ph.lie = ""; return; }
+  if (a === "fvote") return fibVote(ph.pid, +v);
+  if (a === "funvote") return fibUnvote(ph.pid);
+  const isDrawer = g && g.type === "draw" && drawer() && drawer().id === ph.pid;
+  if (a === "ink") { if (isDrawer) g.color = v; renderPhones(); return; }
+  if (a === "tool") { if (isDrawer) g.tool = v; renderPhones(); return; }
+  if (a === "size") { if (isDrawer) { g.size = v; g.tool = "brush"; } renderPhones(); return; }
+  if (a === "undo") { if (isDrawer) { g.ops.pop(); repaintAll(); } return; }
+  if (a === "clear") { if (isDrawer) { g.ops = []; repaintAll(); } return; }
+  if (a === "drSkip") { if (isDrawer) drSkip(); return; }
+  if (a === "guess") {
+    const txt = ph.guess || ""; if (!txt.trim()) return;
+    const ok = drGuess(ph.pid, txt); ph.guess = ""; ph.fb = ok ? "صح! 🎉" : "«" + txt.trim() + "» غلط، جرّب ثاني";
+    phoneCache[ph.id] = null; renderPhones(); return;
+  }
+}
+function drawFromPhone(ph, a) {
+  const g = S.game;
+  if (!g || g.type !== "draw" || g.phase !== "drawing" || !drawer() || drawer().id !== ph.pid) return;
+  if (a.wid != null && a.wid !== (g.wordNo || 0)) return;   // stroke belongs to an old word
+  const ctx = c => c.getContext("2d", {willReadFrequently: true});
+  const hideHint = () => { const ov = tv.querySelector(".canvas-box .ov"); if (ov) ov.remove(); };
+  const pts = Array.isArray(a.p) ? a.p.filter(p => Array.isArray(p) && p.length === 2).map(p => [+p[0], +p[1]]) : [];
+  if (a.a === "ds" && pts.length) {
+    const op = {k: "s", c: String(a.c || "#1b1540"), w: Math.min(20, +a.w || 7), p: pts, sid: a.id}; g.ops.push(op); hideHint();
+    drawCanvases().forEach(c => strokeSeg(ctx(c), op, 0));
+  } else if (a.a === "dp" && pts.length) {
+    const op = g.ops.find(o => o.sid === a.id); if (!op) return;
+    const from = op.p.length; op.p.push(...pts);
+    drawCanvases().forEach(c => strokeSeg(ctx(c), op, from));
+  } else if (a.a === "fill") {
+    const f = {k: "f", c: String(a.c || "#1b1540"), x: +a.x, y: +a.y}; g.ops.push(f); hideHint();
+    drawCanvases().forEach(c => floodFill(ctx(c), f.x, f.y, f.c));
+  }
+}
+
+// ---------------------------------------------------------- online: Firebase room + live question bank
+const FB_CONFIG = {apiKey: "AIzaSyCS4Ma_0YzpzDxoXVqNpY71ZVJjCJQpaUU", authDomain: "jamaa-3b3e9.firebaseapp.com", databaseURL: "https://jamaa-3b3e9-default-rtdb.europe-west1.firebasedatabase.app", projectId: "jamaa-3b3e9", storageBucket: "jamaa-3b3e9.firebasestorage.app", messagingSenderId: "186594515809", appId: "1:186594515809:web:48a3133bd4a4b37fe74320"};
+const SITE = "https://waelapp.github.io/jamaa/";
+let fdb = null, roomRef = null, ONLINE = false;
+function newCode() { return Array.from({length: 4}, () => "ABCDEFGHJKLMNPQRSTUVWXYZ"[Math.floor(Math.random() * 24)]).join(""); }
+function onPhoneJoin(pid, d) {
+  if (!/^[A-Za-z0-9_-]{4,40}$/.test(pid)) return;
+  if (!playerById(pid)) {
+    const name = String(d.name || "لاعب").trim().slice(0, 14) || "لاعب";
+    const avatar = AVATARS.includes(d.avatar) ? d.avatar : AVATARS[S.players.length % AVATARS.length];
+    S.players.push({id: pid, name, avatar, color: COLORS[S.players.length % COLORS.length], score: 0, phone: true});
+    beep("join");
+  }
+  if (!phones.find(p => p.id === pid)) phones.push({id: pid, pid, lie: "", guess: "", fb: ""});
+  phoneCache[pid] = null;
+  render();
+}
+function onPhoneAction(a) {
+  const ph = phones.find(p => p.id === a.pid); if (!ph) return;
+  if (a.a === "ds" || a.a === "dp" || a.a === "fill") return drawFromPhone(ph, a);
+  if (a.f && ["lie", "guess"].includes(a.f)) ph[a.f] = String(a.x || "").slice(0, 60);
+  phoneAct(ph, String(a.a || ""), a.v == null ? undefined : String(a.v));
+}
+async function initOnline() {
+  try {
+    if (!window.firebase) throw new Error("Firebase SDK not loaded");
+    firebase.initializeApp(FB_CONFIG); fdb = firebase.database();
+    fdb.ref("bank").on("value", snap => Bank.fromCloud(snap.val()), err => console.warn(err));
+    let code = newCode();
+    for (let i = 0; i < 6; i++) { const ex = await fdb.ref("rooms/" + code + "/meta").get(); if (!ex.exists()) break; code = newCode(); }
+    ROOM = code; roomRef = fdb.ref("rooms/" + code);
+    await roomRef.child("meta").set({created: Date.now(), alive: Date.now()});
+    roomRef.onDisconnect().remove();
+    setInterval(() => roomRef.child("meta/alive").set(Date.now()), 20000);
+    roomRef.child("players").on("child_added", s => onPhoneJoin(s.key, s.val() || {}));
+    roomRef.child("actions").on("child_added", s => { const a = s.val(); s.ref.remove(); try { onPhoneAction(a || {}); } catch (e) { console.error(e); } });
+    ONLINE = true;
+  } catch (e) { console.warn("offline:", e); ONLINE = false; }
+  render();
+}
+
+// ---------------------------------------------------------- intro (logo animation, never blocks the game)
+(function intro() {
+  const el = $("#intro"); if (!el) return;
+  let done = false;
+  const finish = () => { if (done) return; done = true; el.classList.add("out"); setTimeout(() => el.remove(), 600); };
+  const imgs = [...el.querySelectorAll("img")];
+  let started = false;
+  const start = () => { if (started) return; started = true; el.classList.add("play"); setTimeout(finish, 2900); };
+  Promise.all(imgs.map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }))).then(start);
+  setTimeout(start, 1200);                 // slow network: start anyway
+  setTimeout(finish, 5000);                // never stay longer than this
+  window.addEventListener("keydown", finish, {once: true});
+  el.addEventListener("click", finish);
+  window.__introDone = () => done;
+})();
+
+// ---------------------------------------------------------- boot
+Bank.onChange(kind => {
+  if (kind === "remote") showBanner("🔄 وصلت تحديثات الأسئلة");
+  if (S.screen === "cats" || S.screen === "home") render();
+});
+fitTV(); render(true);
+initOnline();
+setTimeout(fitTV, 300);
+</script>
+</body>
+</html>
