@@ -627,7 +627,7 @@ function reportsCard() {
   if (!Bank.reports.length) return "";
   return `<div class="card2 rep-card"><h4>⚠️ بلاغات من اللعب (${Bank.reports.length}) <span class="muted" style="font-weight:400;font-size:13px">— هذي الأسئلة مخفية من اللعبة لين تراجعها</span></h4>
     ${Bank.reports.map(r => { const f = findItem(r.key);
-      return `<div class="item rep-item"><span class="q"><b class="rep-reason">${esc(REASON[r.reason] || "⚠️ بلاغ")}</b> ${esc(itemText(r.item || {}))}<div class="a" style="color:var(--faint)">${f ? esc(f.c.emoji || "") + " " + esc(f.c.name) : "(محذوف أو تعدّل)"} · ${esc(TYPE_LABEL[r.type] || r.type || "")} · ${new Date(r.t).toLocaleString("ar-SA")} · غرفة ${esc(r.room)}</div>
+      return `<div class="item rep-item"><span class="q"><b class="rep-reason">${esc(REASON[r.reason] || "⚠️ بلاغ")}</b> ${esc(itemText(r.item || {}))}<div class="a" style="color:var(--faint)">${f ? esc(f.c.emoji || "") + " " + esc(f.c.name) : "(محذوف أو تعدّل)"} · ${esc(TYPE_LABEL[r.type] || r.type || "")} · ${new Date(r.t).toLocaleString("ar-SA")} · غرفة ${esc(r.room)}${r.device ? ` · 📺 ${r.device.w}×${r.device.h}${/Android/.test(r.device.ua) ? " أندرويد" : /iPad|iPhone/.test(r.device.ua) ? " iOS" : ""}` : ""}</div>
         ${r.shot ? `<a href="#" data-shot="${esc(r.id)}" title="عرض صورة الشاشة"><img class="rep-shot" src="${r.shot}" alt="صورة الشاشة"></a>` : ""}</span>
         ${f ? `<button class="btn" data-rep-open="${esc(r.id)}">✎ تعديل</button><button class="btn danger" data-rep-del="${esc(r.id)}">🗑 حذف</button>` : ""}<button class="btn ok" data-rep-ok="${esc(r.id)}">✓ ${f ? "سليم" : "إغلاق"}</button></div>`; }).join("")}</div>`;
 }

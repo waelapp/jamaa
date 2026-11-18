@@ -574,7 +574,12 @@ function loadScript(src) { return new Promise((res, rej) => { if (document.query
 async function captureTV() {   // screenshot of the TV screen as a small JPEG
   try {
     await Promise.race([loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"), new Promise((_, rej) => setTimeout(rej, 5000))]);
-    const c = await Promise.race([window.html2canvas(tv, {backgroundColor: "#0d0a1d", scale: 0.75, useCORS: true, logging: false, width: 1280, height: 720, windowWidth: 1280, windowHeight: 720}), new Promise((_, rej) => setTimeout(rej, 7000))]);
+    const opts = {backgroundColor: "#0d0a1d", scale: 0.75, useCORS: true, logging: false, x: 0, y: 0, width: 1280, height: 720, windowWidth: 1280, windowHeight: 720, scrollX: 0, scrollY: 0,
+      onclone: doc => {   // freeze animations (fade-ins start at opacity 0) and undo the TV scaling in the copy
+        const st = doc.createElement("style"); st.textContent = "*,*::before,*::after{animation:none!important;transition:none!important}"; doc.head.appendChild(st);
+        const t = doc.getElementById("tv"); t.style.cssText += ";transform:none!important;position:fixed!important;left:0!important;top:0!important;width:1280px!important;height:720px!important;margin:0!important";
+      }};
+    const c = await Promise.race([window.html2canvas(tv, opts), new Promise((_, rej) => setTimeout(rej, 9000))]);
     return c.toDataURL("image/jpeg", 0.6);
   } catch (e) { console.warn("shot", e); return null; }
 }
@@ -591,6 +596,7 @@ function reportSend(reason) {
   Reported.add(it);
   const rec = {key: repKey(it), item: it, type: g ? g.type : "", cat: g && g.cat && g.cat.id || "", catName: g && g.cat && g.cat.name || "", reason, t: Date.now()};
   if (reason === "display" && S.repShot) rec.shot = S.repShot;
+  rec.device = {ua: navigator.userAgent.slice(0, 160), w: screen.width, h: screen.height, dpr: window.devicePixelRatio || 1};
   if (roomRef) try { roomRef.child("reports").push(rec); } catch (e) { }
   closeReport(); beep("tick"); showToast("⚠️ وصل البلاغ — ما بيطلع مرة ثانية لين تراجعه");
 }
