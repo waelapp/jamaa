@@ -395,7 +395,14 @@ details.card2 summary{cursor:pointer}
 .rep-card .item{gap:8px}
 .rep-item .q{display:flex;flex-direction:column;gap:4px}
 .rep-reason{color:#fcd34d;font-size:13px}
-.rep-shot{width:220px;border-radius:10px;border:1px solid #ffffff22;margin-top:6px;cursor:zoom-in}
+.rep-entry{display:flex!important;align-items:center;gap:14px;cursor:pointer;margin-bottom:16px}.rep-entry:hover{background:#f59e0b1c!important}
+.rep-badge{background:#f59e0b;color:#1b1540;font-weight:800;border-radius:999px;min-width:30px;height:30px;display:grid;place-items:center;padding:0 8px}
+.rep-tabs{display:flex;gap:8px;margin-bottom:14px}.rep-tabs button{border:1px solid #ffffff22;background:#ffffff0d;color:#fff;border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer}.rep-tabs button.on{background:#f59e0b;color:#1b1540;border-color:#f59e0b}
+.rep-row{display:flex;flex-direction:column;gap:6px;border-color:#f59e0b55!important}.rep-row.closed{opacity:.7;border-color:#ffffff1a!important}
+.rep-top{display:flex;align-items:center;gap:8px}.rep-q{font-size:17px;font-weight:700}
+.rep-reply{background:#22c55e14;border:1px solid #22c55e44;border-radius:10px;padding:10px 12px;margin-top:4px}
+.rep-send textarea{min-height:52px;flex:1}
+.rep-shot{width:320px;max-width:100%;border-radius:10px;border:1px solid #ffffff22;margin-top:6px;cursor:zoom-in}
 </style>
 </head>
 <body>
@@ -613,17 +620,41 @@ const BULK_HINT = {qa: "كل سطر: <b>السؤال | الإجابة الصحي
 let newOpen = false;
 let view = "home";   // home → sec → cat
 const REASON = {answer: "❌ الإجابة غلط", question: "❓ السؤال غلط أو مو واضح", display: "🖼️ مشكلة في العرض", repeat: "🔁 مكرر", unfit: "🚫 غير مناسب"};
-const repRef = id => fdb.ref("rooms/" + id.split("/")[0] + "/reports/" + id.split("/").slice(1).join("/"));
+const repRef = id => fdb.ref("rooms/REPORTS/reports/" + id.split("/").slice(1).join("/"));
 const repKey = it => norm((it.l || "") + (it.q || "") + "|" + (it.w || "") + "|" + (it.a || "") + "|" + (it.e || []).join(""));
 function findItem(key) { for (const c of Bank.cats) { const i = (c.items || []).findIndex(it => repKey(it) === key); if (i >= 0) return {c, i}; } return null; }
 function itemText(it) { return it.q ? (it.l ? it.l + " · " : "") + it.q + (it.a ? " ← " + it.a : "") : it.w ? it.w + (it.t ? " (" + it.t + ")" : "") : (it.e || []).join(" ") + (it.a ? " ← " + it.a : ""); }
-function reportsCard() {
-  if (!Bank.reports.length) return "";
-  return `<div class="card2 rep-card"><h4>⚠️ بلاغات من اللعب (${Bank.reports.length}) <span class="muted" style="font-weight:400;font-size:13px">— هذي الأسئلة مخفية من اللعبة لين تراجعها</span></h4>
-    ${Bank.reports.map(r => { const f = findItem(r.key);
-      return `<div class="item rep-item"><span class="q"><b class="rep-reason">${esc(REASON[r.reason] || "⚠️ بلاغ")}</b> ${esc(itemText(r.item || {}))}<div class="a" style="color:var(--faint)">${f ? esc(f.c.emoji || "") + " " + esc(f.c.name) : "(محذوف أو تعدّل)"} · ${esc(TYPE_LABEL[r.type] || r.type || "")} · ${new Date(r.t).toLocaleString("ar-SA")} · غرفة ${esc(r.room)}${r.device ? ` · 📺 ${r.device.w}×${r.device.h}${/Android/.test(r.device.ua) ? " أندرويد" : /iPad|iPhone/.test(r.device.ua) ? " iOS" : ""}` : ""}</div>
-        ${r.shot ? `<a href="#" data-shot="${esc(r.id)}" title="عرض صورة الشاشة"><img class="rep-shot" src="${r.shot}" alt="صورة الشاشة"></a>` : ""}</span>
-        ${f ? `<button class="btn" data-rep-open="${esc(r.id)}">✎ تعديل</button><button class="btn danger" data-rep-del="${esc(r.id)}">🗑 حذف</button>` : ""}<button class="btn ok" data-rep-ok="${esc(r.id)}">✓ ${f ? "سليم" : "إغلاق"}</button></div>`; }).join("")}</div>`;
+let repTab = "open";
+const devLabel = d => d ? ` · 📺 ${d.w}×${d.h}${/Android/.test(d.ua) ? " أندرويد" : /iPad|iPhone/.test(d.ua) ? " iOS" : ""}` : "";
+function reportsBtn() {   // entry on the home page
+  const open = Bank.reports.filter(r => r.status !== "closed").length;
+  return `<div class="card2 rep-card rep-entry" data-nav="reports"><span style="font-size:30px">⚠️</span><div style="flex:1"><b style="font-size:17px">البلاغات</b>
+    <div class="muted">${open ? `${open} بلاغ مفتوح — الأسئلة المبلّغ عنها مخفية من اللعبة لين تراجعها` : "ما فيه بلاغات مفتوحة 👌"}</div></div>
+    ${open ? `<span class="rep-badge">${open}</span>` : ""}<span class="muted">◀</span></div>`;
+}
+function repRow(r) {
+  const f = findItem(r.key), closed = r.status === "closed";
+  return `<div class="card2 rep-row ${closed ? "closed" : ""}">
+    <div class="rep-top"><b class="rep-reason">${esc(REASON[r.reason] || "⚠️ بلاغ")}</b><span class="tag">${closed ? "✓ مغلق" : "🟠 مفتوح"}</span>
+      <span class="muted" style="margin-inline-start:auto">${new Date(r.t).toLocaleString("ar-SA")}</span></div>
+    <div class="rep-q">${esc(itemText(r.item || {}))}</div>
+    <div class="muted">${f ? esc(f.c.emoji || "") + " " + esc(f.c.name) : "(السؤال انحذف أو تعدّل)"} · ${esc(TYPE_LABEL[r.type] || r.type || "")} · غرفة ${esc(r.room || "")}${devLabel(r.device)}</div>
+    ${r.shot ? `<a href="#" data-shot="${esc(r.id)}" title="عرض صورة الشاشة بحجم كامل"><img class="rep-shot" src="${r.shot}" alt="صورة الشاشة"></a>` : ""}
+    ${r.reply ? `<div class="rep-reply"><b>ردّك:</b> ${esc(r.reply)}<div class="muted" style="margin-top:4px">${r.seen ? "👁️ وصل وانقرأ على التلفزيون " + (r.seenT ? new Date(r.seenT).toLocaleString("ar-SA") : "") : "⏳ بيطلع على التلفزيون أول ما يكون بالصفحة الرئيسية"}</div></div>` : ""}
+    <div class="form-row rep-send"><textarea class="in" id="rr-${esc(r.id.replace(/\W/g, "_"))}" rows="2" placeholder="${r.reply ? "عدّل الرد…" : "اكتب رد يطلع للي بلّغ على التلفزيون… (مثال: شكراً، صححنا الإجابة 👍)"}"></textarea>
+      <button class="btn pri" data-rep-reply="${esc(r.id)}">📨 ${r.reply ? "تحديث الرد" : "إرسال الرد"}</button></div>
+    <div class="form-row" style="margin-top:8px">
+      ${f ? `<button class="btn" data-rep-open="${esc(r.id)}">✎ تعديل السؤال</button><button class="btn danger" data-rep-del="${esc(r.id)}">🗑 حذف السؤال</button>` : ""}
+      ${closed ? `<button class="btn" data-rep-reopen="${esc(r.id)}">↩ إعادة فتح</button><button class="btn danger" data-rep-rm="${esc(r.id)}">حذف البلاغ نهائياً</button>`
+        : `<button class="btn ok" data-rep-ok="${esc(r.id)}">✓ ${f ? "سليم — رجّعه للعبة وأغلق" : "إغلاق البلاغ"}</button>`}</div></div>`;
+}
+function reportsPage() {
+  const open = Bank.reports.filter(r => r.status !== "closed"), closed = Bank.reports.filter(r => r.status === "closed");
+  const list = repTab === "open" ? open : repTab === "closed" ? closed : Bank.reports;
+  return `<div class="crumbs"><button data-nav="home">🏠 الأقسام الرئيسية</button><span>›</span><b>⚠️ البلاغات</b></div>
+    <div class="page-h"><h2>⚠️ البلاغات</h2><p class="muted">كل بلاغ من التلفزيون يوصل هنا مباشرة. السؤال المبلّغ عنه يختفي من اللعبة لين تغلق البلاغ. الرد اللي تكتبه يطلع على نفس التلفزيون اللي بلّغ.</p></div>
+    <div class="rep-tabs"><button class="${repTab === "open" ? "on" : ""}" data-reptab="open">مفتوحة (${open.length})</button><button class="${repTab === "closed" ? "on" : ""}" data-reptab="closed">مغلقة (${closed.length})</button><button class="${repTab === "all" ? "on" : ""}" data-reptab="all">الكل (${Bank.reports.length})</button></div>
+    ${list.length ? list.map(repRow).join("") : `<div class="card2"><p class="muted">${repTab === "open" ? "ما فيه بلاغات مفتوحة 👌" : "فاضي"}</p></div>`}`;
 }
 function secCard(sec) {
   const cs = Bank.catsOf(sec), n = cs.reduce((t, c) => t + (c.items || []).length, 0);
@@ -641,11 +672,17 @@ function renderAdmin() {
   if (!$("#admin").classList.contains("open")) return;
   const ed = $("#editor"), msg = `<div class="status-line" id="adminMsg">${esc(adminMsg)}</div>`;
   let sec = Bank.secOf(selSec);
-  if (!sec) { view = "home"; selSec = null; }
+  if (!sec && view !== "reports") { view = "home"; selSec = null; }
   // ---------- 1) الأقسام الرئيسية
+  if (view === "reports") {
+    const keep = {}; document.querySelectorAll(".rep-send textarea").forEach(t => { if (t.value) keep[t.id] = t.value; });
+    ed.innerHTML = reportsPage() + msg;
+    Object.entries(keep).forEach(([id, v]) => { const t = document.getElementById(id); if (t) t.value = v; });
+    return;
+  }
   if (view === "home") {
     const keepNew = $("#ncName") ? {n: $("#ncName").value, e: $("#ncEmoji").value, t: $("#ncType").value} : {n: "", e: "", t: "qa"};
-    ed.innerHTML = reportsCard() + `<div class="page-h"><h2>الأقسام الرئيسية</h2><p class="muted">هذي الأقسام اللي تظهر في الصفحة الرئيسية للعبة على التلفزيون — اضغط على أي قسم لإضافة تصنيفات وأسئلة. الزر يخفي القسم من اللعبة.</p></div>
+    ed.innerHTML = reportsBtn() + `<div class="page-h"><h2>الأقسام الرئيسية</h2><p class="muted">هذي الأقسام اللي تظهر في الصفحة الرئيسية للعبة على التلفزيون — اضغط على أي قسم لإضافة تصنيفات وأسئلة. الزر يخفي القسم من اللعبة.</p></div>
       <div class="sgrid">${Object.keys(GAMES).map(t => secCard(Bank.secOf("g:" + t))).join("")}</div>
       ${Bank.sections.length ? `<h3 class="grp">⭐ أقسامك</h3><div class="sgrid">${Bank.sections.map(x => secCard(Bank.secOf("s:" + x.id))).join("")}</div>` : ""}
       <div class="sgrid" style="margin-top:16px"><div class="scard add ${newOpen ? "open" : ""}" ${newOpen ? "" : 'data-opennew="1"'}>
@@ -705,18 +742,30 @@ function renderAdmin() {
 async function sideClick(e) {
   const sh = e.target.closest("[data-shot]");
   if (sh) { e.preventDefault(); const r = Bank.reports.find(x => x.id === sh.dataset.shot); if (r && r.shot) { const w = window.open(); if (w) w.document.write(`<title>صورة الشاشة</title><body style="margin:0;background:#000;display:grid;place-items:center;min-height:100vh"><img src="${r.shot}" style="max-width:100%">`); } return true; }
-  const ro = e.target.closest("[data-rep-open],[data-rep-del],[data-rep-ok]");
+  const tb = e.target.closest("[data-reptab]");
+  if (tb) { repTab = tb.dataset.reptab; renderAdmin(); return true; }
+  const ro = e.target.closest("[data-rep-open],[data-rep-del],[data-rep-ok],[data-rep-reply],[data-rep-reopen],[data-rep-rm]");
   if (ro) {
-    const id = ro.dataset.repOpen || ro.dataset.repDel || ro.dataset.repOk, r = Bank.reports.find(x => x.id === id); if (!r) return true;
+    const id = ro.dataset.repOpen || ro.dataset.repDel || ro.dataset.repOk || ro.dataset.repReply || ro.dataset.repReopen || ro.dataset.repRm, r = Bank.reports.find(x => x.id === id); if (!r) return true;
     const f = findItem(r.key);
-    if (ro.dataset.repOk || !f) { await repRef(id).remove(); setMsg(f ? "✓ تم — السؤال رجع للعبة" : "تم إغلاق البلاغ"); return true; }
+    if (ro.dataset.repReply) {
+      const t = document.getElementById("rr-" + id.replace(/\W/g, "_")), txt = t && t.value.trim();
+      if (!txt) { if (t) t.focus(); setMsg("اكتب الرد أول"); return true; }
+      t.value = ""; await repRef(id).update({reply: txt.slice(0, 500), replyT: Date.now(), seen: false, seenT: null}); setMsg("📨 انرسل الرد — بيطلع على التلفزيون"); return true;
+    }
+    if (ro.dataset.repReopen) { await repRef(id).update({status: null}); setMsg("↩ البلاغ رجع مفتوح"); return true; }
+    if (ro.dataset.repRm) {
+      if (ro.dataset.confirm !== "1") { ro.dataset.confirm = "1"; ro.textContent = "متأكد؟ اضغط مرة ثانية"; return true; }
+      await repRef(id).remove(); setMsg("🗑 انحذف البلاغ"); return true;
+    }
+    if (ro.dataset.repOk || !f) { await repRef(id).update({status: "closed", closedT: Date.now()}); setMsg(f ? "✓ تم — السؤال رجع للعبة" : "تم إغلاق البلاغ"); return true; }
     if (ro.dataset.repDel) {
       if (ro.dataset.confirm !== "1") { ro.dataset.confirm = "1"; ro.textContent = "متأكد؟"; return true; }
       const items = f.c.items.slice(); items.splice(f.i, 1);
-      await Bank.save(Object.assign({}, f.c, {items})); await repRef(id).remove(); setMsg("🗑 انحذف السؤال"); return true;
+      await Bank.save(Object.assign({}, f.c, {items})); await repRef(id).update({status: "closed", closedT: Date.now()}); setMsg("🗑 انحذف السؤال وانقفل البلاغ"); return true;
     }
     selSec = f.c.sec ? "s:" + f.c.sec : "g:" + f.c.type; selCat = f.c.id; view = "cat"; editIdx = f.i; picImgs = (f.c.items[f.i].imgs || []).slice();
-    adminMsg = "✎ عدّل السؤال واحفظه، بعدها ارجع للرئيسية واضغط «✓ سليم» على البلاغ"; renderAdmin(); $("#editor").scrollTop = 0; return true;
+    adminMsg = "✎ عدّل السؤال واحفظه، بعدها ارجع لصفحة البلاغات واضغط «✓ سليم» على البلاغ"; renderAdmin(); $("#editor").scrollTop = 0; return true;
   }
   const nav = e.target.closest("[data-nav]");
   if (nav) { view = nav.dataset.nav; editIdx = null; picImgs = []; adminMsg = ""; renderAdmin(); $("#editor").scrollTop = 0; return true; }
