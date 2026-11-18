@@ -471,18 +471,12 @@ const Bank = {
   roomReports: {},
   collectReports() {
     this.reports = [];
-    for (const [code, rs] of Object.entries(this.roomReports)) for (const [k, r] of Object.entries(rs || {})) if (r && r.key) this.reports.push(Object.assign({id: code + "/" + k, room: code}, r));
+    for (const [code, rs] of Object.entries(this.roomReports)) for (const [k, r] of Object.entries(rs || {})) if (r && r.key) this.reports.push(Object.assign({id: code + "/" + k}, r, {room: r.room || code}));
     this.reports.sort((a, b) => b.t - a.t);
   },
-  async watchRooms() {   // reports live under each TV room (rooms/<code>/reports)
-    try {
-      const r = await fetch(FB_CONFIG.databaseURL + "/rooms.json?shallow=true"); const codes = Object.keys((await r.json()) || {});
-      codes.forEach(code => {
-        if (this.roomReports[code] !== undefined) return;
-        this.roomReports[code] = null;
-        fdb.ref("rooms/" + code + "/reports").on("value", snap => { this.roomReports[code] = snap.val(); this.collectReports(); this.emit("reports"); });
-      });
-    } catch (e) { console.warn(e); }
+  watchRooms() {   // all TVs push reports into one shared inbox: rooms/REPORTS/reports
+    if (this._repWatch) return; this._repWatch = true;
+    fdb.ref("rooms/REPORTS/reports").on("value", snap => { this.roomReports = {REPORTS: snap.val()}; this.collectReports(); this.emit("reports"); }, e => console.warn(e));
   },
   sections: [], games: {}, reports: [],
   secOf(key) {   // "g:qa" = لعبة أساسية · "s:<id>" = قسم رئيسي مضاف
@@ -901,7 +895,7 @@ auth.onAuthStateChanged(u => {
   if (u && u.email === OWNER) {
     $("#gate").style.display = "none"; Bank.canWrite = true;
     $("#admin").classList.add("open"); renderAdmin();
-    if (!Bank.started) { Bank.started = true; Bank.start(); Bank.watchRooms(); setInterval(() => Bank.watchRooms(), 60000); }
+    if (!Bank.started) { Bank.started = true; Bank.start(); Bank.watchRooms(); }
   } else {
     $("#gate").style.display = "grid";
     if (u) $("#gateMsg").textContent = "هذا الحساب (" + u.email + ") ما عنده صلاحية — سجّل بحساب صاحب اللعبة";

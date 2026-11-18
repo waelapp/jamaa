@@ -597,7 +597,8 @@ function reportSend(reason) {
   const rec = {key: repKey(it), item: it, type: g ? g.type : "", cat: g && g.cat && g.cat.id || "", catName: g && g.cat && g.cat.name || "", reason, t: Date.now()};
   if (reason === "display" && S.repShot) rec.shot = S.repShot;
   rec.device = {ua: navigator.userAgent.slice(0, 160), w: screen.width, h: screen.height, dpr: window.devicePixelRatio || 1};
-  if (roomRef) try { roomRef.child("reports").push(rec); } catch (e) { }
+  rec.room = ROOM;
+  if (roomRef) try { roomRef.root.child("rooms/REPORTS/reports").push(rec); } catch (e) { }   // one shared inbox the admin reads
   closeReport(); beep("tick"); showToast("⚠️ وصل البلاغ — ما بيطلع مرة ثانية لين تراجعه");
 }
 function modalReport() {
@@ -2121,7 +2122,7 @@ async function initOnline() {
       if (r.phone && !phones.find(p => p.id === id)) phones.push({id, pid: id, lie: "", guess: "", fb: ""});
     });
     roomRef.child("players").on("child_added", s => onPhoneJoin(s.key, s.val() || {}));
-    roomRef.child("reports").on("value", s => Reported.fromRoom(s.val()));
+    roomRef.root.child("rooms/REPORTS/reports").on("value", s => Reported.fromRoom(s.val()));
     roomRef.child("actions").on("child_added", s => { const a = s.val(); s.ref.remove(); try { onPhoneAction(a || {}); } catch (e) { console.error(e); } });
     ONLINE = true;
   } catch (e) { console.warn("offline:", e); ONLINE = false; }
