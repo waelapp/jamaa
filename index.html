@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>جَمعة — ألعاب جماعية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -418,6 +418,11 @@ body.tvmode .screen.enter{animation-duration:.2s}
 .phone .tbtn{border:2px solid transparent;border-radius:12px;padding:8px 4px;font-size:12px;font-weight:800;background:#ffffff10;color:#fff;line-height:1.3}
 .phone .tbtn small{display:block;font-size:10px;color:var(--dim)}.phone .tbtn.sel{border-color:var(--c)}
 .phone .buzz{border:none;border-radius:50%;width:110px;height:110px;margin:8px auto;display:block;font-size:24px;font-weight:900;color:#fff;background:radial-gradient(circle at 35% 30%,#ff8a8a,#e11d48 60%,#9f1239)}
+.phone .tbtn{display:flex;flex-direction:column;gap:4px;border-color:var(--c)!important}
+.phone .tname{color:var(--c);font-size:12px}.phone .tbtn.sel{background:var(--c)}.phone .tbtn.sel .tname{color:#fff}
+.phone .tchip{display:inline-block;background:var(--c);color:#fff;border-radius:999px;padding:1px 6px;font-size:10px;margin:1px}
+.phone .tbtn.sel .tchip{background:#fff;color:#1b1540}
+html{touch-action:manipulation}
 </style>
 </head>
 <body>
@@ -474,12 +479,13 @@ let actx = null;
 function beep(type) {
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    const seq = {ok: [[660, .09], [880, .14]], bad: [[220, .2]], tick: [[1200, .03]], join: [[520, .07], [780, .1]], end: [[440, .12], [330, .12], [220, .25]]}[type] || [];
+    const seq = {ok: [[660, .09], [880, .14]], bad: [[220, .2]], tick: [[1200, .03]], join: [[520, .07], [780, .1]], end: [[440, .12], [330, .12], [220, .25]], buzz: [[988, .16], [1319, .32]], open: [[523, .08], [659, .08], [784, .14]]}[type] || [];
     let t = actx.currentTime;
     for (const [f, d] of seq) {
       const o = actx.createOscillator(), g = actx.createGain();
       o.frequency.value = f; o.type = "triangle";
-      g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+      g.gain.setValueAtTime(type === "buzz" ? .22 : .12, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+      if (type === "buzz") o.type = "sine";
       o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d); t += d * .9;
     }
   } catch (e) { /* audio not allowed */ }
@@ -976,8 +982,8 @@ function ltBuzz(pid) {
   const g = S.game; if (!g || g.type !== "letters" || g.phase !== "q" || g.buzzer) return;
   const t = ltTeamOf(pid);
   if (g.lock && ltLockLeft() > 0 && g.lock.team === t) return;          // فريقه ينتظر 10 ثواني
-  if ((g.wrong || []).includes(pid)) return;                             // نفس اللاعب ما يعيد على نفس السؤال
-  g.buzzer = pid; g.buzz.push(pid); beep("ok"); pauseTimer();
+  if (g.lock && ltLockLeft() > 0 && (g.wrong || []).includes(pid)) return;
+  g.buzzer = pid; g.buzz.push(pid); beep("buzz"); pauseTimer();
   render(true);
 }
 function ltJudge(ok) {
@@ -990,7 +996,7 @@ function ltJudge(ok) {
     clearInterval(g.lockTick);
     g.lockTick = setInterval(() => {
       const gg = S.game; if (!gg || gg !== g) { clearInterval(g.lockTick); return; }
-      if (ltLockLeft() <= 0) { clearInterval(g.lockTick); g.lock = null; g.open = true; beep("tick"); }
+      if (ltLockLeft() <= 0) { clearInterval(g.lockTick); g.lock = null; g.open = true; g.wrong = []; beep("open"); }
       render();
     }, 1000);
   }
@@ -1588,7 +1594,9 @@ function phoneHTML(ph) {
   if (g && g.type === "letters") {
     const t = ltTeamOf(p.id), tm = t >= 0 ? `<div class="ph-dim" style="text-align:center;color:${LT_TEAMS[t].color};font-weight:800">${LT_TEAMS[t].name}</div>` : "";
     if (g.phase === "teams") return who + `<div class="ph-title">اختر فريقك</div>
-      <div class="teams2">${[0, 1].map(k => `<button class="tbtn ${t === k ? "sel" : ""}" data-ph-act="team" data-v="${k}" style="--c:${LT_TEAMS[k].color}">${k === 0 ? "🟠" : "🟢"}<br>${LT_TEAMS[k].name}<small>${g.teams[k].map(id => esc((playerById(id) || {}).name || "")).join("، ") || "—"}</small></button>`).join("")}</div>
+      <div class="teams2">${[0, 1].map(k => `<button class="tbtn ${t === k ? "sel" : ""}" data-ph-act="team" data-v="${k}" style="--c:${LT_TEAMS[k].color}">
+        <span class="tname">${LT_TEAMS[k].name}${g.ready[k] ? " ✅" : ""}</span>
+        <span class="tlist">${g.teams[k].map(id => { const pp = playerById(id); return pp ? `<span class="tchip ${id === p.id ? "me" : ""}">${pp.avatar} ${esc(pp.name)}</span>` : ""; }).join("") || '<span class="tempty">اضغط للانضمام</span>'}</span></button>`).join("")}</div>
       ${t >= 0 ? `<button class="pbtn ${g.ready[t] ? "ghost" : ""}" data-ph-act="ready">${g.ready[t] ? "✅ فريقكم جاهز — ننتظر الفريق الثاني (اضغط للإلغاء)" : "✅ فريقنا جاهز — ابدأ"}</button>` : ""}`;
     if (g.phase === "q") {
       const lk = ltLockLeft();
@@ -1814,6 +1822,8 @@ async function initOnline() {
 let wakeLock = null;
 async function keepAwake() { try { if ("wakeLock" in navigator && document.visibilityState === "visible" && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch (e) { } }
 document.addEventListener("visibilitychange", keepAwake); document.addEventListener("click", keepAwake, {once: true}); keepAwake();
+["gesturestart", "gesturechange"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), {passive: false}));
+document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
 window.addEventListener("pagehide", () => { try { if (roomRef) roomRef.child("meta").update({online: false}); } catch (e) { } });
 
 // ---------------------------------------------------------- intro (logo animation, never blocks the game)
