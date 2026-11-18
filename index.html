@@ -423,6 +423,19 @@ body.tvmode .screen.enter{animation-duration:.2s}
 .phone .tchip{display:inline-block;background:var(--c);color:#fff;border-radius:999px;padding:1px 6px;font-size:10px;margin:1px}
 .phone .tbtn.sel .tchip{background:#fff;color:#1b1540}
 html{touch-action:manipulation}
+
+/* ---------- v8 ---------- */
+.gc10{background:linear-gradient(150deg,#7f1d1d,#1e1b4b)}
+.gt-mafia{background:linear-gradient(150deg,#7f1d1d,#1e1b4b)}
+.wait-ready{margin:18px auto 0;background:#ffffff10;border:2px dashed #ffffff30;border-radius:18px;padding:14px 22px;font-size:24px;font-weight:800;display:inline-block;animation:pulse 1.2s infinite alternate}
+.mf-night{background:radial-gradient(circle at 50% 30%,#1e1b4b,transparent 70%)}
+.mf-news{margin:18px auto 0;font-size:34px;font-weight:800;background:#ffffff10;border-radius:20px;padding:16px 26px;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.mf-news.bad{background:#ef444426;border:2px solid #ef4444}.mf-news.ok{background:#22c55e26;border:2px solid #22c55e}
+.mf-news small{font-size:22px;opacity:.85}
+.mf-grave{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;opacity:.7;font-size:16px}
+.mf-roles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.phone .mf-card{border:2px solid var(--c);border-radius:12px;padding:8px;text-align:center;font-size:16px}
+.phone .mf-card span{display:block;font-size:30px}
 </style>
 </head>
 <body>
@@ -470,9 +483,10 @@ const GAMES = {
   fib:      {name: "اكذب صح", icon: "🤥", min: 2, minPhones: 2, unit: "سؤال", desc: "اكتب كذبة مقنعة ولا تنخدع بكذبات الباقين"},
   draw:     {name: "ارسم وخمّن", icon: "🎨", min: 2, minPhones: 1, unit: "كلمة", desc: "ارسم بجوالك والرسمة تطلع على التلفزيون"},
   pics:     {name: "تحدي الصور", icon: "🖼️", min: 1, minPhones: 0, unit: "تحدي", desc: "صورتين أو ثلاث… وش يجمعها؟ أسرع واحد يجاوب"},
+  mafia:    {name: "المافيا", icon: "🔪", min: 4, minPhones: 4, unit: "", nobank: true, desc: "الليل للمافيا والنهار للتصويت… مين القاتل بينكم؟"},
   letters:  {name: "الحروف", icon: "🔤", min: 2, minPhones: 0, unit: "سؤال", desc: "فريقين على لوحة الحروف… أول فريق يوصل للطرف الثاني يفوز"},
 };
-const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور", letters: "الحروف"};
+const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور", letters: "الحروف", mafia: "المافيا"};
 
 // ---------------------------------------------------------- sound
 let actx = null;
@@ -538,7 +552,7 @@ const S = {
   screen: "home", next: null, players: [], game: null, modal: null, toast: null, banner: null, reveal: null,
   pendingCat: null,
   cfg: (() => {
-    const d = {qa: {count: 7, secs: 20}, charades: {turns: 1, secs: 60}, salfa: {rounds: 3, secs: 120}, fib: {count: 5, secs: 90}, draw: {turns: 1, secs: 80}, pics: {count: 8, secs: 20}, letters: {rounds: 1, secs: 20}};
+    const d = {qa: {count: 7, secs: 20}, charades: {turns: 1, secs: 60}, salfa: {rounds: 3, secs: 120}, fib: {count: 5, secs: 90}, draw: {turns: 1, secs: 80}, pics: {count: 8, secs: 20}, letters: {rounds: 1, secs: 20}, mafia: {mafia: 0, secs: 120, reveal: 1}};
     try { const s = JSON.parse(localStorage.getItem("jamaa-cfg") || "{}"); for (const k in d) Object.assign(d[k], s[k] || {}); } catch (e) { }
     return d;
   })()
@@ -547,14 +561,15 @@ const cfg = t => S.cfg[t];
 function saveCfg() { try { localStorage.setItem("jamaa-cfg", JSON.stringify(S.cfg)); } catch (e) { } }
 const SETUP = {
   qa:       [{k: "count", label: "عدد الأسئلة", opts: [5, 7, 10, 15, 20]}, {k: "secs", label: "وقت كل سؤال", opts: [10, 15, 20, 30, 0]}],
-  charades: [{k: "turns", label: "عدد اللفات (لكل لاعب)", opts: [1, 2, 3]}, {k: "secs", label: "وقت كل دور", opts: [30, 45, 60, 90, 0]}],
+  charades: [{k: "turns", label: "عدد الكلمات لكل لاعب", opts: [1, 2, 3, 5]}, {k: "secs", label: "وقت كل كلمة", opts: [30, 45, 60, 90, 0]}],
   salfa:    [{k: "rounds", label: "عدد الجولات", opts: [1, 2, 3, 5]}, {k: "secs", label: "وقت الأسئلة قبل التصويت", opts: [60, 90, 120, 180, 0]}],
   fib:      [{k: "count", label: "عدد الأسئلة", opts: [3, 5, 7, 10]}, {k: "secs", label: "وقت كتابة الكذبة", opts: [45, 60, 90, 120, 0]}],
-  draw:     [{k: "turns", label: "عدد اللفات (لكل رسّام)", opts: [1, 2, 3]}, {k: "secs", label: "وقت الرسّام", opts: [45, 60, 80, 120, 0]}],
+  draw:     [{k: "turns", label: "عدد الكلمات لكل رسّام", opts: [1, 2, 3, 5]}, {k: "secs", label: "وقت كل رسمة", opts: [45, 60, 80, 120, 0]}],
   pics:     [{k: "count", label: "عدد التحديات", opts: [5, 8, 10, 15]}, {k: "secs", label: "وقت كل تحدي", opts: [10, 15, 20, 30, 0]}],
   letters:  [{k: "rounds", label: "عدد الجولات (لوحات)", opts: [1, 2, 3, 5]}, {k: "secs", label: "وقت كل سؤال", opts: [10, 15, 20, 30, 0]}],
+  mafia:    [{k: "mafia", label: "عدد المافيا", opts: [0, 1, 2, 3]}, {k: "secs", label: "وقت النقاش بالنهار", opts: [60, 120, 180, 300, 0]}, {k: "reveal", label: "كشف دور اللي يطلع", opts: [1, 0]}],
 };
-function optLabel(k, v) { return k === "secs" ? (v ? v + " ثانية" : "بدون وقت ∞") : String(v); }
+function optLabel(k, v) { return k === "secs" ? (v ? (v >= 120 && v % 60 === 0 ? v / 60 + " دقائق" : v + " ثانية") : "بدون وقت ∞") : k === "mafia" ? (v ? String(v) : "تلقائي") : k === "reveal" ? (v ? "نعم" : "لا") : String(v); }
 let phones = [];
 const playerById = id => S.players.find(p => p.id === id);
 const phonePlayers = () => S.players.filter(p => p.phone);
@@ -590,7 +605,7 @@ function back() {
   if (S.reveal) { S.reveal = null; render(true); return; }
   if (S.screen === "lobby" || S.screen === "scores") go("home");
   else if (S.screen === "cats") go("lobby");
-  else if (S.screen === "setup") go("cats");
+  else if (S.screen === "setup") go(GAMES[S.next] && GAMES[S.next].nobank ? "lobby" : "cats");
   else if (S.game) openQuit();
 }
 function chooseGame(type, sec) { S.next = type; S.sec = sec || null; go("lobby"); }
@@ -666,25 +681,37 @@ function toggleAward(pid, pts = 100) {
 // ---------------------------------------------------------- charades
 function startCharades(cat) {
   const ids = shuffle(S.players.map(p => p.id));
-  S.game = {type: "charades", cat, pool: freshItems(cat, "charades"), order: [].concat(...Array(cfg("charades").turns).fill(ids)), turn: 0, phase: "ready", peek: false, turnPts: 0, guessed: 0};
+  S.game = {type: "charades", cat, pool: freshItems(cat, "charades"), order: ids, per: Math.max(1, cfg("charades").turns), turn: 0, phase: "ready", peek: false, turnPts: 0, guessed: 0, done: 0};
   S.screen = "charades"; render(true);
 }
 function chActor() { const g = S.game; return g && playerById(g.order[g.turn]); }
 function nextWord(g) { if (!g.pool.length) g.pool = freshItems(g.cat, g.type); const it = g.pool.pop(); Used.add(g.type, it); g.word = it.w; g.peek = false; g.wordNo = (g.wordNo || 0) + 1; }
 function chStart() {
-  const g = S.game; g.phase = "acting"; g.turnPts = 0; g.guessed = 0; g.total = 0; nextWord(g);
-  startTimer(cfg("charades").secs, chEnd);
-  render(true);
+  const g = S.game; if (!g || g.type !== "charades" || g.phase !== "ready") return;
+  g.phase = "acting"; g.turnPts = 0; g.guessed = 0; g.done = 0; chWord(); render(true);
+}
+function chWord() { const g = S.game; nextWord(g); g.total = 0; startTimer(cfg("charades").secs, () => chDone(false)); }
+function chDone(ok) {   // كلمة خلصت (صح / تخطي / انتهى وقتها)
+  const g = S.game; if (!g || g.phase !== "acting") return;
+  g.done++;
+  if (g.done >= g.per) { chEnd(); return; }
+  if (!ok) beep("bad");
+  showToast(ok ? "صح! 🎉 الكلمة التالية" : "الكلمة التالية ⏭"); chWord(); render(true);
 }
 function chGuessed(pid) {
   const g = S.game; if (!g || g.phase !== "acting") return;
   award(pid, 100); award(chActor().id, 50); g.turnPts += 50; g.guessed++;
-  beep("ok"); showToast("صح! 🎉"); nextWord(g); render(true);
+  beep("ok"); chDone(true);
 }
-function chEnd() { const g = S.game; if (!g || g.phase !== "acting") return; stopTimer(); g.phase = "turnEnd"; beep("end"); render(true); }
-function chSkip() { const g = S.game; if (!g || g.phase !== "acting") return; beep("bad"); nextWord(g); render(true); }
+function chEnd() {
+  const g = S.game; if (!g || g.phase !== "acting") return;
+  stopTimer(); g.phase = "turnEnd"; beep("end"); render(true);
+  clearTimeout(g.autoNext); g.autoNext = setTimeout(() => { if (S.game === g && g.phase === "turnEnd") chNextTurn(); }, 4500);
+}
+function chSkip() { const g = S.game; if (!g || g.phase !== "acting") return; chDone(false); }
 function chNextTurn() {
-  const g = S.game; g.turn++;
+  const g = S.game; if (!g || g.phase !== "turnEnd") return; clearTimeout(g.autoNext);
+  g.turn++;
   if (g.turn >= g.order.length) { endGame(); return; }
   g.phase = "ready"; g.peek = false; render(true);
 }
@@ -797,22 +824,29 @@ function fibReveal() {
 // ---------------------------------------------------------- ارسم وخمّن
 const SIZES = {s: 3, m: 7, l: 14};
 function startDraw(cat) {
-  const ids = shuffle(phonePlayers().map(p => p.id)), drawers = [].concat(...Array(cfg("draw").turns).fill(ids));
-  S.game = {type: "draw", cat, pool: freshItems(cat, "draw"), order: drawers, turn: 0, phase: "ready", ops: [], color: INK[0], size: "m", tool: "brush", feed: [], turnPts: 0, guessed: 0};
+  const drawers = shuffle(phonePlayers().map(p => p.id));
+  S.game = {type: "draw", cat, pool: freshItems(cat, "draw"), order: drawers, per: Math.max(1, cfg("draw").turns), turn: 0, phase: "ready", ops: [], color: INK[0], size: "m", tool: "brush", feed: [], turnPts: 0, guessed: 0, done: 0};
   S.screen = "draw"; render(true);
 }
 function drawer() { const g = S.game; return g && playerById(g.order[g.turn]); }
 function drStart() {
-  const g = S.game; g.phase = "drawing"; g.turnPts = 0; g.guessed = 0; g.feed = []; g.total = 0; drNewWord();
-  startTimer(cfg("draw").secs, drEnd);
-  render(true);
+  const g = S.game; if (!g || g.type !== "draw" || g.phase !== "ready") return;
+  g.phase = "drawing"; g.turnPts = 0; g.guessed = 0; g.done = 0; g.feed = []; drWord(); render(true);
 }
 function drNewWord() { const g = S.game; nextWord(g); g.ops = []; repaintAll(); }
+function drWord() { const g = S.game; drNewWord(); g.total = 0; startTimer(cfg("draw").secs, () => drDone(false)); }
+function drDone(ok) {
+  const g = S.game; if (!g || g.phase !== "drawing") return;
+  g.done++;
+  if (g.done >= g.per) { drEnd(); return; }
+  if (!ok) { beep("bad"); g.feed.unshift({pid: null, text: "⏭ الكلمة كانت: " + g.word, ok: false}); }
+  showToast(ok ? "صح! 🎉 الكلمة التالية" : "الكلمة التالية ⏭"); drWord(); render(true);
+}
 function drCorrect(pid) {
   const g = S.game; if (!g || g.phase !== "drawing") return;
   award(pid, 100); award(drawer().id, 50); g.turnPts += 50; g.guessed++;
   g.feed.unshift({pid, text: "✅ " + g.word, ok: true});
-  beep("ok"); showToast("صح! 🎉"); drNewWord(); render(true);
+  beep("ok"); drDone(true);
 }
 function drGuess(pid, text) {
   const g = S.game; if (!g || g.phase !== "drawing" || !text.trim()) return false;
@@ -820,10 +854,15 @@ function drGuess(pid, text) {
   g.feed.unshift({pid, text: text.trim().slice(0, 24), ok: false}); g.feed = g.feed.slice(0, 9);
   render(); return false;
 }
-function drEnd() { const g = S.game; if (!g || g.phase !== "drawing") return; stopTimer(); g.phase = "turnEnd"; beep("end"); render(true); }
-function drSkip() { const g = S.game; if (!g || g.phase !== "drawing") return; beep("bad"); drNewWord(); render(true); }
+function drEnd() {
+  const g = S.game; if (!g || g.phase !== "drawing") return;
+  stopTimer(); g.phase = "turnEnd"; beep("end"); render(true);
+  clearTimeout(g.autoNext); g.autoNext = setTimeout(() => { if (S.game === g && g.phase === "turnEnd") drNextTurn(); }, 4500);
+}
+function drSkip() { const g = S.game; if (!g || g.phase !== "drawing") return; drDone(false); }
 function drNextTurn() {
-  const g = S.game; g.turn++;
+  const g = S.game; if (!g || g.phase !== "turnEnd") return; clearTimeout(g.autoNext);
+  g.turn++;
   if (g.turn >= g.order.length) { endGame(); return; }
   g.phase = "ready"; g.ops = []; render(true);
 }
@@ -1073,17 +1112,195 @@ function screenLetters() {
     <div class="lt-wrap">${board}<div class="lt-panel">${teamBox(0)}${teamBox(1)}${panel}</div></div></div>`;
 }
 
+// ---------------------------------------------------------- المافيا
+const MF_ROLES = {
+  mafia:     {name: "مافيا", icon: "🔪", color: "#ef4444", tip: "كل ليلة تتفق مع المافيا على شخص تطلعونه. بالنهار اندمج مع الناس ولا تنكشف!"},
+  doctor:    {name: "الطبيب", icon: "💉", color: "#22c55e", tip: "كل ليلة اختر شخص تحميه — لو المافيا اختاروه ما يموت. ما تقدر تحمي نفس الشخص ليلتين ورا بعض."},
+  detective: {name: "المحقق", icon: "🕵️", color: "#3b82f6", tip: "كل ليلة اختر شخص وتعرف هل هو مافيا أو لا. ساعد الناس بدون ما تنكشف!"},
+  citizen:   {name: "مواطن", icon: "👤", color: "#a79fd0", tip: "ما عندك قدرة بالليل. بالنهار ناقش وصوّت عشان تطلعون المافيا."},
+};
+function startMafia() {
+  const ids = shuffle(S.players.map(p => p.id)), n = ids.length;
+  const mCount = cfg("mafia").mafia || (n <= 5 ? 1 : n <= 8 ? 2 : 3);
+  const roles = {};
+  ids.forEach((id, i) => { roles[id] = i < mCount ? "mafia" : i === mCount ? "doctor" : i === mCount + 1 && n >= 5 ? "detective" : "citizen"; });
+  S.game = {type: "mafia", cat: {name: "المافيا", emoji: "🔪"}, roles, alive: ids.slice(), seen: {}, night: 0, phase: "roles", picks: {}, lastSaved: null, log: [], votes: {}};
+  S.screen = "mafia"; render(true);
+}
+const mfRole = pid => S.game.roles[pid];
+const mfAlive = (pid) => S.game.alive.includes(pid);
+const mfAliveRole = r => S.game.alive.filter(id => mfRole(id) === r);
+function mfSeen(pid) {
+  const g = S.game; if (!g || g.type !== "mafia" || g.phase !== "roles") return;
+  g.seen[pid] = true;
+  if (S.players.every(p => g.seen[p.id])) { beep("ok"); }
+  render();
+}
+function mfNight() {
+  const g = S.game; if (!g) return;
+  g.night++; g.phase = "night"; g.picks = {mafia: {}, doctor: null, detective: null}; g.check = null; g.votes = {}; stopTimer();
+  beep("end"); render(true);
+}
+function mfNightDone() {
+  const g = S.game, mafia = mfAliveRole("mafia"), targets = mafia.map(id => g.picks.mafia[id]);
+  const mafiaOk = mafia.length && targets.every(t => t && t === targets[0]);
+  const docOk = !mfAliveRole("doctor").length || g.picks.doctor;
+  const detOk = !mfAliveRole("detective").length || g.picks.detective;
+  return {mafiaOk, docOk, detOk, all: mafiaOk && docOk && detOk, target: mafiaOk ? targets[0] : null};
+}
+function mfPick(pid, v) {
+  const g = S.game; if (!g || g.type !== "mafia" || !mfAlive(pid)) return;
+  const r = mfRole(pid);
+  if (g.phase === "night") {
+    if (!mfAlive(v)) return;
+    if (r === "mafia") { if (mfRole(v) === "mafia") return; g.picks.mafia[pid] = v; }
+    else if (r === "doctor") { if (v === g.lastSaved) return; g.picks.doctor = v; }
+    else if (r === "detective") { if (g.picks.detective || v === pid) return; g.picks.detective = v; g.check = {target: v, mafia: mfRole(v) === "mafia"}; }
+    else return;
+    beep("tick");
+    if (mfNightDone().all) setTimeout(() => { if (S.game === g && g.phase === "night" && mfNightDone().all) mfMorning(); }, 1500);
+    render();
+  }
+}
+function mfMorning() {
+  const g = S.game; if (!g || g.phase !== "night") return;
+  const res = mfNightDone(), target = res.target, saved = g.picks.doctor;
+  g.lastSaved = saved || null;
+  g.dawn = {target, saved: target && saved === target};
+  if (target && saved !== target) { g.alive = g.alive.filter(x => x !== target); g.log.push({night: g.night, dead: target}); }
+  g.phase = "morning"; beep(g.dawn.target && !g.dawn.saved ? "bad" : "ok");
+  if (!mfWinner()) render(true);
+}
+function mfDay() {
+  const g = S.game; if (!g) return;
+  g.phase = "day"; g.votes = {}; startTimer(cfg("mafia").secs, mfVoteStart); render(true);
+}
+function mfVoteStart() { const g = S.game; if (!g || (g.phase !== "day" && g.phase !== "morning")) return; stopTimer(); g.phase = "vote"; g.votes = {}; beep("tick"); render(true); }
+function mfVote(pid, v) {
+  const g = S.game; if (!g || g.type !== "mafia" || g.phase !== "vote" || !mfAlive(pid)) return;
+  if (v !== "none" && (!mfAlive(v) || v === pid)) return;
+  g.votes[pid] = v; beep("tick");
+  if (g.alive.every(id => g.votes[id])) setTimeout(() => { if (S.game === g && g.phase === "vote") mfTally(); }, 1200);
+  render();
+}
+function mfTally() {
+  const g = S.game; if (!g || g.phase !== "vote") return;
+  const count = {}; Object.values(g.votes).forEach(v => { if (v !== "none") count[v] = (count[v] || 0) + 1; });
+  const sorted = Object.entries(count).sort((a, b) => b[1] - a[1]);
+  const voters = Object.keys(g.votes).length;
+  let out = null;
+  if (sorted.length && (sorted.length === 1 || sorted[0][1] > sorted[1][1]) && sorted[0][1] > (Object.values(g.votes).filter(v => v === "none").length)) out = sorted[0][0];
+  g.dayOut = {out, count, voters};
+  if (out) g.alive = g.alive.filter(x => x !== out);
+  g.phase = "dayEnd"; beep(out ? "end" : "tick");
+  if (!mfWinner()) render(true);
+}
+function mfWinner() {
+  const g = S.game, m = mfAliveRole("mafia").length, others = g.alive.length - m;
+  let w = null;
+  if (m === 0) w = "town"; else if (m >= others) w = "mafia";
+  if (!w) return false;
+  g.winner = w; g.phase = "over"; stopTimer();
+  S.players.forEach(p => { const isM = g.roles[p.id] === "mafia"; if ((w === "mafia") === isM) award(p.id, 200); });
+  beep("end"); render(true); return true;
+}
+function screenMafia() {
+  const g = S.game, left = timeLeft(), nm = id => { const p = playerById(id); return p ? av(p) + " " + esc(p.name) : ""; };
+  const info = g.night ? `🌙 الليلة ${g.night} · 👥 ${g.alive.length} عايشين` : "🔪 المافيا";
+  const graveyard = S.players.filter(p => !mfAlive(p.id));
+  const grave = graveyard.length ? `<div class="mf-grave">👻 ${graveyard.map(p => `<span class="mini">${av(p)}${esc(p.name)}${cfg("mafia").reveal || g.phase === "over" ? " · " + MF_ROLES[g.roles[p.id]].icon : ""}</span>`).join("")}</div>` : "";
+  let body;
+  if (g.phase === "roles") {
+    const n = S.players.length, mC = Object.values(g.roles).filter(r => r === "mafia").length;
+    body = `<div class="actor-hero"><div style="font-size:90px">🃏</div><h2>كل واحد يشوف دوره في جواله… بسرية!</h2>
+      <p>في اللعبة: ${mC} مافيا 🔪 · طبيب 💉${Object.values(g.roles).includes("detective") ? " · محقق 🕵️" : ""} · والباقي مواطنين 👤</p>
+      <div class="minis" style="justify-content:center;margin-top:14px">${S.players.map(p => `<span class="mini ${g.seen[p.id] ? "done" : ""}">${av(p)}${esc(p.name)} ${g.seen[p.id] ? "✓" : "…"}</span>`).join("")}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn go f" data-f="mf-n" data-act="mfNight" data-auto="1" ${S.players.every(p => g.seen[p.id]) ? "" : "disabled"}>🌙 ابدأ الليل</button></div></div>`;
+  } else if (g.phase === "night") {
+    const r = mfNightDone();
+    body = `<div class="actor-hero mf-night"><div style="font-size:90px">🌙</div><h2>الليلة ${g.night} — الكل يغمض عيونه 😴</h2>
+      <p>اللي عندهم دور يختارون من جوالاتهم بهدوء</p>
+      <div class="tv-row" style="justify-content:center;gap:14px;margin-top:16px"><span class="pill">${r.mafiaOk ? "✅" : "⏳"} المافيا</span>${g.roles && Object.values(g.roles).includes("doctor") ? `<span class="pill">${r.docOk ? "✅" : "⏳"} الطبيب</span>` : ""}${Object.values(g.roles).includes("detective") ? `<span class="pill">${r.detOk ? "✅" : "⏳"} المحقق</span>` : ""}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn ghost f" data-f="mf-m" data-act="mfMorning" ${r.mafiaOk ? 'data-auto="1"' : "disabled"}>☀️ الصباح</button></div></div>`;
+  } else if (g.phase === "morning") {
+    const d = g.dawn;
+    body = `<div class="actor-hero"><div style="font-size:90px">☀️</div><h2>صباح الخير… افتحوا عيونكم</h2>
+      ${d.target && !d.saved ? `<div class="mf-news bad">💀 المافيا طلّعت ${nm(d.target)} ${cfg("mafia").reveal ? `<small>(كان ${MF_ROLES[g.roles[d.target]].icon} ${MF_ROLES[g.roles[d.target]].name})</small>` : ""}</div>`
+        : `<div class="mf-news ok">🎉 ما مات أحد الليلة${d.saved ? " — الطبيب أنقذ الضحية 💉" : ""}</div>`}
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn go f" data-f="mf-d" data-act="mfDay" data-auto="1">🗣️ ابدأ النقاش</button>
+        <button class="tv-btn ghost f" data-f="mf-v" data-act="mfVoteStart">🗳 التصويت مباشرة</button></div></div>`;
+  } else if (g.phase === "day") {
+    body = `<div class="actor-hero"><div class="big-timer ${timed() && left <= 10 ? "timer low" : ""}" id="tTimer" style="${timed() && left <= 10 ? "background:none" : ""}">${tl(left)}</div>
+      ${timed() ? `<div class="bar" style="max-width:700px;margin:14px auto 0"><i id="tBar" style="width:${barW(left)}%"></i></div>` : ""}
+      <h2 style="margin-top:16px">🗣️ وقت النقاش — مين تشكون فيه؟</h2>
+      <div class="minis" style="justify-content:center;margin-top:10px">${g.alive.map(id => `<span class="mini">${nm(id)}</span>`).join("")}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn alt f" data-f="mf-v" data-act="mfVoteStart" data-auto="1">🗳 التصويت الآن</button></div></div>`;
+  } else if (g.phase === "vote") {
+    const done = g.alive.filter(id => g.votes[id]).length;
+    body = `<div class="actor-hero"><div style="font-size:80px">🗳️</div><h2>صوّتوا من جوالاتكم — مين نطلّع؟</h2>
+      <p>صوّت ${done} من ${g.alive.length}</p>
+      <div class="minis" style="justify-content:center;margin-top:10px">${g.alive.map(id => `<span class="mini ${g.votes[id] ? "done" : ""}">${nm(id)} ${g.votes[id] ? "✓" : ""}</span>`).join("")}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn go f" data-f="mf-t" data-act="mfTally" ${done ? 'data-auto="1"' : "disabled"}>📊 النتيجة</button></div></div>`;
+  } else if (g.phase === "dayEnd") {
+    const o = g.dayOut, rows = Object.entries(o.count).sort((a, b) => b[1] - a[1]).map(([id, c]) => `<span class="mini">${nm(id)} · ${c} 🗳</span>`).join("");
+    body = `<div class="actor-hero"><div style="font-size:80px">${o.out ? "⚖️" : "🤷"}</div>
+      ${o.out ? `<div class="mf-news bad">الأغلبية طلّعت ${nm(o.out)} ${cfg("mafia").reveal ? `<small>(كان ${MF_ROLES[g.roles[o.out]].icon} ${MF_ROLES[g.roles[o.out]].name})</small>` : ""}</div>` : `<div class="mf-news">تعادل أو ما فيه أغلبية — ما طلع أحد</div>`}
+      <div class="minis" style="justify-content:center;margin-top:12px">${rows}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn go f" data-f="mf-n" data-act="mfNight" data-auto="1">🌙 الليلة التالية</button></div></div>`;
+  } else {
+    const w = g.winner === "mafia";
+    body = `<div class="actor-hero"><div style="font-size:90px">${w ? "🔪" : "🏆"}</div><h2 style="color:${w ? "#ef4444" : "#22c55e"}">${w ? "فازت المافيا!" : "فاز المواطنين — طلّعتوا كل المافيا!"}</h2>
+      <div class="mf-roles">${S.players.map(p => `<span class="mini" style="border:2px solid ${MF_ROLES[g.roles[p.id]].color}">${av(p)}${esc(p.name)} · ${MF_ROLES[g.roles[p.id]].icon} ${MF_ROLES[g.roles[p.id]].name}${mfAlive(p.id) ? "" : " 👻"}</span>`).join("")}</div>
+      <p class="tv-sub">+200 لكل لاعب في الفريق الفائز</p>
+      <div class="tv-row" style="justify-content:center;margin-top:20px"><button class="tv-btn go f" data-f="mf-end" data-act="mfEnd" data-auto="1">النتائج 🏆</button></div></div>`;
+  }
+  return `<div class="screen">${head(info)}${body}${grave}</div>`;
+}
+function mfPhone(p, who, center) {
+  const g = S.game, r = g.roles[p.id], R = MF_ROLES[r], alive = mfAlive(p.id);
+  const card = `<div class="mf-card" style="--c:${R.color}"><span>${R.icon}</span><b>${R.name}</b></div>`;
+  if (g.phase === "over") return who + center(g.winner === "mafia" ? "🔪" : "🏆", g.winner === "mafia" ? "فازت المافيا" : "فاز المواطنين", "دورك كان: " + R.icon + " " + R.name);
+  if (g.phase === "roles") {
+    if (g.seen[p.id]) return who + center("🤫", "احفظ دورك", "انتظر الباقين");
+    const mates = r === "mafia" ? Object.keys(g.roles).filter(id => id !== p.id && g.roles[id] === "mafia").map(id => esc((playerById(id) || {}).name || "")).join("، ") : "";
+    return who + `<div class="ph-dim">دورك السري 🤫 لا تخلّي أحد يشوف جوالك</div>${card}<div class="ph-dim" style="margin:8px 0">${R.tip}</div>${mates ? `<div class="ph-dim" style="color:#fca5a5;font-weight:800">معك في المافيا: ${mates}</div>` : ""}<button class="pbtn" data-ph-act="mfseen">شفت دوري ✓</button>`;
+  }
+  if (!alive) return who + center("👻", "خرجت من اللعبة", "لا تتكلم ولا تلمّح 🤐 · دورك: " + R.icon + " " + R.name);
+  const list = (ids, act, sel, note) => `<div class="plist">${ids.map(id => { const q = playerById(id); return q ? `<button class="${sel === id ? "sel" : ""}" data-ph-act="${act}" data-v="${id}">${q.avatar} ${esc(q.name)}${note ? note(id) : ""}</button>` : ""; }).join("")}</div>`;
+  if (g.phase === "night") {
+    if (r === "mafia") {
+      const others = mfAliveRole("mafia").filter(id => id !== p.id);
+      const note = id => { const who2 = others.filter(m => g.picks.mafia[m] === id).map(m => (playerById(m) || {}).name).join("، "); return who2 ? ` <small style="opacity:.75">← ${esc(who2)}</small>` : ""; };
+      const ok = mfNightDone().mafiaOk;
+      return who + card + `<div class="ph-title">🔪 مين تطلعون الليلة؟</div><div class="ph-dim">${others.length ? "لازم تتفقون كلكم على نفس الشخص" : "اختر الضحية"}${ok ? " — ✅ اتفقتوا" : ""}</div>` + list(g.alive.filter(id => g.roles[id] !== "mafia"), "mfpick", g.picks.mafia[p.id], note);
+    }
+    if (r === "doctor") return who + card + `<div class="ph-title">💉 مين تحمي الليلة؟</div>${g.lastSaved ? `<div class="ph-dim">ما تقدر تحمي ${esc((playerById(g.lastSaved) || {}).name || "")} مرتين ورا بعض</div>` : ""}` + list(g.alive.filter(id => id !== g.lastSaved), "mfpick", g.picks.doctor);
+    if (r === "detective") {
+      if (g.check) { const q = playerById(g.check.target); return who + card + center(g.check.mafia ? "🔴" : "🟢", esc(q ? q.name : "") + (g.check.mafia ? " مافيا!" : " مو مافيا"), "احفظ المعلومة ولا تنكشف 🤫"); }
+      return who + card + `<div class="ph-title">🕵️ مين تحقق فيه الليلة؟</div>` + list(g.alive.filter(id => id !== p.id), "mfpick", null);
+    }
+    return who + center("😴", "نايم…", "غمّض عيونك لين يطلع الصباح");
+  }
+  if (g.phase === "vote") {
+    const mine = g.votes[p.id];
+    return who + `<div class="ph-title">🗳 مين تطلّعون؟</div>${mine ? '<div class="ph-dim">✅ صوتك وصل — تقدر تغيّره</div>' : ""}` + list(g.alive.filter(id => id !== p.id), "mfvote", mine) + `<button class="pbtn ghost" style="margin-top:8px;${mine === "none" ? "outline:3px solid #fff" : ""}" data-ph-act="mfvote" data-v="none">🤷 ما أصوّت لأحد</button>`;
+  }
+  if (g.phase === "day") return who + `<div class="mini-role">${R.icon} ${R.name}</div>` + center("🗣️", "وقت النقاش", "ناقشوا مين المافيا · ⏱ " + tl(timeLeft()));
+  return who + `<div class="mini-role">${R.icon} ${R.name}</div>` + center("👀", "تابع التلفزيون", "");
+}
+
 // ---------------------------------------------------------- game start / end
 function startGame(type, cat) {
   cat = {id: cat.id, name: cat.name, emoji: cat.emoji, type: cat.type, items: cat.items.slice()};
   if (!cat.items.length) return;
-  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw, pics: startPics, letters: startLetters})[type](cat);
+  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw, pics: startPics, letters: startLetters, mafia: startMafia})[type](cat);
 }
 function endGame() { stopTimer(); S.game = null; beep("end"); go("scores"); }
 function gameReady(type) {
   const G = GAMES[type]; if (!G) return {ok: true};
   if (S.players.length < G.min) return {ok: false, why: `تحتاج ${G.min} لاعبين على الأقل`};
   if (phonePlayers().length < G.minPhones) return {ok: false, why: `تحتاج ${G.minPhones === 1 ? "لاعب واحد" : G.minPhones + " لاعبين"} على الأقل من الجوال`};
+  if (type === "mafia" && phonePlayers().length < S.players.length) return {ok: false, why: "المافيا تحتاج كل اللاعبين من الجوال (الأدوار سرية)"};
   return {ok: true};
 }
 
@@ -1104,7 +1321,7 @@ function screenHome() {
       <div><p class="tv-sub" style="font-size:24px;color:#fff;font-weight:800;margin:0">ألعاب الجَمعات 🎉</p><p class="tv-sub" style="font-size:18px"><span class="live-dot"></span> ${Bank.mode === "db" ? "الأسئلة متزامنة أونلاين" : ONLINE ? "متصل" : "بدون إنترنت"}</p></div></div>
       <div class="tv-row"><button class="hbtn f" data-f="h-pl" data-act="choose" data-v="">👥 اللاعبين <b>${n}</b></button><button class="hbtn f" data-f="h-sc" data-act="go" data-v="scores">🏆 النقاط</button></div></div>
     <div class="home-grid" style="margin-top:22px">
-      ${[["gc1", "charades"], ["gc2", "qa"], ["gc5", "salfa"], ["gc6", "fib"], ["gc7", "draw"], ["gc8", "pics"], ["gc9", "letters"]]
+      ${[["gc1", "charades"], ["gc2", "qa"], ["gc5", "salfa"], ["gc6", "fib"], ["gc7", "draw"], ["gc8", "pics"], ["gc9", "letters"], ["gc10", "mafia"]]
         .filter(([, t]) => !(Bank.games[t] && Bank.games[t].hidden)).map(([cl, t]) => card(cl, "g-" + t, "choose", t, GAMES[t].icon, GAMES[t].name, GAMES[t].desc)).join("")}
       ${Bank.sections.filter(x => x.enabled !== false).map(x => card("gcx gt-" + x.type, "sec-" + esc(x.id), "choose", x.type + "|" + esc(x.id), esc(x.emoji || GAMES[x.type].icon), esc(x.name), GAMES[x.type].icon + " " + GAMES[x.type].name)).join("")}
     </div>
@@ -1175,22 +1392,23 @@ function screenQA() {
 
 function screenCharades() {
   const g = S.game, actor = chActor(), left = timeLeft();
-  const info = `${catPill()} · الدور ${g.turn + 1} من ${g.order.length}`;
+  const info = `${catPill()} · الدور ${g.turn + 1} من ${g.order.length}${g.phase === "acting" ? ` · كلمة ${g.done + 1} من ${g.per}` : ""}`;
   if (g.phase === "ready") {
     return `<div class="screen">${head(info)}
       <div class="actor-hero">${av(actor, "avatar")}<h2>دور ${esc(actor.name)} 🎭</h2>
-        <p>${actor.phone ? "الكلمات بتظهر في جوالك — مثّلها بدون ولا كلمة!" : "الكلمة بتظهر هنا لما تضغط «👁 الكلمة» — خلّ الباقين يغمضون"}</p>
-        <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-start" data-act="chStart" data-auto="1">ابدأ · ${optLabel("secs", cfg("charades").secs)}</button></div></div></div>`;
+        <p>${g.per} ${g.per === 1 ? "كلمة" : "كلمات"} · ${optLabel("secs", cfg("charades").secs)} لكل كلمة — أول ما أحد يجاوب صح تطلع الكلمة اللي بعدها</p>
+        ${actor.phone ? `<div class="wait-ready">📱 بانتظار ${esc(actor.name)} يضغط «✋ مستعد» في جواله…</div>` : `<p>الكلمة بتظهر هنا لما تضغط «👁 الكلمة» — خلّ الباقين يغمضون</p>`}
+        <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn ${actor.phone ? "ghost" : "go"} f" data-f="ch-start" data-act="chStart" data-auto="1">${actor.phone ? "ابدأ من هنا" : "ابدأ"} ▶</button></div></div></div>`;
   }
   if (g.phase === "turnEnd") {
     const last = g.turn + 1 >= g.order.length;
     return `<div class="screen">${head(info)}
-      <div class="actor-hero">${av(actor, "avatar")}<h2>${timed() || cfg("charades").secs ? "انتهى الوقت! ⏰" : "انتهى الدور 👏"}</h2><p>${esc(actor.name)} مثّل ${g.guessed} كلمات وجاب +${g.turnPts} نقطة</p>
+      <div class="actor-hero">${av(actor, "avatar")}<h2>انتهى دور ${esc(actor.name)} 👏</h2><p>جاوبوا ${g.guessed} من ${g.per} · +${g.turnPts} نقطة</p><p class="tv-sub">${last ? "" : "ننتقل للاعب التالي تلقائياً…"}</p>
         <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-next" data-act="chNextTurn" data-auto="1">${last ? "النتائج 🏆" : "الدور التالي ←"}</button></div></div></div>`;
   }
   const others = S.players.filter(p => p.id !== actor.id);
   const word = g.peek ? `<div class="word-box">${esc(g.word)}</div>` : `<div class="word-hidden">${actor.phone ? "📱 الكلمة في جوال " + esc(actor.name) : "الكلمة مخفية — اضغط «👁 الكلمة» للممثل فقط"}</div>`;
-  return `<div class="screen">${head(info, `<span class="pill">${av(actor)} ${esc(actor.name)} يمثّل · ${g.guessed} كلمات</span>`)}
+  return `<div class="screen">${head(info, `<span class="pill">${av(actor)} ${esc(actor.name)} يمثّل · ✅ ${g.guessed}</span>`)}
     <div style="text-align:center;margin-top:10px"><div class="big-timer ${timed() && left <= 10 ? "timer low" : ""}" id="tTimer" style="${timed() && left <= 10 ? "background:none" : ""}">${tl(left)}</div>
       ${timed() ? `<div class="bar" style="max-width:700px;margin:14px auto 0"><i id="tBar" style="width:${barW(left)}%"></i></div>` : ""}${word}</div>
     <div style="margin-top:auto"><p class="tv-sub" style="text-align:center;margin-bottom:12px">مين خمّنها؟</p>
@@ -1287,20 +1505,21 @@ function screenFib() {
 }
 
 function screenDraw() {
-  const g = S.game, d = drawer(), left = timeLeft(), info = `${catPill()} · الدور ${g.turn + 1} من ${g.order.length}`;
+  const g = S.game, d = drawer(), left = timeLeft(), info = `${catPill()} · الدور ${g.turn + 1} من ${g.order.length}${g.phase === "drawing" ? ` · رسمة ${g.done + 1} من ${g.per}` : ""}`;
   if (g.phase === "ready") {
     return `<div class="screen">${head(info)}<div class="actor-hero">${av(d, "avatar")}<h2>دور ${esc(d.name)} يرسم 🎨</h2>
-      <p>الكلمة بتطلع في جوالك — ارسمها والرسمة تظهر هنا مباشرة. ممنوع الكتابة والأرقام!</p>
-      <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="d-start" data-act="drStart" data-auto="1">ابدأ · ${optLabel("secs", cfg("draw").secs)}</button></div></div></div>`;
+      <p>${g.per} ${g.per === 1 ? "كلمة" : "كلمات"} · ${optLabel("secs", cfg("draw").secs)} لكل رسمة — أول ما أحد يخمّن صح تطلع الكلمة اللي بعدها. ممنوع الكتابة والأرقام!</p>
+      <div class="wait-ready">📱 بانتظار ${esc(d.name)} يضغط «✋ مستعد» في جواله…</div>
+      <div class="tv-row" style="justify-content:center;margin-top:24px"><button class="tv-btn ghost f" data-f="d-start" data-act="drStart" data-auto="1">ابدأ من هنا ▶</button></div></div></div>`;
   }
   if (g.phase === "turnEnd") {
     const last = g.turn + 1 >= g.order.length;
-    return `<div class="screen">${head(info)}<div class="actor-hero">${av(d, "avatar")}<h2>انتهى الوقت! ⏰</h2><p>${esc(d.name)} رسم ${g.guessed} كلمات وجاب +${g.turnPts} نقطة</p>
+    return `<div class="screen">${head(info)}<div class="actor-hero">${av(d, "avatar")}<h2>انتهى دور ${esc(d.name)} 👏</h2><p>خمّنوا ${g.guessed} من ${g.per} · +${g.turnPts} نقطة</p><p class="tv-sub">${last ? "" : "ننتقل للرسّام التالي تلقائياً…"}</p>
       <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="d-next" data-act="drNextTurn" data-auto="1">${last ? "النتائج 🏆" : "الدور التالي ←"}</button></div></div></div>`;
   }
   const others = S.players.filter(p => p.id !== d.id && !p.phone);
-  const feed = g.feed.map(f => { const p = playerById(f.pid); return `<div class="g ${f.ok ? "ok" : ""}">${av(p)}<b>${esc(p ? p.name : "")}:</b> ${esc(f.text)}</div>`; }).join("");
-  return `<div class="screen">${head(info, `<span class="pill">${av(d)} ${esc(d.name)} يرسم · ${g.guessed} كلمات</span><div class="timer ${timed() && left <= 10 ? "low" : ""}" id="tTimer">${tl(left)}</div>`)}
+  const feed = g.feed.map(f => { const p = playerById(f.pid); return `<div class="g ${f.ok ? "ok" : ""}">${p ? av(p) + "<b>" + esc(p.name) + ":</b> " : ""}${esc(f.text)}</div>`; }).join("");
+  return `<div class="screen">${head(info, `<span class="pill">${av(d)} ${esc(d.name)} يرسم · ✅ ${g.guessed}</span><div class="timer ${timed() && left <= 10 ? "low" : ""}" id="tTimer">${tl(left)}</div>`)}
     <div class="draw-wrap"><div class="canvas-box"><canvas id="tvCanvas" width="900" height="480"></canvas>${g.ops.length ? "" : `<div class="ov">بانتظار الرسمة من جوال ${esc(d.name)}… ✏️</div>`}</div>
       <div class="feed"><div class="tv-sub" style="font-size:18px;margin:0 0 4px">💬 التخمينات</div>${feed || '<div class="muted" style="font-size:16px">اكتبوا تخميناتكم في الجوال</div>'}</div></div>
     <div class="guessers" style="margin-top:14px">${others.map(p => `<button class="guesser f" data-f="dg-${p.id}" data-act="drCorrect" data-v="${p.id}">${av(p)}${esc(p.name)} خمّنها</button>`).join("")}
@@ -1367,7 +1586,7 @@ function modalQuit() {
 
 let lastScreenKey = "";
 function render(resetFocus) {
-  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, setup: screenSetup, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, pics: screenPics, letters: screenLetters, scores: screenScores};
+  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, setup: screenSetup, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, pics: screenPics, letters: screenLetters, mafia: screenMafia, scores: screenScores};
   if (S.game && !map[S.screen]) S.screen = "home";
   const keep = focusKey();
   tv.innerHTML = (map[S.screen] || screenHome)()
@@ -1477,7 +1696,7 @@ function act(name, v, el) {
   switch (name) {
     case "choose": { const [t, sec] = String(v || "").split("|"); chooseGame(t || null, sec); break; }
     case "go": go(v); break;
-    case "toCats": if (gameReady(S.next).ok) go("cats"); break;
+    case "toCats": if (gameReady(S.next).ok) { if (GAMES[S.next].nobank) { S.pendingCat = {id: "_" + S.next, name: GAMES[S.next].name, emoji: GAMES[S.next].icon, type: S.next, items: [{}]}; go("setup"); } else go("cats"); } break;
     case "addRemote": S.modal = "addPlayer"; render(true); break;
     case "closeModal": S.modal = null; render(true); break;
     case "addNamed": addPlayer(v, null, false); S.modal = null; render(true); break;
@@ -1500,6 +1719,12 @@ function act(name, v, el) {
     case "ltNextRound": ltNextRound(); break;
     case "ltSwap": ltSwap(v); break;
     case "ltBegin": ltBegin(); break;
+    case "mfNight": mfNight(); break;
+    case "mfMorning": mfMorning(); break;
+    case "mfDay": mfDay(); break;
+    case "mfVoteStart": mfVoteStart(); break;
+    case "mfTally": mfTally(); break;
+    case "mfEnd": endGame(); break;
     case "ltJudge": ltJudge(v === "1"); break;
     case "pickCat": {
       let cat;
@@ -1591,6 +1816,7 @@ function phoneHTML(ph) {
     const ok = a && a.choice === g.correct;
     return who + center(!a ? "⌛" : ok ? "🎉" : "😅", !a ? "ما جاوبت" : ok ? "صح! +" + a.pts : "خطأ", "الإجابة: " + esc(g.options[g.correct]));
   }
+  if (g && g.type === "mafia") return mfPhone(p, who, center);
   if (g && g.type === "letters") {
     const t = ltTeamOf(p.id), tm = t >= 0 ? `<div class="ph-dim" style="text-align:center;color:${LT_TEAMS[t].color};font-weight:800">${LT_TEAMS[t].name}</div>` : "";
     if (g.phase === "teams") return who + `<div class="ph-title">اختر فريقك</div>
@@ -1622,10 +1848,10 @@ function phoneHTML(ph) {
   if (g && g.type === "charades") {
     const actor = chActor();
     if (actor && actor.id === p.id) {
-      if (g.phase === "ready") return who + center("🎭", "دورك تمثّل!", "اضغط «ابدأ» في التلفزيون<br>والكلمة تظهر هنا");
-      if (g.phase === "acting") return who + `<div class="center"><div class="ph-dim">مثّل بدون كلام 🤫 · ⏱ ${timeLeft()}</div><div class="pword">${esc(g.word)}</div></div>
+      if (g.phase === "ready") return who + center("🎭", "دورك تمثّل!", `${g.per} ${g.per === 1 ? "كلمة" : "كلمات"} — أول ما تضغط تطلع الكلمة هنا`) + `<button class="pbtn" data-ph-act="chReady">✋ مستعد — ابدأ</button>`;
+      if (g.phase === "acting") return who + `<div class="center"><div class="ph-dim">كلمة ${g.done + 1} من ${g.per} · مثّل بدون كلام 🤫 · ⏱ ${tl(timeLeft())}</div><div class="pword">${esc(g.word)}</div></div>
         <button class="pbtn ghost" data-ph-act="chSkip">⏭ تخطي الكلمة</button>`;
-      return who + center("⏰", "انتهى وقتك", "+" + g.turnPts + " نقطة");
+      return who + center("👏", "خلص دورك", "+" + g.turnPts + " نقطة");
     }
     return who + center(g.phase === "acting" ? "🤔" : "👀", g.phase === "acting" ? "خمّن وقولها بصوت عالي!" : "تابع التلفزيون", actor ? esc(actor.name) + " يمثّل" : "");
   }
@@ -1671,14 +1897,14 @@ function phoneHTML(ph) {
   if (g && g.type === "draw") {
     const d = drawer();
     if (d && d.id === p.id) {
-      if (g.phase === "ready") return who + center("🎨", "دورك ترسم!", "اضغط «ابدأ» في التلفزيون");
-      if (g.phase === "drawing") return `<div class="ph-dim">ارسم: <b style="color:#fff;font-size:15px">${esc(g.word)}</b></div>
+      if (g.phase === "ready") return who + center("🎨", "دورك ترسم!", `${g.per} ${g.per === 1 ? "كلمة" : "كلمات"} — أول ما تضغط تطلع الكلمة واللوحة`) + `<button class="pbtn" data-ph-act="drReady">✋ مستعد — ابدأ</button>`;
+      if (g.phase === "drawing") return `<div class="ph-dim">${g.done + 1}/${g.per} · ارسم: <b style="color:#fff;font-size:15px">${esc(g.word)}</b> · ⏱ ${tl(timeLeft())}</div>
         <canvas data-ph-canvas width="300" height="190" data-color="${g.color}" data-w="${SIZES[g.size] || 7}" data-tool="${g.tool}" data-wid="${g.wordNo || 0}"></canvas>
         <div class="tools" style="justify-content:center">${INK.map(c => `<button class="sw ${g.color === c ? "sel" : ""}" style="background:${c}" data-ph-act="ink" data-v="${c}"></button>`).join("")}</div>
         <div class="tools"><button class="tb ${g.tool === "brush" ? "on" : ""}" data-ph-act="tool" data-v="brush">🖌</button><button class="tb ${g.tool === "fill" ? "on" : ""}" data-ph-act="tool" data-v="fill">🪣</button>
           ${["s", "m", "l"].map(k => `<button class="tb sz ${g.size === k && g.tool === "brush" ? "on" : ""}" data-ph-act="size" data-v="${k}"><i style="width:${{s: 4, m: 8, l: 13}[k]}px;height:${{s: 4, m: 8, l: 13}[k]}px"></i></button>`).join("")}</div>
         <div class="tools"><button class="tb" style="flex:1" data-ph-act="undo">↩ تراجع</button><button class="tb" style="flex:1" data-ph-act="clear">🧽 مسح</button><button class="tb" style="flex:1" data-ph-act="drSkip">⏭</button></div>`;
-      return who + center("⏰", "انتهى وقتك", "+" + g.turnPts + " نقطة");
+      return who + center("👏", "خلص دورك", "+" + g.turnPts + " نقطة");
     }
     if (g.phase === "drawing") return who + `<div class="center"><div class="big">🤔</div><div class="ph-title">وش يرسم ${esc(d ? d.name : "")}؟</div></div>
       <input class="ptext" data-phone-input="guess" data-enter="guess" maxlength="24" placeholder="اكتب تخمينك...">
@@ -1705,7 +1931,12 @@ function phoneAct(ph, a, v) {
   if (a === "buzz") return ltBuzz(ph.pid);
   if (a === "team") return ltJoinTeam(ph.pid, v);
   if (a === "ready") return ltReady(ph.pid);
-  if (a === "chSkip") return chSkip();
+  if (a === "chSkip") { if (g && g.type === "charades" && chActor() && chActor().id === ph.pid) chSkip(); return; }
+  if (a === "chReady") { if (g && g.type === "charades" && chActor() && chActor().id === ph.pid) chStart(); return; }
+  if (a === "drReady") { if (g && g.type === "draw" && drawer() && drawer().id === ph.pid) drStart(); return; }
+  if (a === "mfseen") return mfSeen(ph.pid);
+  if (a === "mfpick") return mfPick(ph.pid, v);
+  if (a === "mfvote") return mfVote(ph.pid, v);
   if (a === "seen") return salfaSeen(ph.pid);
   if (a === "vote") return salfaPhoneVote(ph.pid, v);
   if (a === "sguess") { if (g && g.impostor === ph.pid) salfaGuess(+v); return; }
