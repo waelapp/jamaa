@@ -337,6 +337,14 @@ body.tvmode .screen.enter{animation-duration:.2s}
 .gate .card2{text-align:center;max-width:420px}
 .gate img{width:120px;border-radius:28px}
 @media (max-width:800px){.admin-body{grid-template-columns:1fr}.cat-list{border-left:none;border-bottom:1px solid #ffffff12;max-height:45vh}.form-row > *{min-width:100px}}
+.addcat-btn{width:100%;margin-bottom:10px;padding:12px;font-size:15px}
+.item .x.ed{background:#7b61ff33;color:#cbbcff}
+.item.editing{outline:2px solid var(--amber,#ffc94d)}
+.edit-card{border-color:#ffc94d88!important}
+.thumbs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.th{position:relative}.th img{width:72px;height:72px;object-fit:cover;border-radius:10px;display:block}
+.th button{position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;border:none;background:#ff6b6b;color:#fff;font-size:11px}
+.card2 h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -376,11 +384,12 @@ const GAMES = {
   salfa:    {name: "برا السالفة", icon: "🕵️", min: 3, minPhones: 0, unit: "كلمة", desc: "الكل يعرف الكلمة إلا واحد… اكشفوه!"},
   fib:      {name: "اكذب صح", icon: "🤥", min: 2, minPhones: 2, unit: "سؤال", desc: "اكتب كذبة مقنعة ولا تنخدع بكذبات الباقين"},
   draw:     {name: "ارسم وخمّن", icon: "🎨", min: 2, minPhones: 1, unit: "كلمة", desc: "ارسم بجوالك والرسمة تطلع على التلفزيون"},
+  pics:     {name: "تحدي الصور", icon: "🖼️", min: 1, minPhones: 0, unit: "تحدي", desc: "صورتين أو ثلاث… وش يجمعها؟"},
 };
-const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن"};
+const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور"};
 
 
-const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}];
+const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}, {"id": "c-pics-emoji", "name": "إيموجي", "emoji": "😀", "type": "pics", "enabled": true, "order": 50, "items": [{"q": "وش يجمع هذي الصور؟", "e": ["🌧️", "☂️", "⛈️"], "a": "مطر", "w": ["شمس", "ثلج", "رياح"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🎂", "🎈", "🎁"], "a": "عيد ميلاد", "w": ["عرس", "تخرج", "رمضان"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌙", "🕌", "🍽️"], "a": "رمضان", "w": ["عيد", "حج", "سفر"]}, {"q": "وش يجمع هذي الصور؟", "e": ["✈️", "🧳", "🛂"], "a": "سفر", "w": ["مدرسة", "دوام", "تسوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["⚽", "🥅", "🏟️"], "a": "كورة", "w": ["سباحة", "تنس", "سلة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🐪", "🏜️", "⛺"], "a": "كشتة", "w": ["بحر", "سوق", "مطعم"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🍿", "🎬", "🎟️"], "a": "سينما", "w": ["ملعب", "مكتبة", "مدرسة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["📚", "✏️", "🎒"], "a": "مدرسة", "w": ["مستشفى", "مطار", "سوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🔥", "🥩", "🍢"], "a": "شوي", "w": ["قلي", "سلق", "خبز"]}, {"q": "وش يجمع هذي الصور؟", "e": ["❄️", "⛄", "🧣"], "a": "شتاء", "w": ["صيف", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌊", "🏖️", "☀️"], "a": "صيف", "w": ["شتاء", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["💍", "👰", "🎉"], "a": "عرس", "w": ["تخرج", "عيد ميلاد", "سفر"]}]}];
 const FB_CONFIG = {apiKey: "AIzaSyCS4Ma_0YzpzDxoXVqNpY71ZVJjCJQpaUU", authDomain: "jamaa-3b3e9.firebaseapp.com", databaseURL: "https://jamaa-3b3e9-default-rtdb.europe-west1.firebasedatabase.app", projectId: "jamaa-3b3e9", storageBucket: "jamaa-3b3e9.firebasestorage.app", messagingSenderId: "186594515809", appId: "1:186594515809:web:48a3133bd4a4b37fe74320"};
 firebase.initializeApp(FB_CONFIG);
 const auth = firebase.auth(), fdb = firebase.database();
@@ -391,6 +400,7 @@ const Bank = {
     fdb.ref("bank").on("value", snap => {
       const v = snap.val() || {};
       this.loading = false;
+      autoSeed(snap.val());
       this.cats = Object.entries(v).map(([id, c]) => Object.assign({id}, c, {items: Array.isArray(c.items) ? c.items.filter(Boolean) : Object.values(c.items || {})})).filter(c => c.type);
       this.cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name), "ar"));
       this.emit("remote");
@@ -414,7 +424,7 @@ $("#closeAdmin").addEventListener("click", closeAdmin);
 
 async function createCat(type, name, emoji) {
   if (!Bank.canWrite) return setMsg("ما عندك صلاحية تعديل الأسئلة في هذه الصفحة.");
-  const icons = {qa: "❓", charades: "🎭", salfa: "🕵️", fib: "🤥", draw: "🎨"};
+  const icons = {qa: "❓", charades: "🎭", salfa: "🕵️", fib: "🤥", draw: "🎨", pics: "🖼️"};
   const maxOrder = Math.max(0, ...Bank.cats.map(c => c.order || 0));
   const cat = {id: uid("c-"), name: name || "قسم جديد", emoji: emoji || icons[type], type, enabled: true, order: maxOrder + 1, items: []};
   selCat = cat.id;
@@ -442,27 +452,58 @@ function renderBadges() {
     b.querySelector("span").textContent = Bank.mode === "db" ? (Bank.loading ? "جاري التحميل..." : "متزامن عبر الإنترنت") : "تخزين محلي";
   }
 }
-function itemFields(type) {
-  if (type === "qa") return `<div class="form-row"><input class="in" id="nq" placeholder="السؤال" style="flex:3"></div>
-    <div class="form-row" style="margin-top:8px"><input class="in" id="na" placeholder="✓ الإجابة الصحيحة"><input class="in" id="nw1" placeholder="✗ خطأ 1"><input class="in" id="nw2" placeholder="✗ خطأ 2"><input class="in" id="nw3" placeholder="✗ خطأ 3"><button class="btn pri" data-a="addItem">إضافة</button></div>`;
-  if (type === "fib") return `<div class="form-row"><input class="in" id="nq" placeholder="المعلومة مع ____ مكان الجواب (مثال: الأخطبوط عنده ____ قلوب)" style="flex:3"><input class="in" id="na" placeholder="✓ الحقيقة"><button class="btn pri" data-a="addItem">إضافة</button></div>`;
-  if (type === "salfa") return `<div class="form-row"><input class="in" id="nwd" placeholder="الكلمة السرية (مثال: حديقة حيوان)"><input class="in" id="ntp" placeholder="الموضوع الظاهر للجميع (مثال: مكان سياحي) — اختياري"><button class="btn pri" data-a="addItem">إضافة</button></div>`;
+let editIdx = null, picImgs = [];
+function itemFields(type, it) {
+  const v = k => esc(it ? (it[k] ?? "") : ""), w = i => esc(it && it.w && it.w[i] || "");
+  const btn = it ? `<button class="btn ok" data-a="addItem">💾 حفظ التعديل</button><button class="btn" data-a="cancelEdit">إلغاء</button>` : `<button class="btn pri" data-a="addItem">إضافة</button>`;
+  if (type === "qa") return `<div class="form-row"><input class="in" id="nq" placeholder="السؤال" style="flex:3" value="${v("q")}"></div>
+    <div class="form-row" style="margin-top:8px"><input class="in" id="na" placeholder="✓ الإجابة الصحيحة" value="${v("a")}"><input class="in" id="nw1" placeholder="✗ خطأ 1" value="${w(0)}"><input class="in" id="nw2" placeholder="✗ خطأ 2" value="${w(1)}"><input class="in" id="nw3" placeholder="✗ خطأ 3" value="${w(2)}">${btn}</div>`;
+  if (type === "fib") return `<div class="form-row"><input class="in" id="nq" placeholder="المعلومة مع ____ مكان الجواب (مثال: الأخطبوط عنده ____ قلوب)" style="flex:3" value="${v("q")}"><input class="in" id="na" placeholder="✓ الحقيقة" value="${v("a")}">${btn}</div>`;
+  if (type === "salfa") return `<div class="form-row"><input class="in" id="nwd" placeholder="الكلمة السرية (مثال: حديقة حيوان)" value="${v("w")}"><input class="in" id="ntp" placeholder="الموضوع الظاهر للجميع (مثال: مكان سياحي) — اختياري" value="${v("t")}">${btn}</div>`;
+  if (type === "pics") {
+    return `<div class="form-row"><input class="in" id="nq" placeholder="السؤال (اختياري) — الافتراضي: وش يجمع هذي الصور؟" value="${v("q")}" style="flex:3"></div>
+    <div class="form-row" style="margin-top:8px"><input class="in" id="ne" placeholder="إيموجي بدل الصور (مثال: 🌧️ ☂️ ⛈️)" value="${esc(it && it.e ? it.e.join(" ") : "")}" style="flex:2">
+      <label class="btn" style="cursor:pointer">📷 رفع صور<input type="file" id="nimgf" accept="image/*" multiple hidden></label></div>
+    <div class="form-row" style="margin-top:8px"><input class="in" id="nurl" placeholder="أو روابط صور مفصولة بمسافة (https://...)" style="flex:3"></div>
+    <div class="thumbs" id="thumbs">${picImgs.map((src, i) => `<span class="th"><img src="${esc(src)}" alt=""><button data-rmimg="${i}">✕</button></span>`).join("")}</div>
+    <div class="form-row" style="margin-top:8px"><input class="in" id="na" placeholder="✓ الإجابة الصحيحة" value="${v("a")}"><input class="in" id="nw1" placeholder="✗ خطأ 1" value="${w(0)}"><input class="in" id="nw2" placeholder="✗ خطأ 2" value="${w(1)}"><input class="in" id="nw3" placeholder="✗ خطأ 3" value="${w(2)}">${btn}</div>`;
+  }
   const ph = {charades: "كلمة أو عبارة تنمثّل (فيلم، فعل، مثل شعبي...)", draw: "شيء سهل يترسم (شمس، بيت، قطة...)"}[type];
-  return `<div class="form-row"><input class="in" id="nwd" placeholder="${ph}"><button class="btn pri" data-a="addItem">إضافة</button></div>`;
+  return `<div class="form-row"><input class="in" id="nwd" placeholder="${ph}" value="${v("w")}">${btn}</div>`;
 }
 function itemRow(type, it, i) {
-  if (type === "qa") return `<div class="item"><span class="q">${esc(it.q)}<div class="a">✓ ${esc(it.a)} <span style="color:var(--faint)">· ✗ ${(it.w || []).map(esc).join(" · ")}</span></div></span><button class="x" data-del="${i}" title="حذف">✕</button></div>`;
-  if (type === "fib") return `<div class="item"><span class="q">${esc(it.q)}<div class="a">✓ ${esc(it.a)}</div></span><button class="x" data-del="${i}" title="حذف">✕</button></div>`;
-  if (type === "salfa") return `<div class="item"><span class="q">🕵️ ${esc(it.w)}<div class="a" style="color:var(--amber)">🧭 ${esc(it.t || "الموضوع = اسم الفئة")}</div></span><button class="x" data-del="${i}" title="حذف">✕</button></div>`;
-  return `<div class="item"><span class="q">${{charades: "🎭", draw: "🎨"}[type] || ""} ${esc(it.w)}</span><button class="x" data-del="${i}" title="حذف">✕</button></div>`;
+  const tools = `<button class="x ed" data-edit="${i}" title="تعديل">✎</button><button class="x" data-del="${i}" title="حذف">✕</button>`;
+  const cls = `item ${editIdx === i ? "editing" : ""}`;
+  if (type === "qa") return `<div class="${cls}"><span class="q">${esc(it.q)}<div class="a">✓ ${esc(it.a)} <span style="color:var(--faint)">· ✗ ${(it.w || []).map(esc).join(" · ")}</span></div></span>${tools}</div>`;
+  if (type === "fib") return `<div class="${cls}"><span class="q">${esc(it.q)}<div class="a">✓ ${esc(it.a)}</div></span>${tools}</div>`;
+  if (type === "salfa") return `<div class="${cls}"><span class="q">🕵️ ${esc(it.w)}<div class="a" style="color:var(--amber)">🧭 ${esc(it.t || "الموضوع = اسم الفئة")}</div></span>${tools}</div>`;
+  if (type === "pics") {
+    const media = it.imgs && it.imgs.length ? it.imgs.slice(0, 3).map(src => `<img src="${esc(src)}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-left:4px">`).join("") : (it.e || []).map(esc).join(" ");
+    return `<div class="${cls}"><span class="q">${media}<div class="a">✓ ${esc(it.a)} <span style="color:var(--faint)">· ✗ ${(it.w || []).map(esc).join(" · ")}</span></div></span>${tools}</div>`;
+  }
+  return `<div class="${cls}"><span class="q">${{charades: "🎭", draw: "🎨"}[type] || ""} ${esc(it.w)}</span>${tools}</div>`;
 }
-const BULK_HINT = {qa: "كل سطر: <b>السؤال | الإجابة الصحيحة | خطأ | خطأ | خطأ</b>", fib: "كل سطر: <b>المعلومة مع ____ | الحقيقة</b>", charades: "كل سطر كلمة أو عبارة", salfa: "كل سطر: <b>الكلمة | الموضوع</b> (الموضوع اختياري — بدونه يكون اسم الفئة)", draw: "كل سطر كلمة"};
+function shrinkImage(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+      const k = Math.min(1, 360 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      let d = c.toDataURL("image/webp", 0.72); if (!d.startsWith("data:image/webp")) d = c.toDataURL("image/jpeg", 0.75);
+      res(d); }; im.onerror = rej; im.src = r.result; };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+const BULK_HINT = {qa: "كل سطر: <b>السؤال | الإجابة الصحيحة | خطأ | خطأ | خطأ</b>", fib: "كل سطر: <b>المعلومة مع ____ | الحقيقة</b>", charades: "كل سطر كلمة أو عبارة", salfa: "كل سطر: <b>الكلمة | الموضوع</b> (الموضوع اختياري — بدونه يكون اسم الفئة)", draw: "كل سطر كلمة", pics: "كل سطر: <b>إيموجي بمسافات | الإجابة | خطأ | خطأ | خطأ</b> — مثال: 🌧️ ☂️ ⛈️ | مطر | شمس | ثلج | رياح"};
+let newOpen = false;
 function renderAdmin() {
   renderBadges();
   if (!$("#admin").classList.contains("open")) return;
   if (selCat && !Bank.get(selCat)) selCat = Bank.cats[0] ? Bank.cats[0].id : null;
   const keepNew = $("#ncName") ? {n: $("#ncName").value, e: $("#ncEmoji").value, t: $("#ncType").value} : {n: "", e: "", t: "qa"};
-  $("#catList").innerHTML = `<div class="card2 newcat"><h4>➕ قسم جديد</h4>
+  $("#catList").innerHTML = `<button class="btn pri addcat-btn" data-opennew="1">${newOpen ? "✕ إغلاق" : "＋ إضافة قسم جديد"}</button>
+    <div class="card2 newcat" style="${newOpen ? "" : "display:none"}"><h4>قسم جديد</h4>
       <div class="form-row"><input class="in" id="ncEmoji" placeholder="🙂" maxlength="4" style="max-width:56px;flex:0 0 56px;text-align:center;font-size:18px"><input class="in" id="ncName" placeholder="اسم القسم (مثال: دوري روشن)"></div>
       <div class="form-row" style="margin-top:8px"><select class="in" id="ncType">${Object.keys(TYPE_LABEL).map(k => `<option value="${k}">${GAMES[k].icon} ${TYPE_LABEL[k]}</option>`).join("")}</select><button class="btn pri" data-newcat="1">إضافة</button></div></div>`
     + (Bank.cats.length ? Bank.cats.map((c, i) => `<div class="cat-item ${c.id === selCat ? "sel" : ""} ${c.enabled ? "" : "off"}" data-cat="${esc(c.id)}">
@@ -481,7 +522,7 @@ function renderAdmin() {
       <div class="form-row"><input class="in" id="ceEmoji" value="${esc(c.emoji)}" style="max-width:70px;flex:0 0 70px;text-align:center;font-size:20px">
         <input class="in" id="ceName" value="${esc(c.name)}"><span class="tag" style="flex:none">${TYPE_LABEL[c.type] || c.type}</span>
         <button class="btn ok" data-a="saveMeta">حفظ</button><button class="btn danger" data-a="delCat">حذف الفئة</button></div></div>
-    <div class="card2"><h4>➕ إضافة يدوية</h4>${itemFields(c.type)}</div>
+    <div class="card2 ${editIdx != null ? "edit-card" : ""}" id="formCard"><h4>${editIdx != null ? "✎ تعديل العنصر رقم " + (editIdx + 1) : "➕ إضافة يدوية"}</h4>${itemFields(c.type, editIdx != null ? c.items[editIdx] : null)}</div>
     <div class="card2"><h4>🤖 إضافة تلقائية بالذكاء الاصطناعي</h4>
       ${Bank.sample ? `<div class="form-row"><input class="in" id="aiTopic" placeholder="موضوع إضافي (اختياري) مثل: دوري روشن، أكلات شعبية..." style="flex:3">
         <select class="in" id="aiCount" style="max-width:110px"><option>5</option><option selected>10</option><option>20</option></select>
@@ -491,22 +532,30 @@ function renderAdmin() {
     <div class="card2"><h4>📋 استيراد جماعي (لصق)</h4><p class="muted">${BULK_HINT[c.type]}</p>
       <textarea class="in" id="bulk"></textarea>
       <div class="form-row" style="margin-top:8px"><button class="btn pri" data-a="bulkAdd">استيراد</button><button class="btn" data-a="copyJson">نسخ الفئة JSON</button></div></div>
-    <div class="card2"><h4>العناصر (${(c.items || []).length}) <span class="tag">🔁 التلفزيون ما يكرر أي عنصر انلعب</span></h4><div class="items">${items || '<p class="muted">فاضية — أضف من الأعلى.</p>'}</div></div>
+    <div class="card2"><h4>العناصر (${(c.items || []).length}) <span class="tag">🔁 التلفزيون ما يكرر أي عنصر انلعب</span>
+      ${(c.items || []).length ? `<button class="btn danger" data-a="delAllItems" style="margin-inline-start:auto;padding:6px 12px;font-size:13px">🗑 حذف كل العناصر</button>` : ""}</h4><div class="items">${items || '<p class="muted">فاضية — أضف من الأعلى.</p>'}</div></div>
     <div class="status-line" id="adminMsg">${esc(adminMsg)}</div>
 `;
   $("#bulk").value = keepBulk;
+  const f = $("#nimgf");
+  if (f) f.onchange = async () => {
+    for (const file of [...f.files].slice(0, 3 - picImgs.length)) { try { picImgs.push(await shrinkImage(file)); } catch (err) { setMsg("تعذّر قراءة الصورة"); } }
+    const keep = {}; ["nq", "ne", "nurl", "na", "nw1", "nw2", "nw3"].forEach(k => { const el = $("#" + k); if (el) keep[k] = el.value; });
+    renderAdmin(); Object.entries(keep).forEach(([k, val]) => { const el = $("#" + k); if (el) el.value = val; });
+  };
 }
 $("#catList").addEventListener("click", async e => {
+  if (e.target.closest("[data-opennew]")) { newOpen = !newOpen; renderAdmin(); if (newOpen) $("#ncName").focus(); return; }
   if (e.target.closest("[data-newcat]")) {
     const name = $("#ncName").value.trim(); if (!name) { setMsg("اكتب اسم القسم"); $("#ncName").focus(); return; }
-    $("#ncName").value = ""; await createCat($("#ncType").value, name, $("#ncEmoji").value.trim()); $("#ncEmoji").value = ""; return;
+    $("#ncName").value = ""; newOpen = false; await createCat($("#ncType").value, name, $("#ncEmoji").value.trim()); $("#ncEmoji").value = ""; return;
   }
   const mv = e.target.closest("[data-move]");
   if (mv) { e.stopPropagation(); await moveCat(mv.dataset.move, +mv.dataset.dir); return; }
   const t = e.target.closest("[data-toggle]");
   if (t) { e.stopPropagation(); const c = Bank.get(t.dataset.toggle); if (!c) return;
     try { await Bank.save(Object.assign({}, c, {enabled: !c.enabled})); } catch (err) { setMsg("تعذّر الحفظ"); } return; }
-  const it = e.target.closest("[data-cat]"); if (it) { selCat = it.dataset.cat; adminMsg = ""; $("#editor").innerHTML = ""; renderAdmin(); }
+  const it = e.target.closest("[data-cat]"); if (it) { selCat = it.dataset.cat; adminMsg = ""; editIdx = null; picImgs = []; $("#editor").innerHTML = ""; renderAdmin(); }
 });
 $("#editor").addEventListener("change", e => {
   const k = e.target.dataset && e.target.dataset.set;
@@ -515,30 +564,49 @@ $("#editor").addEventListener("change", e => {
 $("#editor").addEventListener("click", async e => {
   const c = Bank.get(selCat); if (!c) return;
   const del = e.target.closest("[data-del]");
+  const ed = e.target.closest("[data-edit]");
+  if (ed) { editIdx = +ed.dataset.edit; const it = c.items[editIdx] || {}; picImgs = (it.imgs || []).slice(); renderAdmin(); $("#formCard").scrollIntoView({behavior: "smooth", block: "center"}); return; }
+  const rm = e.target.closest("[data-rmimg]");
+  if (rm) { picImgs.splice(+rm.dataset.rmimg, 1); rm.closest(".th").remove(); return; }
   const btn = e.target.closest("[data-a]"), a = btn && btn.dataset.a;
+  if (a === "cancelEdit") { editIdx = null; picImgs = []; renderAdmin(); return; }
   if (!del && !a) return;
   if (!Bank.canWrite && a !== "copyJson") return setMsg("ما عندك صلاحية تعديل الأسئلة في هذه الصفحة.");
   const copy = Object.assign({}, c, {items: (c.items || []).slice()});
   const save = async msg => { try { await Bank.save(copy); setMsg(msg); } catch (err) { setMsg("تعذّر الحفظ: " + (err.message || err.code)); } };
-  if (del) { copy.items.splice(+del.dataset.del, 1); return save("تم الحذف"); }
+  if (del) { const i = +del.dataset.del; copy.items.splice(i, 1); if (editIdx === i) { editIdx = null; picImgs = []; } else if (editIdx != null && editIdx > i) editIdx--; return save("تم الحذف"); }
+  if (a === "delAllItems") { if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "متأكد؟ بينحذف " + copy.items.length + " عنصر — اضغط مرة ثانية"; return; }
+    copy.items = []; editIdx = null; picImgs = []; return save("تم حذف كل العناصر — أضف عناصر جديدة"); }
   if (a === "saveMeta") { copy.name = $("#ceName").value.trim() || c.name; copy.emoji = $("#ceEmoji").value.trim() || c.emoji; return save("تم حفظ الفئة ✓"); }
   if (a === "delCat") { if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "متأكد؟ اضغط مرة ثانية"; return; }
     try { await Bank.remove(c.id); selCat = null; adminMsg = "تم حذف الفئة"; renderAdmin(); } catch (err) { setMsg("تعذّر الحذف"); } return; }
   if (a === "addItem") {
-    if (c.type === "qa") {
+    let item;
+    if (c.type === "pics") {
+      const q = $("#nq").value.trim(), ans = $("#na").value.trim(), w = ["#nw1", "#nw2", "#nw3"].map(s => $(s).value.trim()).filter(Boolean);
+      const e2 = $("#ne").value.trim().split(/\s+/).filter(Boolean).slice(0, 3);
+      const urls = $("#nurl").value.trim().split(/\s+/).filter(u => /^https?:\/\//.test(u));
+      const imgs = picImgs.concat(urls).slice(0, 3);
+      if (!imgs.length && e2.length < 2) return setMsg("أضف صورتين أو ثلاث (رفع أو روابط) أو إيموجي");
+      if (!ans || w.length < 3) return setMsg("اكتب الإجابة الصحيحة وثلاث إجابات خاطئة");
+      item = {a: ans, w}; if (q) item.q = q; if (imgs.length) item.imgs = imgs; if (e2.length) item.e = e2;
+    } else if (c.type === "qa") {
       const q = $("#nq").value.trim(), ans = $("#na").value.trim(), w = ["#nw1", "#nw2", "#nw3"].map(s => $(s).value.trim()).filter(Boolean);
       if (!q || !ans || w.length < 3) return setMsg("اكتب السؤال والإجابة الصحيحة وثلاث إجابات خاطئة");
-      copy.items.push({q, a: ans, w});
+      item = {q, a: ans, w};
     } else if (c.type === "fib") {
       const q = $("#nq").value.trim(), ans = $("#na").value.trim();
       if (!q || !ans) return setMsg("اكتب المعلومة والحقيقة"); if (!/_{2,}/.test(q)) return setMsg("حط ____ مكان الجواب في المعلومة");
-      copy.items.push({q, a: ans});
+      item = {q, a: ans};
     } else {
       const w = $("#nwd").value.trim(); if (!w) return setMsg("اكتب الكلمة");
       const t = c.type === "salfa" && $("#ntp") ? $("#ntp").value.trim() : "";
-      copy.items.push(t ? {w, t} : {w});
+      item = t ? {w, t} : {w};
     }
-    return save("تمت الإضافة ✓ — وصلت للعبة فوراً");
+    const editing = editIdx != null && editIdx < copy.items.length;
+    if (editing) copy.items[editIdx] = item; else copy.items.push(item);
+    editIdx = null; picImgs = [];
+    await save(editing ? "تم حفظ التعديل ✓" : "تمت الإضافة ✓ — وصلت للعبة فوراً"); renderAdmin(); return;
   }
   if (a === "bulkAdd") {
     const lines = $("#bulk").value.split(/\n+/).map(s => s.trim()).filter(Boolean); let n = 0;
@@ -547,6 +615,7 @@ $("#editor").addEventListener("click", async e => {
       if (c.type === "qa") { if (p.length >= 5) { copy.items.push({q: p[0], a: p[1], w: p.slice(2, 5)}); n++; } }
       else if (c.type === "fib") { if (p.length >= 2 && /_{2,}/.test(p[0])) { copy.items.push({q: p[0], a: p[1]}); n++; } }
       else if (c.type === "salfa" && p.length >= 2) { copy.items.push({w: p[0], t: p[1]}); n++; }
+      else if (c.type === "pics") { if (p.length >= 5) { copy.items.push({e: p[0].split(/\s+/).slice(0, 3), a: p[1], w: p.slice(2, 5)}); n++; } }
       else { copy.items.push({w: p[0] || ln}); n++; }
     }
     if (!n) return setMsg("ما لقيت أسطر بالصيغة الصحيحة");
@@ -607,13 +676,19 @@ auth.onAuthStateChanged(u => {
     if (u) $("#gateMsg").textContent = "هذا الحساب (" + u.email + ") ما عنده صلاحية — سجّل بحساب صاحب اللعبة";
   }
 });
-Bank.onChange(() => {
-  renderAdmin();
-  if (!Bank.loading && !Bank.cats.length && !Bank.seeded && $("#editor")) {
-    $("#editor").innerHTML = `<div class="card2"><h4>قاعدة الأسئلة فاضية</h4><p class="muted">أضيف لك الأقسام والأسئلة الأساسية (${STARTER.length} أقسام) بضغطة؟</p><button class="btn pri" id="seed">إضافة الأسئلة الأساسية</button></div>`;
-    $("#seed").onclick = async () => { Bank.seeded = true; const upd = {}; STARTER.forEach(c => { const b = Object.assign({}, c); delete b.id; upd[c.id] = b; }); await fdb.ref("bank").update(upd); };
-  }
-});
+// first time (or after an update adds new starter sections): put the built-in sections in the database so they show here
+const SEED_V = 3;
+async function autoSeed(v) {
+  if (Bank.seeding || !Bank.canWrite) return;
+  if (v && v._seedv >= SEED_V) return;
+  Bank.seeding = true;
+  const upd = {_seedv: SEED_V}, have = v || {};
+  STARTER.forEach((c, i) => { if (!have[c.id]) { const b = Object.assign({order: i}, c); delete b.id; upd[c.id] = b; } });
+  try { await fdb.ref("bank").update(upd); const n = Object.keys(upd).length - 1; if (n) setMsg("✅ تمت إضافة " + n + " قسم من أقسام اللعبة الأساسية — تقدر تعدّلها أو تحذفها"); }
+  catch (e) { setMsg("تعذّر إضافة الأقسام الأساسية: " + (e.message || e.code)); }
+  Bank.seeding = false;
+}
+Bank.onChange(() => renderAdmin());
 </script>
 </body>
 </html>

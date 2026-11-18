@@ -355,6 +355,30 @@ body.tvmode .screen.enter{animation-duration:.2s}
 @keyframes iWord{0%{opacity:0;transform:translateY(5vmin) scale(.9)}100%{opacity:1;transform:none}}
 @keyframes iBar{0%{opacity:1;transform:scaleX(0)}100%{opacity:1;transform:scaleX(1)}}
 @keyframes iBy{to{opacity:1}}
+
+/* ---------- v3 ---------- */
+.home-grid{grid-template-columns:repeat(3,1fr)!important;gap:22px!important}
+.game-card{height:218px!important}
+.gc8{background:linear-gradient(150deg,#10b981,#0e7490)}
+.hbtn{border:none;border-radius:999px;padding:12px 22px;font-size:20px;font-weight:800;background:#ffffff14;color:#fff;display:inline-flex;gap:8px;align-items:center}
+.hbtn b{background:#ffffff22;border-radius:999px;padding:0 10px}
+.pcard{position:relative}
+.pdel{position:absolute;top:8px;left:8px;width:34px;height:34px;border-radius:50%;border:none;background:#ff6b6b33;color:#ffb0b0;font-size:16px;font-weight:800}
+.setup{display:flex;flex-direction:column;gap:22px;margin-top:34px}
+.setup-row{background:#ffffff0a;border:1px solid #ffffff14;border-radius:24px;padding:20px 26px;display:flex;align-items:center;gap:24px}
+.setup-label{font-size:26px;font-weight:800;min-width:330px}
+.setup-opts{display:flex;gap:14px;flex-wrap:wrap}
+.sopt{border:none;border-radius:16px;padding:14px 22px;font-size:24px;font-weight:800;background:#ffffff12;color:#fff;min-width:90px}
+.sopt.on{background:linear-gradient(90deg,var(--violet),var(--pink))}
+.ask-pair{display:flex;align-items:center;justify-content:center;gap:40px;margin:auto}
+.ask-pair .avatar{width:150px;height:150px;font-size:86px}
+.ask-mid{text-align:center}
+.ask-name{font-family:var(--display);font-size:56px;line-height:1.2}
+.ask-arrow{font-size:28px;color:var(--amber);font-weight:800;margin:6px 0}
+.pics{display:flex;gap:22px;justify-content:center;flex:1;min-height:0}
+.pic{flex:1;max-width:360px;background:#ffffff10;border-radius:24px;overflow:hidden;display:grid;place-items:center}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pic.emo{font-size:150px;line-height:1}
 </style>
 </head>
 <body>
@@ -401,8 +425,9 @@ const GAMES = {
   salfa:    {name: "برا السالفة", icon: "🕵️", min: 3, minPhones: 0, unit: "كلمة", desc: "الكل يعرف الكلمة إلا واحد… اكشفوه!"},
   fib:      {name: "اكذب صح", icon: "🤥", min: 2, minPhones: 2, unit: "سؤال", desc: "اكتب كذبة مقنعة ولا تنخدع بكذبات الباقين"},
   draw:     {name: "ارسم وخمّن", icon: "🎨", min: 2, minPhones: 1, unit: "كلمة", desc: "ارسم بجوالك والرسمة تطلع على التلفزيون"},
+  pics:     {name: "تحدي الصور", icon: "🖼️", min: 1, minPhones: 0, unit: "تحدي", desc: "صورتين أو ثلاث… وش يجمعها؟ أسرع واحد يجاوب"},
 };
-const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن"};
+const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور"};
 
 // ---------------------------------------------------------- sound
 let actx = null;
@@ -421,7 +446,7 @@ function beep(type) {
 }
 
 // ---------------------------------------------------------- question bank (live from the cloud, built-in copy as fallback)
-const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}];
+const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}, {"id": "c-pics-emoji", "name": "إيموجي", "emoji": "😀", "type": "pics", "enabled": true, "order": 50, "items": [{"q": "وش يجمع هذي الصور؟", "e": ["🌧️", "☂️", "⛈️"], "a": "مطر", "w": ["شمس", "ثلج", "رياح"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🎂", "🎈", "🎁"], "a": "عيد ميلاد", "w": ["عرس", "تخرج", "رمضان"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌙", "🕌", "🍽️"], "a": "رمضان", "w": ["عيد", "حج", "سفر"]}, {"q": "وش يجمع هذي الصور؟", "e": ["✈️", "🧳", "🛂"], "a": "سفر", "w": ["مدرسة", "دوام", "تسوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["⚽", "🥅", "🏟️"], "a": "كورة", "w": ["سباحة", "تنس", "سلة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🐪", "🏜️", "⛺"], "a": "كشتة", "w": ["بحر", "سوق", "مطعم"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🍿", "🎬", "🎟️"], "a": "سينما", "w": ["ملعب", "مكتبة", "مدرسة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["📚", "✏️", "🎒"], "a": "مدرسة", "w": ["مستشفى", "مطار", "سوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🔥", "🥩", "🍢"], "a": "شوي", "w": ["قلي", "سلق", "خبز"]}, {"q": "وش يجمع هذي الصور؟", "e": ["❄️", "⛄", "🧣"], "a": "شتاء", "w": ["صيف", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌊", "🏖️", "☀️"], "a": "صيف", "w": ["شتاء", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["💍", "👰", "🎉"], "a": "عرس", "w": ["تخرج", "عيد ميلاد", "سفر"]}]}];
 const Bank = {
   cats: STARTER.map(c => Object.assign({}, c, {items: c.items.slice()})), mode: "local", loaded: false, listeners: [],
   onChange(fn) { this.listeners.push(fn); },
@@ -442,7 +467,7 @@ const Bank = {
 const USED_KEY = "jamaa-used-v1";
 const Used = {
   set: new Set((() => { try { return JSON.parse(localStorage.getItem(USED_KEY) || "[]"); } catch (e) { return []; } })()),
-  key(type, it) { return type + ":" + norm(it.q || it.w); },
+  key(type, it) { return type + ":" + norm((it.q || "") + "|" + (it.w || "") + "|" + (it.a || "") + "|" + (it.e || []).join("") + "|" + (it.imgs || []).length + (it.imgs && it.imgs[0] ? it.imgs[0].slice(-24) : "")); },
   has(type, it) { return this.set.has(this.key(type, it)); },
   add(type, it) { this.set.add(this.key(type, it)); this.save(); },
   forget(type, items) { items.forEach(it => this.set.delete(this.key(type, it))); this.save(); },
@@ -460,17 +485,49 @@ function freshItems(cat, type, n) {
 // ---------------------------------------------------------- state
 const S = {
   screen: "home", next: null, players: [], game: null, modal: null, toast: null, banner: null, reveal: null,
-  settings: {qaCount: 7, qaSeconds: 20, chSeconds: 60, salfaRounds: 3, salfaSeconds: 120, fibCount: 5, fibSeconds: 90, drawSeconds: 80}
+  pendingCat: null,
+  cfg: (() => {
+    const d = {qa: {count: 7, secs: 20}, charades: {turns: 1, secs: 60}, salfa: {rounds: 3, secs: 120}, fib: {count: 5, secs: 90}, draw: {turns: 1, secs: 80}, pics: {count: 8, secs: 20}};
+    try { const s = JSON.parse(localStorage.getItem("jamaa-cfg") || "{}"); for (const k in d) Object.assign(d[k], s[k] || {}); } catch (e) { }
+    return d;
+  })()
 };
+const cfg = t => S.cfg[t];
+function saveCfg() { try { localStorage.setItem("jamaa-cfg", JSON.stringify(S.cfg)); } catch (e) { } }
+const SETUP = {
+  qa:       [{k: "count", label: "عدد الأسئلة", opts: [5, 7, 10, 15, 20]}, {k: "secs", label: "وقت كل سؤال", opts: [10, 15, 20, 30, 0]}],
+  charades: [{k: "turns", label: "عدد اللفات (لكل لاعب)", opts: [1, 2, 3]}, {k: "secs", label: "وقت كل دور", opts: [30, 45, 60, 90, 0]}],
+  salfa:    [{k: "rounds", label: "عدد الجولات", opts: [1, 2, 3, 5]}, {k: "secs", label: "وقت الأسئلة قبل التصويت", opts: [60, 90, 120, 180, 0]}],
+  fib:      [{k: "count", label: "عدد الأسئلة", opts: [3, 5, 7, 10]}, {k: "secs", label: "وقت كتابة الكذبة", opts: [45, 60, 90, 120, 0]}],
+  draw:     [{k: "turns", label: "عدد اللفات (لكل رسّام)", opts: [1, 2, 3]}, {k: "secs", label: "وقت الرسّام", opts: [45, 60, 80, 120, 0]}],
+  pics:     [{k: "count", label: "عدد التحديات", opts: [5, 8, 10, 15]}, {k: "secs", label: "وقت كل تحدي", opts: [10, 15, 20, 30, 0]}],
+};
+function optLabel(k, v) { return k === "secs" ? (v ? v + " ثانية" : "بدون وقت ∞") : String(v); }
 let phones = [];
 const playerById = id => S.players.find(p => p.id === id);
 const phonePlayers = () => S.players.filter(p => p.phone);
 function addPlayer(name, avatar, viaPhone) {
   const p = {id: uid("p"), name: name.trim().slice(0, 14) || "لاعب", avatar: avatar || AVATARS[S.players.length % AVATARS.length],
     color: COLORS[S.players.length % COLORS.length], score: 0, phone: !!viaPhone};
-  S.players.push(p); beep("join"); return p;
+  S.players.push(p); beep("join"); saveRoster(); return p;
 }
-function award(pid, pts) { const p = playerById(pid); if (p) p.score += pts; }
+function award(pid, pts) { const p = playerById(pid); if (p) { p.score += pts; saveRoster(); } }
+function removePlayer(id) {
+  S.players = S.players.filter(p => p.id !== id);
+  phones = phones.filter(p => p.id !== id);
+  delete phoneCache[id];
+  if (roomRef) { roomRef.child("players/" + id).remove(); roomRef.child("views/" + id).remove(); }
+  saveRoster();
+}
+let rosterTimer = null;
+function saveRoster() {
+  if (!roomRef) return;
+  clearTimeout(rosterTimer);
+  rosterTimer = setTimeout(() => {
+    const r = {}; S.players.forEach((p, i) => { r[p.id] = {name: p.name, avatar: p.avatar, color: p.color, score: p.score, phone: !!p.phone, i}; });
+    roomRef.child("roster").set(r);
+  }, 700);
+}
 function showToast(text) { S.toast = {text, id: Math.random()}; render(); setTimeout(() => { S.toast = null; render(); }, 1100); }
 function showBanner(text) { S.banner = text; render(); clearTimeout(showBanner.t); showBanner.t = setTimeout(() => { S.banner = null; render(); }, 3500); }
 
@@ -481,6 +538,7 @@ function back() {
   if (S.reveal) { S.reveal = null; render(true); return; }
   if (S.screen === "lobby" || S.screen === "scores") go("home");
   else if (S.screen === "cats") go("lobby");
+  else if (S.screen === "setup") go("cats");
   else if (S.game) openQuit();
 }
 function chooseGame(type) { S.next = type; go("lobby"); }
@@ -495,6 +553,7 @@ let timerId = null;
 function startTimer(seconds, onEnd) {
   stopTimer();
   const g = S.game; if (!g) return;
+  if (!(seconds > 0)) { g.endsAt = null; g.total = 0; g.onEnd = onEnd; g.pausedMs = null; return; }   // "بدون وقت"
   g.endsAt = Date.now() + seconds * 1000; g.total = g.total && g.resuming ? g.total : seconds; g.onEnd = onEnd; g.resuming = false;
   timerId = setInterval(() => {
     const left = timeLeft();
@@ -506,11 +565,14 @@ function startTimer(seconds, onEnd) {
 function stopTimer() { if (timerId) clearInterval(timerId); timerId = null; }
 function pauseTimer() { const g = S.game; if (g && timerId) { g.pausedMs = Math.max(0, g.endsAt - Date.now()); stopTimer(); } }
 function resumeTimer() { const g = S.game; if (g && g.pausedMs != null) { const ms = g.pausedMs; g.pausedMs = null; g.resuming = true; startTimer(ms / 1000, g.onEnd); } }
+function timed() { const g = S.game; return !!(g && (g.endsAt || g.pausedMs != null)); }
+function tl(left) { return timed() ? left : "∞"; }
+function barW(left) { const g = S.game; return timed() && g.total ? (left / g.total) * 100 : 100; }
 function timeLeft() { const g = S.game; if (!g || !g.endsAt) return 0; if (g.pausedMs != null) return Math.ceil(g.pausedMs / 1000); return Math.max(0, Math.ceil((g.endsAt - Date.now()) / 1000)); }
 
 // ---------------------------------------------------------- QA
 function startQA(cat) {
-  const items = freshItems(cat, "qa", S.settings.qaCount);
+  const items = freshItems(cat, "qa", cfg("qa").count);
   S.game = {type: "qa", cat, items, idx: -1, phase: "question", answers: {}, awarded: {}};
   S.screen = "qa"; nextQuestion();
 }
@@ -522,12 +584,12 @@ function nextQuestion() {
   g.options = shuffle([it.a, ...(it.w || []).slice(0, 3)]);
   g.correct = g.options.indexOf(it.a);
   g.phase = "question"; g.answers = {}; g.awarded = {}; g.total = 0;
-  startTimer(S.settings.qaSeconds, revealAnswer);
+  startTimer(cfg("qa").secs, revealAnswer);
   render(true);
 }
 function phoneAnswer(pid, choice) {
   const g = S.game; if (!g || g.type !== "qa" || g.phase !== "question" || g.answers[pid]) return;
-  g.answers[pid] = {choice, left: timeLeft()};
+  g.answers[pid] = {choice, left: timeLeft(), order: Object.keys(g.answers).length};
   const pp = phonePlayers();
   if (pp.length && pp.every(p => g.answers[p.id])) { revealAnswer(); return; }
   render();
@@ -537,7 +599,7 @@ function revealAnswer() {
   stopTimer(); g.phase = "reveal";
   let any = false;
   for (const [pid, a] of Object.entries(g.answers)) {
-    if (a.choice === g.correct) { const pts = 100 + Math.round(50 * a.left / S.settings.qaSeconds); a.pts = pts; award(pid, pts); any = true; }
+    if (a.choice === g.correct) { const secs = cfg("qa").secs; const pts = 100 + (secs ? Math.round(50 * a.left / secs) : Math.max(0, 50 - 15 * a.order)); a.pts = pts; award(pid, pts); any = true; }
   }
   beep(any ? "ok" : "bad"); render(true);
 }
@@ -550,14 +612,15 @@ function toggleAward(pid, pts = 100) {
 
 // ---------------------------------------------------------- charades
 function startCharades(cat) {
-  S.game = {type: "charades", cat, pool: freshItems(cat, "charades"), order: shuffle(S.players.map(p => p.id)), turn: 0, phase: "ready", peek: false, turnPts: 0, guessed: 0};
+  const ids = shuffle(S.players.map(p => p.id));
+  S.game = {type: "charades", cat, pool: freshItems(cat, "charades"), order: [].concat(...Array(cfg("charades").turns).fill(ids)), turn: 0, phase: "ready", peek: false, turnPts: 0, guessed: 0};
   S.screen = "charades"; render(true);
 }
 function chActor() { const g = S.game; return g && playerById(g.order[g.turn]); }
 function nextWord(g) { if (!g.pool.length) g.pool = freshItems(g.cat, g.type); const it = g.pool.pop(); Used.add(g.type, it); g.word = it.w; g.peek = false; g.wordNo = (g.wordNo || 0) + 1; }
 function chStart() {
   const g = S.game; g.phase = "acting"; g.turnPts = 0; g.guessed = 0; g.total = 0; nextWord(g);
-  startTimer(S.settings.chSeconds, () => { const gg = S.game; if (gg) { gg.phase = "turnEnd"; beep("end"); render(true); } });
+  startTimer(cfg("charades").secs, chEnd);
   render(true);
 }
 function chGuessed(pid) {
@@ -565,6 +628,7 @@ function chGuessed(pid) {
   award(pid, 100); award(chActor().id, 50); g.turnPts += 50; g.guessed++;
   beep("ok"); showToast("صح! 🎉"); nextWord(g); render(true);
 }
+function chEnd() { const g = S.game; if (!g || g.phase !== "acting") return; stopTimer(); g.phase = "turnEnd"; beep("end"); render(true); }
 function chSkip() { const g = S.game; if (!g || g.phase !== "acting") return; beep("bad"); nextWord(g); render(true); }
 function chNextTurn() {
   const g = S.game; g.turn++;
@@ -574,7 +638,7 @@ function chNextTurn() {
 
 // ---------------------------------------------------------- برا السالفة
 function startSalfa(cat) {
-  S.game = {type: "salfa", cat, pool: freshItems(cat, "salfa"), round: 0, rounds: Math.max(1, S.settings.salfaRounds)};
+  S.game = {type: "salfa", cat, pool: freshItems(cat, "salfa"), round: 0, rounds: Math.max(1, cfg("salfa").rounds)};
   S.screen = "salfa"; salfaRound();
 }
 function salfaRound() {
@@ -590,11 +654,21 @@ function salfaRound() {
 }
 function salfaRoleText(pid) { const g = S.game; return pid === g.impostor ? "أنت برا السالفة 🤫" : g.word; }
 function salfaSeen(pid) { const g = S.game; if (!g || g.phase !== "roles") return; g.seen[pid] = true; S.reveal = null; render(true); }
+function salfaPickPair() {
+  const g = S.game, ids = S.players.map(p => p.id);
+  if (ids.length < 2) return;
+  let a, b, tries = 0;
+  do { a = ids[Math.floor(Math.random() * ids.length)]; b = ids[Math.floor(Math.random() * ids.length)]; tries++; }
+  while ((a === b || (g.pair && g.pair[0] === a && g.pair[1] === b) || (g.pair && g.pair[0] === a && tries < 6)) && tries < 40);
+  if (a === b) b = ids.find(x => x !== a);
+  g.pair = [a, b]; g.asked = (g.asked || 0) + 1;
+}
 function salfaAsk() {
-  const g = S.game; g.phase = "ask";
-  startTimer(S.settings.salfaSeconds, salfaVote);
+  const g = S.game; g.phase = "ask"; g.asked = 0; g.pair = null; salfaPickPair();
+  startTimer(cfg("salfa").secs, salfaVote);
   render(true);
 }
+function salfaNextQ() { const g = S.game; if (!g || g.phase !== "ask") return; salfaPickPair(); beep("tick"); render(true); }
 function salfaVote() { const g = S.game; if (!g) return; stopTimer(); g.phase = "vote"; g.total = 0; beep("end"); render(true); }
 function salfaPhoneVote(pid, target) { const g = S.game; if (!g || g.phase !== "vote" || pid === target) return; g.votes[pid] = target; render(); }
 function salfaAccuse(pid) {
@@ -617,7 +691,7 @@ function salfaGuess(i) {
 
 // ---------------------------------------------------------- اكذب صح
 function startFib(cat) {
-  const items = freshItems(cat, "fib", S.settings.fibCount);
+  const items = freshItems(cat, "fib", cfg("fib").count);
   S.game = {type: "fib", cat, items, idx: -1};
   S.screen = "fib"; fibNext();
 }
@@ -626,7 +700,7 @@ function fibNext() {
   if (g.idx >= g.items.length) { endGame(); return; }
   Used.add("fib", g.items[g.idx]);
   g.phase = "write"; g.lies = {}; g.votes = {}; g.choices = []; g.total = 0; g.reject = {};
-  startTimer(S.settings.fibSeconds, fibToVote);
+  startTimer(cfg("fib").secs, fibToVote);
   render(true);
 }
 function fibSubmit(pid, text) {
@@ -670,14 +744,14 @@ function fibReveal() {
 // ---------------------------------------------------------- ارسم وخمّن
 const SIZES = {s: 3, m: 7, l: 14};
 function startDraw(cat) {
-  const drawers = shuffle(phonePlayers().map(p => p.id));
+  const ids = shuffle(phonePlayers().map(p => p.id)), drawers = [].concat(...Array(cfg("draw").turns).fill(ids));
   S.game = {type: "draw", cat, pool: freshItems(cat, "draw"), order: drawers, turn: 0, phase: "ready", ops: [], color: INK[0], size: "m", tool: "brush", feed: [], turnPts: 0, guessed: 0};
   S.screen = "draw"; render(true);
 }
 function drawer() { const g = S.game; return g && playerById(g.order[g.turn]); }
 function drStart() {
   const g = S.game; g.phase = "drawing"; g.turnPts = 0; g.guessed = 0; g.feed = []; g.total = 0; drNewWord();
-  startTimer(S.settings.drawSeconds, () => { const gg = S.game; if (gg) { gg.phase = "turnEnd"; beep("end"); render(true); } });
+  startTimer(cfg("draw").secs, drEnd);
   render(true);
 }
 function drNewWord() { const g = S.game; nextWord(g); g.ops = []; repaintAll(); }
@@ -693,6 +767,7 @@ function drGuess(pid, text) {
   g.feed.unshift({pid, text: text.trim().slice(0, 24), ok: false}); g.feed = g.feed.slice(0, 9);
   render(); return false;
 }
+function drEnd() { const g = S.game; if (!g || g.phase !== "drawing") return; stopTimer(); g.phase = "turnEnd"; beep("end"); render(true); }
 function drSkip() { const g = S.game; if (!g || g.phase !== "drawing") return; beep("bad"); drNewWord(); render(true); }
 function drNextTurn() {
   const g = S.game; g.turn++;
@@ -742,11 +817,51 @@ function paintFull(canvas, ops) {
 }
 function repaintAll() { const g = S.game, ops = g && g.type === "draw" ? g.ops : []; drawCanvases().forEach(c => paintFull(c, ops)); }
 
+// ---------------------------------------------------------- تحدي الصور
+function startPics(cat) {
+  const items = freshItems(cat, "pics", cfg("pics").count);
+  S.game = {type: "pics", cat, items, idx: -1};
+  S.screen = "pics"; picsNext();
+}
+function picsNext() {
+  const g = S.game; g.idx++;
+  if (g.idx >= g.items.length) { endGame(); return; }
+  const it = g.items[g.idx]; Used.add("pics", it);
+  g.options = shuffle([it.a, ...(it.w || []).slice(0, 3)]);
+  g.correct = g.options.indexOf(it.a);
+  g.phase = "show"; g.answers = {}; g.winner = null; g.winPts = 0; g.total = 0;
+  startTimer(cfg("pics").secs, picsReveal);
+  render(true);
+}
+function picsWin(pid) {
+  const g = S.game; if (!g || g.phase !== "show" || g.winner) return;
+  const secs = cfg("pics").secs, left = timeLeft();
+  g.winner = pid; g.winPts = 100 + (secs && timed() ? Math.round(50 * left / secs) : 0);
+  award(pid, g.winPts); picsReveal();
+}
+function picsAnswer(pid, i) {
+  const g = S.game; if (!g || g.type !== "pics" || g.phase !== "show" || g.answers[pid] != null) return;
+  g.answers[pid] = i;
+  if (i === g.correct) return picsWin(pid);
+  beep("bad");
+  const pp = phonePlayers();
+  if (pp.length && pp.every(p => g.answers[p.id] != null)) { picsReveal(); return; }
+  render();
+}
+function picsReveal() {
+  const g = S.game; if (!g || g.phase !== "show") return;
+  stopTimer(); g.phase = "reveal"; beep(g.winner ? "ok" : "bad"); render(true);
+}
+function picsMedia(it, big) {
+  if (it.imgs && it.imgs.length) return it.imgs.slice(0, 3).map(src => `<div class="pic"><img src="${esc(src)}" alt=""></div>`).join("");
+  return (it.e || []).slice(0, 3).map(e => `<div class="pic emo">${esc(e)}</div>`).join("");
+}
+
 // ---------------------------------------------------------- game start / end
 function startGame(type, cat) {
   cat = {id: cat.id, name: cat.name, emoji: cat.emoji, type: cat.type, items: cat.items.slice()};
   if (!cat.items.length) return;
-  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw})[type](cat);
+  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw, pics: startPics})[type](cat);
 }
 function endGame() { stopTimer(); S.game = null; beep("end"); go("scores"); }
 function gameReady(type) {
@@ -769,17 +884,16 @@ function screenHome() {
   const n = S.players.length;
   const card = (cls, key, act, v, icon, title, desc) => `<button class="game-card ${cls} f" data-f="${key}" data-act="${act}" data-v="${v}"><span class="ico">${icon}</span><h3>${title}</h3><p>${desc}</p></button>`;
   return `<div class="screen">
-    <div class="topline"><div class="tv-head"><img src="${LOGO}" alt="جَمعة" style="width:120px;height:120px;border-radius:30px;box-shadow:0 10px 30px #0006">
-      <div><p class="tv-sub" style="font-size:24px;color:#fff;font-weight:800;margin:0">ألعاب الجَمعات 🎉</p><p class="tv-sub" style="font-size:19px">كل واحد يلعب من جواله أو بالريموت</p></div></div>
-      <span class="pill"><span class="live-dot"></span> ${Bank.mode === "db" ? "الأسئلة متزامنة أونلاين" : ONLINE ? "متصل" : "بدون إنترنت"}</span></div>
-    <div class="home-grid" style="margin-top:20px">
+    <div class="topline"><div class="tv-head"><img src="${LOGO}" alt="جَمعة" style="width:104px;height:104px;border-radius:26px;box-shadow:0 10px 30px #0006">
+      <div><p class="tv-sub" style="font-size:24px;color:#fff;font-weight:800;margin:0">ألعاب الجَمعات 🎉</p><p class="tv-sub" style="font-size:18px"><span class="live-dot"></span> ${Bank.mode === "db" ? "الأسئلة متزامنة أونلاين" : ONLINE ? "متصل" : "بدون إنترنت"}</p></div></div>
+      <div class="tv-row"><button class="hbtn f" data-f="h-pl" data-act="choose" data-v="">👥 اللاعبين <b>${n}</b></button><button class="hbtn f" data-f="h-sc" data-act="go" data-v="scores">🏆 النقاط</button></div></div>
+    <div class="home-grid" style="margin-top:22px">
       ${card("gc1", "g-charades", "choose", "charades", "🎭", "بدون كلام", GAMES.charades.desc)}
       ${card("gc2", "g-qa", "choose", "qa", "❓", "سؤال وجواب", GAMES.qa.desc)}
       ${card("gc5", "g-salfa", "choose", "salfa", "🕵️", "برا السالفة", GAMES.salfa.desc)}
       ${card("gc6", "g-fib", "choose", "fib", "🤥", "اكذب صح", GAMES.fib.desc)}
       ${card("gc7", "g-draw", "choose", "draw", "🎨", "ارسم وخمّن", GAMES.draw.desc)}
-      ${card("gc3", "g-sc", "go", "scores", "🏆", "النقاط", "ترتيب اللاعبين ومجموع نقاطهم")}
-      ${card("gc4", "g-pl", "choose", "", "👥", "اللاعبين", n ? n + " لاعبين في الغرفة" : "أضف اللاعبين بالباركود أو الريموت")}
+      ${card("gc8", "g-pics", "choose", "pics", "🖼️", "تحدي الصور", GAMES.pics.desc)}
     </div>
     <div class="home-foot" style="margin-top:auto"><span>رمز الغرفة: <b style="direction:ltr;display:inline-block">${ROOM}</b></span><span>© 2026 WAEL</span></div>
   </div>`;
@@ -788,7 +902,8 @@ function screenHome() {
 function screenLobby() {
   const ps = S.players, G = GAMES[S.next], title = G ? `${G.icon} ${G.name}` : "👥 اللاعبين";
   const ready = gameReady(S.next);
-  const cards = ps.map(p => `<div class="pcard">${av(p, "avatar")}<div class="nm">${esc(p.name)}</div><div class="via">${p.phone ? "📱 من الجوال" : "🎮 بالريموت"}</div></div>`).join("");
+  const cards = ps.map(p => `<div class="pcard">${av(p, "avatar")}<div class="nm">${esc(p.name)}</div><div class="via">${p.phone ? "📱 من الجوال" : "🎮 بالريموت"} · ${p.score}</div>
+      <button class="pdel f" data-f="pd-${p.id}" data-act="delPlayer" data-v="${p.id}" title="حذف">✕</button></div>`).join("");
   const empties = Array.from({length: Math.max(0, 3 - ps.length)}, () => `<div class="pcard empty">بانتظار لاعب...</div>`).join("");
   return `<div class="screen">
     <div class="topline"><div><h1 class="tv-title">${title}</h1><p class="tv-sub">${G ? esc(G.desc) : "صوّروا الباركود بالجوال واكتبوا أسماءكم"}</p></div>
@@ -801,7 +916,8 @@ function screenLobby() {
         <div class="room-code">${ROOM}</div>
       </div>`}
       <div class="players-area">
-        <div class="tv-row" style="justify-content:space-between"><span class="pill">👥 ${ps.length} لاعبين · 📱 ${phonePlayers().length} جوال</span>${G && !ready.ok ? `<span class="pill">⚠️ ${ready.why}</span>` : ""}</div>
+        <div class="tv-row" style="justify-content:space-between"><span class="pill">👥 ${ps.length} لاعبين · 📱 ${phonePlayers().length} جوال</span>${G && !ready.ok ? `<span class="pill">⚠️ ${ready.why}</span>` : ""}
+          ${ps.length ? `<button class="hbtn f" data-f="pd-all" data-act="delAll" style="color:#ffb0b0">${S.confirmAll ? "متأكد؟ اضغط مرة ثانية" : "🗑 حذف الكل"}</button>` : ""}</div>
         <div class="players-grid">${cards}${empties}<button class="add-card f" data-f="l-add" data-act="addRemote" ${ready.ok && G ? "" : 'data-auto="1"'}>＋ إضافة لاعب بالريموت</button></div>
       </div>
     </div></div>`;
@@ -837,8 +953,8 @@ function screenQA() {
       <div class="tv-row" style="justify-content:center;margin-top:16px"><button class="tv-btn go f" data-f="q-next" data-act="nextQ" data-auto="1">${g.idx + 1 >= g.items.length ? "النتائج 🏆" : "السؤال التالي ←"}</button></div>`;
   }
   return `<div class="screen">
-    ${head(`${catPill()} · سؤال ${g.idx + 1} من ${g.items.length}`, `<div class="timer ${left <= 5 && !rev ? "low" : ""}" id="tTimer">${rev ? "✓" : left}</div>`)}
-    <div class="bar"><i id="tBar" style="width:${rev ? 0 : (left / S.settings.qaSeconds) * 100}%"></i></div>
+    ${head(`${catPill()} · سؤال ${g.idx + 1} من ${g.items.length}`, `<div class="timer ${timed() && left <= 5 && !rev ? "low" : ""}" id="tTimer">${rev ? "✓" : tl(left)}</div>`)}
+    <div class="bar"><i id="tBar" style="width:${rev ? 0 : barW(left)}%"></i></div>
     <div class="question" style="margin:24px 0 22px">${esc(it.q)}</div>
     <div class="opts">${opts}</div>${bottom}</div>`;
 }
@@ -850,22 +966,23 @@ function screenCharades() {
     return `<div class="screen">${head(info)}
       <div class="actor-hero">${av(actor, "avatar")}<h2>دور ${esc(actor.name)} 🎭</h2>
         <p>${actor.phone ? "الكلمات بتظهر في جوالك — مثّلها بدون ولا كلمة!" : "الكلمة بتظهر هنا لما تضغط «👁 الكلمة» — خلّ الباقين يغمضون"}</p>
-        <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-start" data-act="chStart" data-auto="1">ابدأ ⏱ ${S.settings.chSeconds} ثانية</button></div></div></div>`;
+        <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-start" data-act="chStart" data-auto="1">ابدأ · ${optLabel("secs", cfg("charades").secs)}</button></div></div></div>`;
   }
   if (g.phase === "turnEnd") {
     const last = g.turn + 1 >= g.order.length;
     return `<div class="screen">${head(info)}
-      <div class="actor-hero">${av(actor, "avatar")}<h2>انتهى الوقت! ⏰</h2><p>${esc(actor.name)} مثّل ${g.guessed} كلمات وجاب +${g.turnPts} نقطة</p>
+      <div class="actor-hero">${av(actor, "avatar")}<h2>${timed() || cfg("charades").secs ? "انتهى الوقت! ⏰" : "انتهى الدور 👏"}</h2><p>${esc(actor.name)} مثّل ${g.guessed} كلمات وجاب +${g.turnPts} نقطة</p>
         <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="ch-next" data-act="chNextTurn" data-auto="1">${last ? "النتائج 🏆" : "الدور التالي ←"}</button></div></div></div>`;
   }
   const others = S.players.filter(p => p.id !== actor.id);
   const word = g.peek ? `<div class="word-box">${esc(g.word)}</div>` : `<div class="word-hidden">${actor.phone ? "📱 الكلمة في جوال " + esc(actor.name) : "الكلمة مخفية — اضغط «👁 الكلمة» للممثل فقط"}</div>`;
   return `<div class="screen">${head(info, `<span class="pill">${av(actor)} ${esc(actor.name)} يمثّل · ${g.guessed} كلمات</span>`)}
-    <div style="text-align:center;margin-top:10px"><div class="big-timer ${left <= 10 ? "timer low" : ""}" id="tTimer" style="${left <= 10 ? "background:none" : ""}">${left}</div>
-      <div class="bar" style="max-width:700px;margin:14px auto 0"><i id="tBar" style="width:${(left / S.settings.chSeconds) * 100}%"></i></div>${word}</div>
+    <div style="text-align:center;margin-top:10px"><div class="big-timer ${timed() && left <= 10 ? "timer low" : ""}" id="tTimer" style="${timed() && left <= 10 ? "background:none" : ""}">${tl(left)}</div>
+      ${timed() ? `<div class="bar" style="max-width:700px;margin:14px auto 0"><i id="tBar" style="width:${barW(left)}%"></i></div>` : ""}${word}</div>
     <div style="margin-top:auto"><p class="tv-sub" style="text-align:center;margin-bottom:12px">مين خمّنها؟</p>
       <div class="guessers">${others.map((p, i) => `<button class="guesser f" data-f="gs-${p.id}" data-act="chGuessed" data-v="${p.id}" ${i === 0 ? 'data-auto="1"' : ""}>${av(p)}${esc(p.name)}</button>`).join("")}
         <button class="guesser f" data-f="ch-skip" data-act="chSkip" style="background:#ff6b6b2e">⏭ تخطي</button>
+        <button class="guesser f" data-f="ch-end" data-act="chEnd" style="background:#ffffff22">⏹ إنهاء الدور</button>
         ${actor.phone ? "" : `<button class="guesser f" data-f="ch-peek" data-act="chPeek" style="background:#ffffff22">👁 الكلمة</button>`}</div></div></div>`;
 }
 
@@ -892,13 +1009,13 @@ function screenSalfa() {
       <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="s-ask" data-act="salfaAsk" ${all ? 'data-auto="1"' : ""}>${all ? "الكل شاف — ابدأوا الأسئلة ←" : "ابدأ الأسئلة على أي حال ←"}</button></div></div></div>`;
   }
   if (g.phase === "ask") {
-    const left = timeLeft();
-    const pairs = g.pairs.map(([a, b]) => { const A = playerById(a), B = playerById(b); return `<div class="pair">${av(A)}${esc(A.name)} <span style="color:var(--amber)">يسأل ←</span> ${av(B)}${esc(B.name)}</div>`; }).join("");
-    return `<div class="screen">${head(info, topic + `<div class="timer ${left <= 10 ? "low" : ""}" id="tTimer">${left}</div>`)}
-      <div class="bar"><i id="tBar" style="width:${(left / S.settings.salfaSeconds) * 100}%"></i></div>
-      <h2 class="tv-title" style="text-align:center;margin-top:22px;font-size:46px">الموضوع: <span style="color:var(--amber)">${esc(g.topic)}</span> — اسألوا بعض بدون ما تفضحون الكلمة 🤐</h2>
-      <div class="pairs">${pairs}</div>
-      <div class="tv-row" style="justify-content:center;margin-top:auto"><button class="tv-btn alt f" data-f="s-vote" data-act="salfaVote" data-auto="1">🗳 التصويت الآن</button></div></div>`;
+    const left = timeLeft(), A = playerById(g.pair[0]), B = playerById(g.pair[1]);
+    return `<div class="screen">${head(info, topic + `<div class="timer ${timed() && left <= 10 ? "low" : ""}" id="tTimer">${tl(left)}</div>`)}
+      ${timed() ? `<div class="bar"><i id="tBar" style="width:${barW(left)}%"></i></div>` : ""}
+      <p class="tv-sub" style="text-align:center;margin-top:20px">سؤال رقم ${g.asked} · الموضوع: <b style="color:var(--amber)">${esc(g.topic)}</b> — لا تفضحون الكلمة 🤐</p>
+      <div class="ask-pair">${av(A, "avatar")}<div class="ask-mid"><div class="ask-name">${esc(A.name)}</div><div class="ask-arrow">يسأل ←</div><div class="ask-name">${esc(B.name)}</div></div>${av(B, "avatar")}</div>
+      <div class="tv-row" style="justify-content:center;margin-top:auto;gap:22px"><button class="tv-btn go f" data-f="s-nextq" data-act="salfaNextQ" data-auto="1">🎲 سؤال ثاني</button>
+        <button class="tv-btn alt f" data-f="s-vote" data-act="salfaVote">🗳 التصويت الآن</button></div></div>`;
   }
   if (g.phase === "vote") {
     const counts = {}; Object.values(g.votes).forEach(t => counts[t] = (counts[t] || 0) + 1);
@@ -928,7 +1045,7 @@ function screenSalfa() {
 function screenFib() {
   const g = S.game, it = g.items[g.idx], left = timeLeft(), info = `${catPill()} · سؤال ${g.idx + 1} من ${g.items.length}`;
   const q = esc(it.q).replace(/_{2,}/, g.phase === "reveal" ? `<span class="blank" style="color:var(--green)">${esc(it.a)}</span>` : `<span class="blank"></span>`);
-  const timer = g.phase !== "write" ? "" : `<div class="timer ${left <= 10 ? "low" : ""}" id="tTimer">${left}</div>`;
+  const timer = g.phase !== "write" ? "" : `<div class="timer ${timed() && left <= 10 ? "low" : ""}" id="tTimer">${tl(left)}</div>`;
   let body;
   if (g.phase === "write") {
     const chips = phonePlayers().map(p => `<span class="mini ${g.lies[p.id] ? "done" : ""}">${av(p)}${esc(p.name)}</span>`).join("");
@@ -951,7 +1068,7 @@ function screenFib() {
         ${voters.length ? " · انخدع: " + voters.map(v => av(v)).join("") : ""}</span></div>`; }).join("")}</div>
       <div class="tv-row" style="justify-content:center;margin-top:auto"><button class="tv-btn go f" data-f="f-next" data-act="fibNext" data-auto="1">${g.idx + 1 >= g.items.length ? "النتائج 🏆" : "السؤال التالي ←"}</button></div>`;
   }
-  return `<div class="screen">${head(info, timer)}${g.phase !== "write" ? "" : `<div class="bar"><i id="tBar" style="width:${(left / (g.total || 1)) * 100}%"></i></div>`}
+  return `<div class="screen">${head(info, timer)}${g.phase !== "write" || !timed() ? "" : `<div class="bar"><i id="tBar" style="width:${barW(left)}%"></i></div>`}
     <div class="fib-q">${q}</div>${body}</div>`;
 }
 
@@ -960,7 +1077,7 @@ function screenDraw() {
   if (g.phase === "ready") {
     return `<div class="screen">${head(info)}<div class="actor-hero">${av(d, "avatar")}<h2>دور ${esc(d.name)} يرسم 🎨</h2>
       <p>الكلمة بتطلع في جوالك — ارسمها والرسمة تظهر هنا مباشرة. ممنوع الكتابة والأرقام!</p>
-      <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="d-start" data-act="drStart" data-auto="1">ابدأ ⏱ ${S.settings.drawSeconds} ثانية</button></div></div></div>`;
+      <div class="tv-row" style="justify-content:center;margin-top:30px"><button class="tv-btn go f" data-f="d-start" data-act="drStart" data-auto="1">ابدأ · ${optLabel("secs", cfg("draw").secs)}</button></div></div></div>`;
   }
   if (g.phase === "turnEnd") {
     const last = g.turn + 1 >= g.order.length;
@@ -969,11 +1086,46 @@ function screenDraw() {
   }
   const others = S.players.filter(p => p.id !== d.id && !p.phone);
   const feed = g.feed.map(f => { const p = playerById(f.pid); return `<div class="g ${f.ok ? "ok" : ""}">${av(p)}<b>${esc(p ? p.name : "")}:</b> ${esc(f.text)}</div>`; }).join("");
-  return `<div class="screen">${head(info, `<span class="pill">${av(d)} ${esc(d.name)} يرسم · ${g.guessed} كلمات</span><div class="timer ${left <= 10 ? "low" : ""}" id="tTimer">${left}</div>`)}
+  return `<div class="screen">${head(info, `<span class="pill">${av(d)} ${esc(d.name)} يرسم · ${g.guessed} كلمات</span><div class="timer ${timed() && left <= 10 ? "low" : ""}" id="tTimer">${tl(left)}</div>`)}
     <div class="draw-wrap"><div class="canvas-box"><canvas id="tvCanvas" width="900" height="480"></canvas>${g.ops.length ? "" : `<div class="ov">بانتظار الرسمة من جوال ${esc(d.name)}… ✏️</div>`}</div>
       <div class="feed"><div class="tv-sub" style="font-size:18px;margin:0 0 4px">💬 التخمينات</div>${feed || '<div class="muted" style="font-size:16px">اكتبوا تخميناتكم في الجوال</div>'}</div></div>
     <div class="guessers" style="margin-top:14px">${others.map(p => `<button class="guesser f" data-f="dg-${p.id}" data-act="drCorrect" data-v="${p.id}">${av(p)}${esc(p.name)} خمّنها</button>`).join("")}
-      <button class="guesser f" data-f="d-skip" data-act="drSkip" data-auto="1" style="background:#ff6b6b2e">⏭ كلمة ثانية</button></div></div>`;
+      <button class="guesser f" data-f="d-skip" data-act="drSkip" data-auto="1" style="background:#ff6b6b2e">⏭ كلمة ثانية</button>
+      <button class="guesser f" data-f="d-end" data-act="drEnd" style="background:#ffffff22">⏹ إنهاء الدور</button></div></div>`;
+}
+
+function screenSetup() {
+  const type = S.next, G = GAMES[type], c = S.pendingCat;
+  const rows = (SETUP[type] || []).map((row, r) => `<div class="setup-row"><div class="setup-label">${row.label}</div><div class="setup-opts">
+      ${row.opts.map(v => `<button class="sopt f ${cfg(type)[row.k] === v ? "on" : ""}" data-f="so-${row.k}-${v}" data-act="setOpt" data-v="${row.k}:${v}">${optLabel(row.k, v)}</button>`).join("")}</div></div>`).join("");
+  return `<div class="screen">
+    <div class="topline"><div><h1 class="tv-title">${G.icon} ${G.name}</h1><p class="tv-sub">${c ? esc(c.emoji || "") + " " + esc(c.name) + " · " : ""}اختر إعدادات اللعبة</p></div>
+      <button class="tv-btn go f" data-f="st-go" data-act="startPending" data-auto="1" style="font-size:28px;padding:18px 40px">ابدأ اللعب ▶</button></div>
+    <div class="setup">${rows}</div>
+    <p class="tv-sub" style="margin-top:auto;text-align:center">الإعدادات تنحفظ لهذي اللعبة — تقدر تغيّرها قبل كل لعبة</p></div>`;
+}
+
+function screenPics() {
+  const g = S.game, it = g.items[g.idx], left = timeLeft(), rev = g.phase === "reveal";
+  const info = `${catPill()} · تحدي ${g.idx + 1} من ${g.items.length}`;
+  const opts = g.options.map((o, i) => `<div class="opt o${i} ${rev ? (i === g.correct ? "right" : "dim") : ""}" style="min-height:76px;font-size:26px"><span class="k">${LETTERS[i]}</span><span>${esc(o)}</span></div>`).join("");
+  let bottom;
+  if (!rev) {
+    const wrong = phonePlayers().filter(p => g.answers[p.id] != null).map(p => `<span class="mini" style="background:#ff6b6b26">${av(p)}${esc(p.name)} ✗</span>`).join("");
+    const remote = S.players.filter(p => !p.phone);
+    bottom = `<div class="tv-row" style="justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:10px"><div class="minis">${wrong || '<span class="pill">📱 أول واحد يضغط الإجابة الصحيحة في جواله يفوز!</span>'}</div>
+      <div class="tv-row" style="flex-wrap:wrap;gap:10px">${remote.map((p, i) => `<button class="award f" data-f="pw-${p.id}" data-act="picsWin" data-v="${p.id}">${av(p)}${esc(p.name)} جاوب أول ✓</button>`).join("")}
+      <button class="tv-btn ghost f" data-f="p-rev" data-act="picsReveal" ${remote.length ? "" : 'data-auto="1"'}>كشف الإجابة</button></div></div>`;
+  } else {
+    const w = playerById(g.winner);
+    bottom = `<div class="tv-row" style="justify-content:center;margin-top:16px;gap:18px">${w ? `<span class="res ok" style="font-size:24px">🏆 ${av(w)}${esc(w.name)} الأسرع! +${g.winPts}</span>` : `<span class="pill">ما أحد جاوبها صح 😅</span>`}
+      <button class="tv-btn go f" data-f="p-next" data-act="picsNext" data-auto="1">${g.idx + 1 >= g.items.length ? "النتائج 🏆" : "التحدي التالي ←"}</button></div>`;
+  }
+  return `<div class="screen">${head(info, rev ? "" : `<div class="timer ${timed() && left <= 5 ? "low" : ""}" id="tTimer">${tl(left)}</div>`)}
+    ${!rev && timed() ? `<div class="bar"><i id="tBar" style="width:${barW(left)}%"></i></div>` : ""}
+    <p class="tv-sub" style="text-align:center;margin:14px 0 10px;font-size:26px;color:#fff;font-weight:800">${esc(it.q || "وش يجمع هذي الصور؟")}</p>
+    <div class="pics">${picsMedia(it)}</div>
+    <div class="opts" style="margin-top:16px">${opts}</div>${bottom}</div>`;
 }
 
 function screenScores() {
@@ -1001,7 +1153,7 @@ function modalQuit() {
 
 let lastScreenKey = "";
 function render(resetFocus) {
-  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, scores: screenScores};
+  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, setup: screenSetup, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, pics: screenPics, scores: screenScores};
   if (S.game && !map[S.screen]) S.screen = "home";
   const keep = focusKey();
   tv.innerHTML = (map[S.screen] || screenHome)()
@@ -1020,8 +1172,8 @@ function render(resetFocus) {
 }
 function tick() {
   const g = S.game, left = timeLeft(), t = $("#tTimer"), b = $("#tBar");
-  if (t && g && g.phase !== "reveal") { t.textContent = left; t.classList.toggle("low", left <= 10); }
-  if (b && g && g.total) b.style.width = (left / g.total) * 100 + "%";
+  if (t && g && g.phase !== "reveal") { t.textContent = tl(left); t.classList.toggle("low", timed() && left <= 10); }
+  if (b && g && g.total) b.style.width = barW(left) + "%";
   renderPhones();
 }
 
@@ -1095,11 +1247,21 @@ function act(name, v, el) {
     case "closeModal": S.modal = null; render(true); break;
     case "addNamed": addPlayer(v, null, false); S.modal = null; render(true); break;
     case "addTyped": { const inp = $("#remoteName"); const n = inp && inp.value.trim(); if (n) { addPlayer(n, null, false); S.modal = null; render(true); } else if (inp) inp.focus(); break; }
+    case "setOpt": { const [k, val] = String(v).split(":"); S.cfg[S.next][k] = +val; saveCfg(); render(); break; }
+    case "startPending": if (S.pendingCat) startGame(S.next, S.pendingCat); break;
+    case "delPlayer": removePlayer(v); render(true); break;
+    case "delAll": if (!S.confirmAll) { S.confirmAll = true; render(); setTimeout(() => { S.confirmAll = false; render(); }, 4000); } else { S.confirmAll = false; S.players.map(p => p.id).forEach(removePlayer); render(true); } break;
+    case "salfaNextQ": salfaNextQ(); break;
+    case "chEnd": chEnd(); break;
+    case "drEnd": drEnd(); break;
+    case "picsWin": picsWin(v); break;
+    case "picsReveal": picsReveal(); break;
+    case "picsNext": picsNext(); break;
     case "pickCat": {
       let cat;
       if (v === "__random") { const cs = Bank.usable(S.next); cat = {id: "__random", name: "عشوائي", emoji: "🎲", type: S.next, items: cs.flatMap(c => c.items.map(it => Object.assign({t: c.name}, it)))}; }
       else cat = Bank.get(v);
-      if (cat) startGame(S.next, cat);
+      if (cat) { S.pendingCat = cat; go("setup"); }
       break;
     }
     case "openQuit": openQuit(); break;
@@ -1127,7 +1289,7 @@ function act(name, v, el) {
     case "drCorrect": drCorrect(v); break;
     case "drSkip": drSkip(); break;
     case "drNextTurn": drNextTurn(); break;
-    case "resetScores": S.players.forEach(p => p.score = 0); render(); break;
+    case "resetScores": S.players.forEach(p => p.score = 0); saveRoster(); render(); break;
   }
 }
 tv.addEventListener("click", e => {
@@ -1185,6 +1347,16 @@ function phoneHTML(ph) {
     const ok = a && a.choice === g.correct;
     return who + center(!a ? "⌛" : ok ? "🎉" : "😅", !a ? "ما جاوبت" : ok ? "صح! +" + a.pts : "خطأ", "الإجابة: " + esc(g.options[g.correct]));
   }
+  if (g && g.type === "pics") {
+    const it = g.items[g.idx], a = g.answers[p.id];
+    if (g.phase === "show") {
+      if (a != null) return who + center("❌", "غلط!", "انتظر — يمكن أحد ثاني يجيبها");
+      return who + `<div class="ph-title">${esc(it.q || "وش يجمع الصور؟")}</div>${it.e && it.e.length && !(it.imgs && it.imgs.length) ? `<div class="big" style="text-align:center;font-size:44px">${it.e.map(esc).join(" ")}</div>` : `<div class="ph-dim">👀 شوف الصور على التلفزيون</div>`}
+        <div class="popts">${g.options.map((o, i) => `<button class="o${i}" data-ph-act="pans" data-v="${i}">${esc(o)}</button>`).join("")}</div>`;
+    }
+    const won = g.winner === p.id;
+    return who + center(won ? "🏆" : "👏", won ? "أنت الأسرع! +" + g.winPts : "الإجابة: " + esc(g.options[g.correct]), won ? "" : (g.winner ? esc((playerById(g.winner) || {}).name || "") + " كان الأسرع" : ""));
+  }
   if (g && g.type === "charades") {
     const actor = chActor();
     if (actor && actor.id === p.id) {
@@ -1202,7 +1374,12 @@ function phoneHTML(ph) {
       return who + `<div class="center"><div class="ph-dim">🧭 الموضوع: <b style="color:var(--amber)">${esc(g.topic)}</b></div><div class="ph-dim">دورك السري 🤫</div><div class="pword" style="${imp ? "background:linear-gradient(135deg,#ff5f6d,#7b2ff7);color:#fff;font-size:20px" : ""}">${esc(salfaRoleText(p.id))}</div>
         <div class="ph-dim">${imp ? "حاول تعرف الكلمة بدون ما تنكشف!" : "لا تقولها لأحد!"}</div></div><button class="pbtn" data-ph-act="seen">شفت دوري ✓</button>`;
     }
-    if (g.phase === "ask") return who + center("💬", "الموضوع: " + esc(g.topic), p.id === g.impostor ? "أنت برا السالفة 🤫 · ⏱ " + timeLeft() : "الكلمة: " + esc(g.word) + " · ⏱ " + timeLeft());
+    if (g.phase === "ask") {
+      const role = p.id === g.impostor ? "أنت برا السالفة 🤫" : "الكلمة: " + esc(g.word);
+      if (g.pair && g.pair[0] === p.id) return who + center("🎤", "دورك تسأل " + esc((playerById(g.pair[1]) || {}).name || ""), role);
+      if (g.pair && g.pair[1] === p.id) return who + center("👂", esc((playerById(g.pair[0]) || {}).name || "") + " بيسألك", role);
+      return who + center("💬", "الموضوع: " + esc(g.topic), role);
+    }
     if (g.phase === "vote") {
       const mine = g.votes[p.id];
       return who + `<div class="ph-title">مين برا السالفة؟</div><div class="plist">${S.players.filter(x => x.id !== p.id).map(x => `<button class="${mine === x.id ? "sel" : ""}" data-ph-act="vote" data-v="${x.id}">${av(x)}${esc(x.name)}</button>`).join("")}</div>`;
@@ -1262,6 +1439,7 @@ function renderPhones() {
 function phoneAct(ph, a, v) {
   const g = S.game;
   if (a === "ans") return phoneAnswer(ph.pid, +v);
+  if (a === "pans") return picsAnswer(ph.pid, +v);
   if (a === "chSkip") return chSkip();
   if (a === "seen") return salfaSeen(ph.pid);
   if (a === "vote") return salfaPhoneVote(ph.pid, v);
@@ -1312,8 +1490,12 @@ function onPhoneJoin(pid, d) {
   if (!playerById(pid)) {
     const name = String(d.name || "لاعب").trim().slice(0, 14) || "لاعب";
     const avatar = AVATARS.includes(d.avatar) ? d.avatar : AVATARS[S.players.length % AVATARS.length];
-    S.players.push({id: pid, name, avatar, color: COLORS[S.players.length % COLORS.length], score: 0, phone: true});
-    beep("join");
+    // same name already in the room (rejoin / new phone / remote player) -> one player, keep the points
+    const same = S.players.find(p => norm(p.name) === norm(name));
+    let score = 0, color = COLORS[S.players.length % COLORS.length];
+    if (same) { score = same.score; color = same.color; removePlayer(same.id); }
+    S.players.push({id: pid, name, avatar, color, score, phone: true});
+    beep("join"); saveRoster();
   }
   if (!phones.find(p => p.id === pid)) phones.push({id: pid, pid, lie: "", guess: "", fb: ""});
   phoneCache[pid] = null;
@@ -1325,23 +1507,53 @@ function onPhoneAction(a) {
   if (a.f && ["lie", "guess"].includes(a.f)) ph[a.f] = String(a.x || "").slice(0, 60);
   phoneAct(ph, String(a.a || ""), a.v == null ? undefined : String(a.v));
 }
+function hostKey() {
+  let k = null; try { k = localStorage.getItem("jamaa-host"); } catch (e) { }
+  if (!k) { k = "h" + Math.random().toString(36).slice(2, 12); try { localStorage.setItem("jamaa-host", k); } catch (e) { } }
+  return k;
+}
 async function initOnline() {
   try {
     if (!window.firebase) throw new Error("Firebase SDK not loaded");
     firebase.initializeApp(FB_CONFIG); fdb = firebase.database();
     fdb.ref("bank").on("value", snap => Bank.fromCloud(snap.val()), err => console.warn(err));
-    let code = newCode();
-    for (let i = 0; i < 6; i++) { const ex = await fdb.ref("rooms/" + code + "/meta").get(); if (!ex.exists()) break; code = newCode(); }
+    const key = hostKey();
+    // keep the same room code on this TV so phones stay in after a restart or a dropped connection
+    let code = null;
+    try { code = localStorage.getItem("jamaa-room"); } catch (e) { }
+    if (code) {
+      const m = (await fdb.ref("rooms/" + code + "/meta").get()).val();
+      if (m && m.host && m.host !== key) code = null;
+    }
+    if (!code) {
+      code = newCode();
+      for (let i = 0; i < 8; i++) { const ex = await fdb.ref("rooms/" + code + "/meta").get(); if (!ex.exists()) break; code = newCode(); }
+      try { localStorage.setItem("jamaa-room", code); } catch (e) { }
+    }
     ROOM = code; roomRef = fdb.ref("rooms/" + code);
-    await roomRef.child("meta").set({created: Date.now(), alive: Date.now()});
-    roomRef.onDisconnect().remove();
-    setInterval(() => roomRef.child("meta/alive").set(Date.now()), 20000);
+    await roomRef.child("meta").update({host: key, created: Date.now(), alive: Date.now(), online: true});
+    // a dropped connection only marks the TV offline — it never deletes the room or kicks anyone
+    fdb.ref(".info/connected").on("value", snap => {
+      if (snap.val() === true) {
+        roomRef.child("meta").onDisconnect().update({online: false});
+        roomRef.child("meta").update({online: true, alive: Date.now()});
+      }
+    });
+    setInterval(() => roomRef.child("meta/alive").set(Date.now()), 30000);
+    // bring back the players (and their points) saved for this room
+    const roster = (await roomRef.child("roster").get()).val() || {};
+    Object.entries(roster).sort((x, y) => (x[1].i || 0) - (y[1].i || 0)).forEach(([id, r]) => {
+      if (playerById(id)) return;
+      S.players.push({id, name: String(r.name || "لاعب").slice(0, 14), avatar: r.avatar || AVATARS[0], color: r.color || COLORS[S.players.length % COLORS.length], score: +r.score || 0, phone: !!r.phone});
+      if (r.phone && !phones.find(p => p.id === id)) phones.push({id, pid: id, lie: "", guess: "", fb: ""});
+    });
     roomRef.child("players").on("child_added", s => onPhoneJoin(s.key, s.val() || {}));
     roomRef.child("actions").on("child_added", s => { const a = s.val(); s.ref.remove(); try { onPhoneAction(a || {}); } catch (e) { console.error(e); } });
     ONLINE = true;
   } catch (e) { console.warn("offline:", e); ONLINE = false; }
   render();
 }
+window.addEventListener("pagehide", () => { try { if (roomRef) roomRef.child("meta").update({online: false}); } catch (e) { } });
 
 // ---------------------------------------------------------- intro (logo animation, never blocks the game)
 (function intro() {

@@ -108,7 +108,11 @@ async function openRoom(code) {
   if (!meta) { askCode("ما لقينا غرفة بهذا الرمز — تأكد من الرمز اللي على التلفزيون"); return; }
   ROOM = code; roomRef = db.ref("rooms/" + code); $("#roomTag").textContent = code;
   history.replaceState(null, "", location.pathname + "?r=" + code);
-  roomRef.child("meta").on("value", s => { if (!s.exists()) { pid = ""; app.innerHTML = `<div class="card center" style="margin:auto 0"><div class="big">📺</div><h2>انتهت الجلسة</h2><p class="sub">التلفزيون قفل الغرفة. صوّر الباركود الجديد من الشاشة.</p></div>`; } });
+  roomRef.child("meta").on("value", s => {
+    const m = s.val();
+    if (!m) { pid = ""; tvBanner(false); app.innerHTML = `<div class="card center" style="margin:auto 0"><div class="big">📺</div><h2>انتهت الجلسة</h2><p class="sub">التلفزيون قفل الغرفة. صوّر الباركود الجديد من الشاشة.</p></div>`; return; }
+    tvBanner(m.online === false);   // TV dropped for a moment: keep everyone in and just wait
+  });
   const saved = store("jamaa-pid-" + code);
   if (saved && (await roomRef.child("players/" + saved).get()).exists()) { pid = saved; listen(); return; }
   joinForm();
@@ -135,7 +139,27 @@ function joinForm() {
 }
 
 // ---------------------------------------------------------- views from the TV
+function tvBanner(on) {
+  let b = document.getElementById("tvOff");
+  if (!on) { if (b) b.remove(); return; }
+  if (b) return;
+  b = document.createElement("div"); b.id = "tvOff";
+  b.style.cssText = "position:fixed;inset:auto 12px 12px 12px;z-index:50;background:#2a2150;border:1px solid #ffffff22;border-radius:16px;padding:12px 14px;text-align:center;font-weight:700;box-shadow:0 10px 30px #0008";
+  b.textContent = "📺 التلفزيون انقطع اتصاله لحظة… لا تطلع، بيرجع تلقائياً";
+  document.body.appendChild(b);
+}
+let pRef = null;
 function listen() {
+  if (pRef) pRef.off();
+  pRef = roomRef.child("players/" + pid);
+  let seen = false;
+  pRef.on("value", s => {   // removed from the TV (deleted or joined again with the same name elsewhere)
+    if (s.exists()) { seen = true; return; }
+    if (!seen) return;
+    pRef.off(); roomRef.child("views/" + pid).off(); pid = ""; lastHtml = ""; store("jamaa-pid-" + ROOM, "");
+    joinForm();
+    const e = $("#err"); if (e) e.textContent = "تم حذفك من اللاعبين — تقدر تنضم من جديد";
+  });
   app.innerHTML = `<div id="view"><div class="center"><div class="big">${avatar}</div><div class="ph-title">أنت في الغرفة ✅</div><div class="ph-dim">انتظر التلفزيون…</div></div></div>`;
   roomRef.child("views/" + pid).on("value", s => { const v = s.val(); if (v && typeof v.h === "string") show(v.h); });
 }
