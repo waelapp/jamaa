@@ -393,6 +393,9 @@ details.card2 summary{cursor:pointer}
 @media (max-width:600px){.scard.add.open{grid-column:auto}.sgrid{grid-template-columns:1fr 1fr}}
 .rep-card{border-color:#f59e0b88!important;background:#f59e0b10!important}
 .rep-card .item{gap:8px}
+.rep-item .q{display:flex;flex-direction:column;gap:4px}
+.rep-reason{color:#fcd34d;font-size:13px}
+.rep-shot{width:220px;border-radius:10px;border:1px solid #ffffff22;margin-top:6px;cursor:zoom-in}
 </style>
 </head>
 <body>
@@ -452,7 +455,7 @@ const Bank = {
       this.loading = false;
       autoSeed(snap.val());
       this.sections = Object.entries(v._sections || {}).map(([id, x]) => Object.assign({id}, x)).filter(x => x && x.type && GAMES[x.type]).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      this.games = v._games || {}; this.reports = Object.entries(v._reports || {}).map(([id, r]) => Object.assign({id}, r)).sort((a, b) => b.t - a.t);
+      this.games = v._games || {}; 
       this.cats = Object.entries(v).map(([id, c]) => Object.assign({id}, c, {items: Array.isArray(c.items) ? c.items.filter(Boolean) : Object.values(c.items || {})})).filter(c => c.type);
       this.cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name), "ar"));
       this.emit("remote");
@@ -465,6 +468,22 @@ const Bank = {
   },
   async remove(id) { await fdb.ref("bank/" + id).remove(); },
   get(id) { return this.cats.find(c => c.id === id); },
+  roomReports: {},
+  collectReports() {
+    this.reports = [];
+    for (const [code, rs] of Object.entries(this.roomReports)) for (const [k, r] of Object.entries(rs || {})) if (r && r.key) this.reports.push(Object.assign({id: code + "/" + k, room: code}, r));
+    this.reports.sort((a, b) => b.t - a.t);
+  },
+  async watchRooms() {   // reports live under each TV room (rooms/<code>/reports)
+    try {
+      const r = await fetch(FB_CONFIG.databaseURL + "/rooms.json?shallow=true"); const codes = Object.keys((await r.json()) || {});
+      codes.forEach(code => {
+        if (this.roomReports[code] !== undefined) return;
+        this.roomReports[code] = null;
+        fdb.ref("rooms/" + code + "/reports").on("value", snap => { this.roomReports[code] = snap.val(); this.collectReports(); this.emit("reports"); });
+      });
+    } catch (e) { console.warn(e); }
+  },
   sections: [], games: {}, reports: [],
   secOf(key) {   // "g:qa" = لعبة أساسية · "s:<id>" = قسم رئيسي مضاف
     if (!key) return null;
@@ -599,6 +618,8 @@ function shrinkImage(file) {
 const BULK_HINT = {qa: "كل سطر: <b>السؤال | الإجابة الصحيحة | خطأ | خطأ | خطأ</b>", fib: "كل سطر: <b>المعلومة مع ____ | الحقيقة</b>", charades: "كل سطر كلمة أو عبارة", salfa: "كل سطر: <b>الكلمة | الموضوع</b> (الموضوع اختياري — بدونه يكون اسم الفئة)", draw: "كل سطر كلمة", letters: "كل سطر: <b>الحرف | السؤال | الجواب</b> — مثال: ب | عاصمة فرنسا؟ | باريس", pics: "كل سطر: <b>إيموجي بمسافات | الإجابة | خطأ | خطأ | خطأ</b> — مثال: 🌧️ ☂️ ⛈️ | مطر | شمس | ثلج | رياح"};
 let newOpen = false;
 let view = "home";   // home → sec → cat
+const REASON = {answer: "❌ الإجابة غلط", question: "❓ السؤال غلط أو مو واضح", display: "🖼️ مشكلة في العرض", repeat: "🔁 مكرر", unfit: "🚫 غير مناسب"};
+const repRef = id => fdb.ref("rooms/" + id.split("/")[0] + "/reports/" + id.split("/").slice(1).join("/"));
 const repKey = it => norm((it.l || "") + (it.q || "") + "|" + (it.w || "") + "|" + (it.a || "") + "|" + (it.e || []).join(""));
 function findItem(key) { for (const c of Bank.cats) { const i = (c.items || []).findIndex(it => repKey(it) === key); if (i >= 0) return {c, i}; } return null; }
 function itemText(it) { return it.q ? (it.l ? it.l + " · " : "") + it.q + (it.a ? " ← " + it.a : "") : it.w ? it.w + (it.t ? " (" + it.t + ")" : "") : (it.e || []).join(" ") + (it.a ? " ← " + it.a : ""); }
@@ -606,7 +627,8 @@ function reportsCard() {
   if (!Bank.reports.length) return "";
   return `<div class="card2 rep-card"><h4>⚠️ بلاغات من اللعب (${Bank.reports.length}) <span class="muted" style="font-weight:400;font-size:13px">— هذي الأسئلة مخفية من اللعبة لين تراجعها</span></h4>
     ${Bank.reports.map(r => { const f = findItem(r.key);
-      return `<div class="item"><span class="q">${esc(itemText(r.item || {}))}<div class="a" style="color:var(--faint)">${f ? esc(f.c.emoji || "") + " " + esc(f.c.name) : "(محذوف أو تعدّل)"} · ${esc(TYPE_LABEL[r.type] || r.type || "")} · ${new Date(r.t).toLocaleDateString("ar-SA")}</div></span>
+      return `<div class="item rep-item"><span class="q"><b class="rep-reason">${esc(REASON[r.reason] || "⚠️ بلاغ")}</b> ${esc(itemText(r.item || {}))}<div class="a" style="color:var(--faint)">${f ? esc(f.c.emoji || "") + " " + esc(f.c.name) : "(محذوف أو تعدّل)"} · ${esc(TYPE_LABEL[r.type] || r.type || "")} · ${new Date(r.t).toLocaleString("ar-SA")} · غرفة ${esc(r.room)}</div>
+        ${r.shot ? `<a href="#" data-shot="${esc(r.id)}" title="عرض صورة الشاشة"><img class="rep-shot" src="${r.shot}" alt="صورة الشاشة"></a>` : ""}</span>
         ${f ? `<button class="btn" data-rep-open="${esc(r.id)}">✎ تعديل</button><button class="btn danger" data-rep-del="${esc(r.id)}">🗑 حذف</button>` : ""}<button class="btn ok" data-rep-ok="${esc(r.id)}">✓ ${f ? "سليم" : "إغلاق"}</button></div>`; }).join("")}</div>`;
 }
 function secCard(sec) {
@@ -687,15 +709,17 @@ function renderAdmin() {
   wirePics();
 }
 async function sideClick(e) {
+  const sh = e.target.closest("[data-shot]");
+  if (sh) { e.preventDefault(); const r = Bank.reports.find(x => x.id === sh.dataset.shot); if (r && r.shot) { const w = window.open(); if (w) w.document.write(`<title>صورة الشاشة</title><body style="margin:0;background:#000;display:grid;place-items:center;min-height:100vh"><img src="${r.shot}" style="max-width:100%">`); } return true; }
   const ro = e.target.closest("[data-rep-open],[data-rep-del],[data-rep-ok]");
   if (ro) {
     const id = ro.dataset.repOpen || ro.dataset.repDel || ro.dataset.repOk, r = Bank.reports.find(x => x.id === id); if (!r) return true;
     const f = findItem(r.key);
-    if (ro.dataset.repOk || !f) { await fdb.ref("bank/_reports/" + id).remove(); setMsg(f ? "✓ تم — السؤال رجع للعبة" : "تم إغلاق البلاغ"); return true; }
+    if (ro.dataset.repOk || !f) { await repRef(id).remove(); setMsg(f ? "✓ تم — السؤال رجع للعبة" : "تم إغلاق البلاغ"); return true; }
     if (ro.dataset.repDel) {
       if (ro.dataset.confirm !== "1") { ro.dataset.confirm = "1"; ro.textContent = "متأكد؟"; return true; }
       const items = f.c.items.slice(); items.splice(f.i, 1);
-      await Bank.save(Object.assign({}, f.c, {items})); await fdb.ref("bank/_reports/" + id).remove(); setMsg("🗑 انحذف السؤال"); return true;
+      await Bank.save(Object.assign({}, f.c, {items})); await repRef(id).remove(); setMsg("🗑 انحذف السؤال"); return true;
     }
     selSec = f.c.sec ? "s:" + f.c.sec : "g:" + f.c.type; selCat = f.c.id; view = "cat"; editIdx = f.i; picImgs = (f.c.items[f.i].imgs || []).slice();
     adminMsg = "✎ عدّل السؤال واحفظه، بعدها ارجع للرئيسية واضغط «✓ سليم» على البلاغ"; renderAdmin(); $("#editor").scrollTop = 0; return true;
@@ -877,7 +901,7 @@ auth.onAuthStateChanged(u => {
   if (u && u.email === OWNER) {
     $("#gate").style.display = "none"; Bank.canWrite = true;
     $("#admin").classList.add("open"); renderAdmin();
-    if (!Bank.started) { Bank.started = true; Bank.start(); }
+    if (!Bank.started) { Bank.started = true; Bank.start(); Bank.watchRooms(); setInterval(() => Bank.watchRooms(), 60000); }
   } else {
     $("#gate").style.display = "grid";
     if (u) $("#gateMsg").textContent = "هذا الحساب (" + u.email + ") ما عنده صلاحية — سجّل بحساب صاحب اللعبة";

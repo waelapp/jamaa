@@ -437,6 +437,15 @@ html{touch-action:manipulation}
 .phone .mf-card{border:2px solid var(--c);border-radius:12px;padding:8px;text-align:center;font-size:16px}
 .phone .mf-card span{display:block;font-size:30px}
 .quit.rep{background:#f59e0b22;color:#fcd34d;margin-inline-end:8px}
+
+/* ---------- v10 ---------- */
+.pics{flex:none!important;height:236px}
+.pic{height:236px}
+.pic.emo{font-size:0!important}
+.emo-img{width:150px;height:150px;display:block}
+.emo-txt{font-size:130px;line-height:1;font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif}
+.rep-list{display:flex;flex-direction:column;gap:10px}
+.rep-list .tv-btn{font-size:24px;text-align:right;justify-content:flex-start}
 </style>
 </head>
 <body>
@@ -515,7 +524,7 @@ const Bank = {
   fromCloud(v) {
     if (!v) { this.emit("init"); return; }
     const first = !this.loaded; this.loaded = true; this.mode = "db";
-    this.games = v._games || {}; Reported.fromCloud(v._reports);
+    this.games = v._games || {};
     this.sections = Object.entries(v._sections || {}).map(([id, x]) => Object.assign({id}, x)).filter(x => x && x.type && x.name && GAMES[x.type])
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.cats = Object.entries(v).map(([id, c]) => Object.assign({id}, c, {items: Array.isArray(c.items) ? c.items.filter(Boolean) : Object.values(c.items || {})}))
@@ -543,12 +552,17 @@ const Used = {
 // fresh (never played) items of a category; when all were played, start the category over
 // ---------------------------------------------------------- reported (wrong) items: never shown again
 const repKey = it => norm((it.l || "") + (it.q || "") + "|" + (it.w || "") + "|" + (it.a || "") + "|" + (it.e || []).join(""));
-const Reported = {   // cloud list (from the admin) + this session's reports
-  cloud: new Set(), session: new Set(),
-  has(it) { const k = repKey(it); return this.cloud.has(k) || this.session.has(k); },
+const Reported = {   // reports of this room (pending review in the admin) + this session's reports
+  room: new Set(), session: new Set(),
+  has(it) { const k = repKey(it); return this.room.has(k) || this.session.has(k); },
   add(it) { this.session.add(repKey(it)); },
-  fromCloud(r) { this.cloud = new Set(Object.values(r || {}).map(x => x && x.key).filter(Boolean)); }
+  fromRoom(r) { this.room = new Set(Object.values(r || {}).map(x => x && x.key).filter(Boolean)); },
+  fromCloud() { }
 };
+const REPORT_REASONS = [
+  {k: "answer", t: "❌ الإجابة غلط"}, {k: "question", t: "❓ السؤال غلط أو مو واضح"}, {k: "display", t: "🖼️ مشكلة في عرض السؤال (مع صورة للشاشة)"},
+  {k: "repeat", t: "🔁 مكرر"}, {k: "unfit", t: "🚫 غير مناسب"}
+];
 function curItem() {
   const g = S.game; if (!g) return null;
   if (["qa", "pics", "fib"].includes(g.type)) return g.items && g.items[g.idx] || null;
@@ -556,11 +570,34 @@ function curItem() {
   if (["charades", "draw", "salfa"].includes(g.type)) return g.item || null;
   return null;
 }
-function reportItem() {
-  const g = S.game, it = curItem(); if (!it) return;
+function loadScript(src) { return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`) && window.html2canvas) return res(); const sc = document.createElement("script"); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+async function captureTV() {   // screenshot of the TV screen as a small JPEG
+  try {
+    await Promise.race([loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"), new Promise((_, rej) => setTimeout(rej, 5000))]);
+    const c = await Promise.race([window.html2canvas(tv, {backgroundColor: "#0d0a1d", scale: 0.75, useCORS: true, logging: false, width: 1280, height: 720, windowWidth: 1280, windowHeight: 720}), new Promise((_, rej) => setTimeout(rej, 7000))]);
+    return c.toDataURL("image/jpeg", 0.6);
+  } catch (e) { console.warn("shot", e); return null; }
+}
+async function reportItem() {
+  const g = S.game, it = curItem(); if (!it || S.modal) return;
+  pauseTimer(); showToast("📸 لحظة…");
+  S.repItem = it; S.repShot = await captureTV();   // taken before the menu opens, so it shows the question
+  if (S.game !== g) return;
+  S.modal = "report"; render(true);
+}
+function closeReport() { S.modal = null; S.repItem = null; S.repShot = null; resumeTimer(); render(true); }
+function reportSend(reason) {
+  const g = S.game, it = S.repItem; if (!it) return closeReport();
   Reported.add(it);
-  if (fdb) try { fdb.ref("bank/_reports").push({key: repKey(it), item: it, type: g.type, cat: g.cat && g.cat.id || "", catName: g.cat && g.cat.name || "", t: Date.now()}); } catch (e) { }
-  beep("tick"); showToast("⚠️ وصل البلاغ — ما بيطلع مرة ثانية");
+  const rec = {key: repKey(it), item: it, type: g ? g.type : "", cat: g && g.cat && g.cat.id || "", catName: g && g.cat && g.cat.name || "", reason, t: Date.now()};
+  if (reason === "display" && S.repShot) rec.shot = S.repShot;
+  if (roomRef) try { roomRef.child("reports").push(rec); } catch (e) { }
+  closeReport(); beep("tick"); showToast("⚠️ وصل البلاغ — ما بيطلع مرة ثانية لين تراجعه");
+}
+function modalReport() {
+  return `<div class="tv-modal"><div class="box"><h3>⚠️ وش المشكلة؟</h3>
+    <div class="rep-list">${REPORT_REASONS.map((r, i) => `<button class="tv-btn ghost f" data-f="rp-${r.k}" data-act="reportSend" data-v="${r.k}" ${i === 0 ? 'data-auto="1"' : ""}>${r.t}</button>`).join("")}</div>
+    <div class="tv-row" style="justify-content:center;margin-top:14px"><button class="tv-btn f" data-f="rp-x" data-act="closeReport">إلغاء ↩</button></div></div></div>`;
 }
 function freshItems(cat, type, n) {
   let pool = cat.items.filter(it => !Used.has(type, it) && !Reported.has(it));
@@ -623,6 +660,7 @@ function showBanner(text) { S.banner = text; render(); clearTimeout(showBanner.t
 function go(screen) { S.screen = screen; S.modal = null; S.reveal = null; render(true); }
 function back() {
   if (S.modal === "quit") { closeQuit(); return; }
+  if (S.modal === "report") { closeReport(); return; }
   if (S.modal) { S.modal = null; render(true); return; }
   if (S.reveal) { S.reveal = null; render(true); return; }
   if (S.screen === "lobby" || S.screen === "scores") go("home");
@@ -966,9 +1004,17 @@ function picsReveal() {
   const g = S.game; if (!g || g.phase !== "show") return;
   stopTimer(); g.phase = "reveal"; beep(g.winner ? "ok" : "bad"); render(true);
 }
+function emojiCode(e) {   // twemoji file name: code points joined by "-", FE0F dropped when there is no ZWJ
+  const cps = [...e].map(c => c.codePointAt(0));
+  const keep = cps.includes(0x200d) ? cps : cps.filter(c => c !== 0xfe0f);
+  return keep.map(c => c.toString(16)).join("-");
+}
+function emojiImg(e) {
+  return `<img class="emo-img" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${emojiCode(e)}.svg" alt="${esc(e)}" crossorigin="anonymous" onerror="this.outerHTML='<span class=&quot;emo-txt&quot;>'+this.alt+'</span>'">`;
+}
 function picsMedia(it, big) {
   if (it.imgs && it.imgs.length) return it.imgs.slice(0, 4).map(src => `<div class="pic"><img src="${esc(src)}" alt=""></div>`).join("");
-  return (it.e || []).slice(0, 3).map(e => `<div class="pic emo">${esc(e)}</div>`).join("");
+  return (it.e || []).slice(0, 4).map(e => `<div class="pic emo">${emojiImg(e)}</div>`).join("");
 }
 
 // ---------------------------------------------------------- الحروف (لوحة سداسية — فريقين)
@@ -1612,7 +1658,7 @@ function render(resetFocus) {
   if (S.game && !map[S.screen]) S.screen = "home";
   const keep = focusKey();
   tv.innerHTML = (map[S.screen] || screenHome)()
-    + (S.modal === "addPlayer" ? modalAddPlayer() : S.modal === "quit" ? modalQuit() : "")
+    + (S.modal === "addPlayer" ? modalAddPlayer() : S.modal === "quit" ? modalQuit() : S.modal === "report" ? modalReport() : "")
     + (S.toast ? `<div class="toast">${esc(S.toast.text)}</div>` : "")
     + (S.banner ? `<div class="banner">${esc(S.banner)}</div>` : "");
   const g = S.game;
@@ -1757,6 +1803,8 @@ function act(name, v, el) {
     }
     case "openQuit": openQuit(); break;
     case "reportItem": reportItem(); break;
+    case "reportSend": reportSend(v); break;
+    case "closeReport": closeReport(); break;
     case "closeQuit": closeQuit(); break;
     case "quitGame": quitGame(); break;
     case "reveal": revealAnswer(); break;
@@ -1828,7 +1876,7 @@ function phoneHTML(ph) {
   const who = `<div class="who">${av(p)}<b>${esc(p.name)}</b> · ${p.score} نقطة</div>`;
   const center = (big, title, dim = "") => `<div class="center"><div class="big">${big}</div><div class="ph-title">${title}</div><div class="ph-dim">${dim}</div></div>`;
   const g = S.game;
-  if (S.modal === "quit" && g) return who + center("⏸", "اللعبة متوقفة", "انتظر قرار التلفزيون");
+  if ((S.modal === "quit" || S.modal === "report") && g) return who + center("⏸", "اللعبة متوقفة", "انتظر قرار التلفزيون");
   if (g && g.type === "qa") {
     const a = g.answers[p.id];
     if (g.phase === "question") {
@@ -2067,6 +2115,7 @@ async function initOnline() {
       if (r.phone && !phones.find(p => p.id === id)) phones.push({id, pid: id, lie: "", guess: "", fb: ""});
     });
     roomRef.child("players").on("child_added", s => onPhoneJoin(s.key, s.val() || {}));
+    roomRef.child("reports").on("value", s => Reported.fromRoom(s.val()));
     roomRef.child("actions").on("child_added", s => { const a = s.val(); s.ref.remove(); try { onPhoneAction(a || {}); } catch (e) { console.error(e); } });
     ONLINE = true;
   } catch (e) { console.warn("offline:", e); ONLINE = false; }
