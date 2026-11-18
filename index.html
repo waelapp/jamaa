@@ -379,6 +379,34 @@ body.tvmode .screen.enter{animation-duration:.2s}
 .pic{flex:1;max-width:360px;background:#ffffff10;border-radius:24px;overflow:hidden;display:grid;place-items:center}
 .pic img{width:100%;height:100%;object-fit:cover;display:block}
 .pic.emo{font-size:150px;line-height:1}
+
+/* ---------- v4 ---------- */
+.home-grid{grid-template-columns:repeat(4,1fr)!important;gap:18px!important;overflow-y:auto;max-height:500px;padding:8px;margin:-8px;scrollbar-width:none}
+.game-card{height:158px!important;padding:16px 20px!important}
+.game-card .ico{font-size:54px!important;top:14px!important;left:16px!important}
+.game-card h3{font-size:30px!important}.game-card p{font-size:15px!important}
+.gc9{background:linear-gradient(150deg,#f43f5e,#eab308)}
+.gcx{background:linear-gradient(150deg,#475569,#1e293b)}
+.gt-qa{background:linear-gradient(150deg,#6366f1,#0ea5e9)}.gt-charades{background:linear-gradient(150deg,#fb7185,#f97316)}
+.gt-salfa{background:linear-gradient(150deg,#a855f7,#ec4899)}.gt-fib{background:linear-gradient(150deg,#f59e0b,#ef4444)}
+.gt-draw{background:linear-gradient(150deg,#06b6d4,#2563eb)}.gt-pics{background:linear-gradient(150deg,#10b981,#0e7490)}.gt-letters{background:linear-gradient(150deg,#e11d48,#ca8a04)}
+.lt-wrap{display:flex;gap:26px;align-items:flex-start;margin-top:10px;flex:1;min-height:0}
+.lt-board{position:relative;direction:ltr;flex:none;background:#ffffff08;border-radius:22px}
+.lt-side{position:absolute;top:30px;bottom:30px;width:18px;border-radius:9px}
+.lt-top{position:absolute;left:30px;right:30px;height:16px;border-radius:8px}
+.hex{position:absolute;border:none;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);font-family:var(--display);font-size:40px;display:grid;place-items:center;padding:0;transition:transform .15s}
+.hex.f.focus{transform:scale(1.14);box-shadow:none;filter:drop-shadow(0 0 0 #fff) brightness(1.08);background:#ffd43b!important;z-index:3}
+.lt-panel{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0;height:100%}
+.lt-team{border:2px solid;border-radius:18px;padding:10px 14px}
+.lt-tn{display:flex;gap:10px;align-items:center;font-size:20px}.lt-tn span{color:var(--dim);font-size:15px}.lt-w{margin-inline-start:auto;color:#fff!important;font-size:18px!important;font-weight:800}
+.lt-team .minis{margin-top:8px}.lt-team .mini{border:none;color:#fff}
+.lt-q{flex:1;background:#ffffff0c;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.lt-q h2{margin:0;font-size:30px}.lt-big{font-size:64px;text-align:center}
+.lt-letter{font-family:var(--display);font-size:56px;background:#ffd43b;color:#1b1540;border-radius:18px;padding:0 22px;line-height:1.3}
+.lt-qt{font-size:30px;font-weight:800;line-height:1.45}
+.lt-buzz{border:2px solid;border-radius:14px;padding:8px 12px;font-size:22px;font-weight:800}
+.lt-ans{background:#22c55e26;border-radius:14px;padding:8px 12px;font-size:24px;font-weight:800;color:#86efac}
+.lt-q .tv-btn{font-size:18px;padding:10px 16px}
 </style>
 </head>
 <body>
@@ -426,8 +454,9 @@ const GAMES = {
   fib:      {name: "اكذب صح", icon: "🤥", min: 2, minPhones: 2, unit: "سؤال", desc: "اكتب كذبة مقنعة ولا تنخدع بكذبات الباقين"},
   draw:     {name: "ارسم وخمّن", icon: "🎨", min: 2, minPhones: 1, unit: "كلمة", desc: "ارسم بجوالك والرسمة تطلع على التلفزيون"},
   pics:     {name: "تحدي الصور", icon: "🖼️", min: 1, minPhones: 0, unit: "تحدي", desc: "صورتين أو ثلاث… وش يجمعها؟ أسرع واحد يجاوب"},
+  letters:  {name: "الحروف", icon: "🔤", min: 2, minPhones: 0, unit: "سؤال", desc: "فريقين على لوحة الحروف… أول فريق يوصل للطرف الثاني يفوز"},
 };
-const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور"};
+const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور", letters: "الحروف"};
 
 // ---------------------------------------------------------- sound
 let actx = null;
@@ -446,7 +475,7 @@ function beep(type) {
 }
 
 // ---------------------------------------------------------- question bank (live from the cloud, built-in copy as fallback)
-const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}, {"id": "c-pics-emoji", "name": "إيموجي", "emoji": "😀", "type": "pics", "enabled": true, "order": 50, "items": [{"q": "وش يجمع هذي الصور؟", "e": ["🌧️", "☂️", "⛈️"], "a": "مطر", "w": ["شمس", "ثلج", "رياح"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🎂", "🎈", "🎁"], "a": "عيد ميلاد", "w": ["عرس", "تخرج", "رمضان"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌙", "🕌", "🍽️"], "a": "رمضان", "w": ["عيد", "حج", "سفر"]}, {"q": "وش يجمع هذي الصور؟", "e": ["✈️", "🧳", "🛂"], "a": "سفر", "w": ["مدرسة", "دوام", "تسوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["⚽", "🥅", "🏟️"], "a": "كورة", "w": ["سباحة", "تنس", "سلة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🐪", "🏜️", "⛺"], "a": "كشتة", "w": ["بحر", "سوق", "مطعم"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🍿", "🎬", "🎟️"], "a": "سينما", "w": ["ملعب", "مكتبة", "مدرسة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["📚", "✏️", "🎒"], "a": "مدرسة", "w": ["مستشفى", "مطار", "سوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🔥", "🥩", "🍢"], "a": "شوي", "w": ["قلي", "سلق", "خبز"]}, {"q": "وش يجمع هذي الصور؟", "e": ["❄️", "⛄", "🧣"], "a": "شتاء", "w": ["صيف", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌊", "🏖️", "☀️"], "a": "صيف", "w": ["شتاء", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["💍", "👰", "🎉"], "a": "عرس", "w": ["تخرج", "عيد ميلاد", "سفر"]}]}];
+const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}, {"id": "c-pics-emoji", "name": "إيموجي", "emoji": "😀", "type": "pics", "enabled": true, "order": 50, "items": [{"q": "وش يجمع هذي الصور؟", "e": ["🌧️", "☂️", "⛈️"], "a": "مطر", "w": ["شمس", "ثلج", "رياح"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🎂", "🎈", "🎁"], "a": "عيد ميلاد", "w": ["عرس", "تخرج", "رمضان"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌙", "🕌", "🍽️"], "a": "رمضان", "w": ["عيد", "حج", "سفر"]}, {"q": "وش يجمع هذي الصور؟", "e": ["✈️", "🧳", "🛂"], "a": "سفر", "w": ["مدرسة", "دوام", "تسوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["⚽", "🥅", "🏟️"], "a": "كورة", "w": ["سباحة", "تنس", "سلة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🐪", "🏜️", "⛺"], "a": "كشتة", "w": ["بحر", "سوق", "مطعم"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🍿", "🎬", "🎟️"], "a": "سينما", "w": ["ملعب", "مكتبة", "مدرسة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["📚", "✏️", "🎒"], "a": "مدرسة", "w": ["مستشفى", "مطار", "سوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🔥", "🥩", "🍢"], "a": "شوي", "w": ["قلي", "سلق", "خبز"]}, {"q": "وش يجمع هذي الصور؟", "e": ["❄️", "⛄", "🧣"], "a": "شتاء", "w": ["صيف", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌊", "🏖️", "☀️"], "a": "صيف", "w": ["شتاء", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["💍", "👰", "🎉"], "a": "عرس", "w": ["تخرج", "عيد ميلاد", "سفر"]}]}, {"id": "c-letters", "name": "حروف عامة", "emoji": "🔤", "type": "letters", "enabled": true, "order": 60, "items": [{"l": "أ", "q": "ما هي أكبر قارة في العالم؟", "a": "آسيا"}, {"l": "أ", "q": "دولة أوروبية عاصمتها مدريد؟", "a": "إسبانيا"}, {"l": "ب", "q": "عاصمة فرنسا؟", "a": "باريس"}, {"l": "ب", "q": "طائر أبيض وأسود لا يطير ويعيش في القطب الجنوبي؟", "a": "بطريق"}, {"l": "ت", "q": "ثمرة النخيل اللي تشتهر فيها السعودية؟", "a": "تمر"}, {"l": "ت", "q": "دولة عربية في شمال أفريقيا عاصمتها تحمل نفس اسمها؟", "a": "تونس"}, {"l": "ث", "q": "حيوان ماكر في القصص ذيله كثيف؟", "a": "ثعلب"}, {"l": "ث", "q": "نبات فصوصه بيضاء ورائحته قوية يُستخدم في الطبخ؟", "a": "ثوم"}, {"l": "ج", "q": "عاصمة إندونيسيا؟", "a": "جاكرتا"}, {"l": "ج", "q": "حيوان يُلقب بسفينة الصحراء؟", "a": "جمل"}, {"l": "ح", "q": "حيوان يصهل ويُستخدم في السباقات؟", "a": "حصان"}, {"l": "ح", "q": "ركن من أركان الإسلام يؤدى في مكة؟", "a": "حج"}, {"l": "خ", "q": "حيوان يُربى ونأخذ منه الصوف؟", "a": "خروف"}, {"l": "خ", "q": "أكلة أساسية تُصنع من الطحين وتُخبز في الفرن أو التنور؟", "a": "خبز"}, {"l": "د", "q": "عاصمة سوريا؟", "a": "دمشق"}, {"l": "د", "q": "طائر يصيح وقت الفجر؟", "a": "ديك"}, {"l": "ذ", "q": "معدن ثمين لونه أصفر؟", "a": "ذهب"}, {"l": "ذ", "q": "حشرة مزعجة تطير حول الأكل؟", "a": "ذبابة"}, {"l": "ر", "q": "عاصمة إيطاليا؟", "a": "روما"}, {"l": "ر", "q": "شهر الصيام عند المسلمين؟", "a": "رمضان"}, {"l": "ز", "q": "حيوان رقبته طويلة جداً؟", "a": "زرافة"}, {"l": "ز", "q": "شجرة يُستخرج من ثمارها زيت مشهور؟", "a": "زيتون"}, {"l": "س", "q": "عاصمة كوريا الجنوبية؟", "a": "سيول"}, {"l": "س", "q": "حيوان يعيش في الماء ويتنفس بالخياشيم؟", "a": "سمك"}, {"l": "ش", "q": "النجم اللي تدور حوله الأرض؟", "a": "شمس"}, {"l": "ش", "q": "مشروب ساخن يُحضّر من أوراق نبات ويُقدم مع النعناع؟", "a": "شاي"}, {"l": "ص", "q": "طائر جارح يُستخدم في الصيد ويحبه أهل الخليج؟", "a": "صقر"}, {"l": "ص", "q": "المكان اللي نشتري منه الأدوية؟", "a": "صيدلية"}, {"l": "ض", "q": "حيوان برمائي ينقّ؟", "a": "ضفدع"}, {"l": "ض", "q": "عكس كلمة «ظلام»؟", "a": "ضوء"}, {"l": "ط", "q": "عاصمة اليابان؟", "a": "طوكيو"}, {"l": "ط", "q": "الشخص اللي يعالج المرضى؟", "a": "طبيب"}, {"l": "ظ", "q": "عكس كلمة «نور»؟", "a": "ظلام"}, {"l": "ظ", "q": "حيوان رشيق يشبه الغزال ويكثر ذكره في الشعر العربي؟", "a": "ظبي"}, {"l": "ع", "q": "عاصمة الأردن؟", "a": "عمّان"}, {"l": "ع", "q": "حشرة تنسج شبكة لصيد فرائسها؟", "a": "عنكبوت"}, {"l": "غ", "q": "طائر أسود ورد في قصة ابني آدم؟", "a": "غراب"}, {"l": "غ", "q": "حيوان رشيق وسريع يعيش في الصحراء وله قرون؟", "a": "غزال"}, {"l": "ف", "q": "حيوان ضخم له خرطوم؟", "a": "فيل"}, {"l": "ف", "q": "دولة أوروبية عاصمتها باريس؟", "a": "فرنسا"}, {"l": "ق", "q": "الجرم اللي يدور حول الأرض ويضيء بالليل؟", "a": "قمر"}, {"l": "ق", "q": "حيوان أليف يموء؟", "a": "قطة"}, {"l": "ك", "q": "حيوان يحمل صغيره في جيب ببطنه؟", "a": "كنغر"}, {"l": "ك", "q": "أشهر أكلة سعودية من الرز واللحم؟", "a": "كبسة"}, {"l": "ل", "q": "عاصمة بريطانيا؟", "a": "لندن"}, {"l": "ل", "q": "فاكهة صفراء حامضة؟", "a": "ليمون"}, {"l": "م", "q": "عاصمة روسيا؟", "a": "موسكو"}, {"l": "م", "q": "المدينة اللي فيها المسجد الحرام؟", "a": "مكة"}, {"l": "ن", "q": "حشرة تصنع العسل؟", "a": "نحلة"}, {"l": "ن", "q": "حيوان مفترس جلده مخطط أو مرقط من فصيلة القطط؟", "a": "نمر"}, {"l": "هـ", "q": "جهاز نتصل فيه ونحمله في جيبنا؟", "a": "هاتف"}, {"l": "هـ", "q": "يظهر في السماء أول الشهر القمري؟", "a": "هلال"}, {"l": "و", "q": "زهرة مشهورة برائحتها الجميلة؟", "a": "وردة"}, {"l": "و", "q": "حيوان ضخم له قرن واحد على أنفه؟", "a": "وحيد القرن"}, {"l": "ي", "q": "العضو اللي نكتب ونمسك فيه الأشياء؟", "a": "يد"}, {"l": "ي", "q": "حجر كريم ثمين لونه أحمر غالباً؟", "a": "ياقوت"}]}];
 const Bank = {
   cats: STARTER.map(c => Object.assign({}, c, {items: c.items.slice()})), mode: "local", loaded: false, listeners: [],
   onChange(fn) { this.listeners.push(fn); },
@@ -454,20 +483,25 @@ const Bank = {
   fromCloud(v) {
     if (!v) { this.emit("init"); return; }
     const first = !this.loaded; this.loaded = true; this.mode = "db";
+    this.games = v._games || {};
+    this.sections = Object.entries(v._sections || {}).map(([id, x]) => Object.assign({id}, x)).filter(x => x && x.type && x.name && GAMES[x.type])
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.cats = Object.entries(v).map(([id, c]) => Object.assign({id}, c, {items: Array.isArray(c.items) ? c.items.filter(Boolean) : Object.values(c.items || {})}))
       .filter(c => c.type && c.name);
     this.cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name), "ar"));
     this.emit(first ? "init" : "remote");
   },
   get(id) { return this.cats.find(c => c.id === id); },
-  usable(type) { return this.cats.filter(c => c.type === type && c.enabled && (c.items || []).length); }
+  sections: [], games: {},
+  inSec(c, type, sec) { return c.type === type && (sec ? c.sec === sec : !c.sec); },
+  usable(type, sec = S.sec) { return this.cats.filter(c => this.inSec(c, type, sec) && c.enabled && (c.items || []).length); }
 };
 
 // ---------------------------------------------------------- no-repeat memory (played items are not shown again)
 const USED_KEY = "jamaa-used-v1";
 const Used = {
   set: new Set((() => { try { return JSON.parse(localStorage.getItem(USED_KEY) || "[]"); } catch (e) { return []; } })()),
-  key(type, it) { return type + ":" + norm((it.q || "") + "|" + (it.w || "") + "|" + (it.a || "") + "|" + (it.e || []).join("") + "|" + (it.imgs || []).length + (it.imgs && it.imgs[0] ? it.imgs[0].slice(-24) : "")); },
+  key(type, it) { return type + ":" + norm((it.l || "") + (it.q || "") + "|" + (it.w || "") + "|" + (it.a || "") + "|" + (it.e || []).join("") + "|" + (it.imgs || []).length + (it.imgs && it.imgs[0] ? it.imgs[0].slice(-24) : "")); },
   has(type, it) { return this.set.has(this.key(type, it)); },
   add(type, it) { this.set.add(this.key(type, it)); this.save(); },
   forget(type, items) { items.forEach(it => this.set.delete(this.key(type, it))); this.save(); },
@@ -487,7 +521,7 @@ const S = {
   screen: "home", next: null, players: [], game: null, modal: null, toast: null, banner: null, reveal: null,
   pendingCat: null,
   cfg: (() => {
-    const d = {qa: {count: 7, secs: 20}, charades: {turns: 1, secs: 60}, salfa: {rounds: 3, secs: 120}, fib: {count: 5, secs: 90}, draw: {turns: 1, secs: 80}, pics: {count: 8, secs: 20}};
+    const d = {qa: {count: 7, secs: 20}, charades: {turns: 1, secs: 60}, salfa: {rounds: 3, secs: 120}, fib: {count: 5, secs: 90}, draw: {turns: 1, secs: 80}, pics: {count: 8, secs: 20}, letters: {rounds: 1, secs: 20}};
     try { const s = JSON.parse(localStorage.getItem("jamaa-cfg") || "{}"); for (const k in d) Object.assign(d[k], s[k] || {}); } catch (e) { }
     return d;
   })()
@@ -501,6 +535,7 @@ const SETUP = {
   fib:      [{k: "count", label: "عدد الأسئلة", opts: [3, 5, 7, 10]}, {k: "secs", label: "وقت كتابة الكذبة", opts: [45, 60, 90, 120, 0]}],
   draw:     [{k: "turns", label: "عدد اللفات (لكل رسّام)", opts: [1, 2, 3]}, {k: "secs", label: "وقت الرسّام", opts: [45, 60, 80, 120, 0]}],
   pics:     [{k: "count", label: "عدد التحديات", opts: [5, 8, 10, 15]}, {k: "secs", label: "وقت كل تحدي", opts: [10, 15, 20, 30, 0]}],
+  letters:  [{k: "rounds", label: "عدد الجولات (لوحات)", opts: [1, 2, 3, 5]}, {k: "secs", label: "وقت كل سؤال", opts: [10, 15, 20, 30, 0]}],
 };
 function optLabel(k, v) { return k === "secs" ? (v ? v + " ثانية" : "بدون وقت ∞") : String(v); }
 let phones = [];
@@ -541,7 +576,8 @@ function back() {
   else if (S.screen === "setup") go("cats");
   else if (S.game) openQuit();
 }
-function chooseGame(type) { S.next = type; go("lobby"); }
+function chooseGame(type, sec) { S.next = type; S.sec = sec || null; go("lobby"); }
+function secInfo() { const x = S.sec && Bank.sections.find(z => z.id === S.sec); return x ? {icon: x.emoji || GAMES[x.type].icon, name: x.name} : null; }
 
 // quit / cancel at any time
 function openQuit() { if (!S.game) { go("home"); return; } pauseTimer(); S.modal = "quit"; render(true); }
@@ -853,15 +889,128 @@ function picsReveal() {
   stopTimer(); g.phase = "reveal"; beep(g.winner ? "ok" : "bad"); render(true);
 }
 function picsMedia(it, big) {
-  if (it.imgs && it.imgs.length) return it.imgs.slice(0, 3).map(src => `<div class="pic"><img src="${esc(src)}" alt=""></div>`).join("");
+  if (it.imgs && it.imgs.length) return it.imgs.slice(0, 4).map(src => `<div class="pic"><img src="${esc(src)}" alt=""></div>`).join("");
   return (it.e || []).slice(0, 3).map(e => `<div class="pic emo">${esc(e)}</div>`).join("");
+}
+
+// ---------------------------------------------------------- الحروف (لوحة سداسية — فريقين)
+const AR_LETTERS = ["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"];
+const LT_TEAMS = [{name: "الفريق البرتقالي", color: "#ff7a3d", soft: "#ff7a3d33"}, {name: "الفريق الأخضر", color: "#22c55e", soft: "#22c55e33"}];
+const LT_ASK = ["اسم حيوان", "اسم بلد", "اسم مدينة", "اسم أكلة", "اسم فاكهة أو خضار", "اسم ولد", "اسم بنت", "اسم جماد", "اسم مهنة", "اسم نبات"];
+const normL = l => l === "ا" || l === "آ" || l === "إ" ? "أ" : l === "ه" || l === "ة" ? "هـ" : l;
+function ltBoard() { return shuffle(AR_LETTERS).slice(0, 25).map(l => ({l, o: -1})); }
+function startLetters(cat) {
+  const ids = S.players.map(p => p.id), teams = [[], []];
+  ids.forEach((id, i) => teams[i % 2].push(id));
+  S.game = {type: "letters", cat, pool: cat.items.slice(), board: ltBoard(), teams, wins: [0, 0], round: 1, rounds: cfg("letters").rounds, phase: "pick", sel: null, q: null, buzz: [], lastFocus: null};
+  S.screen = "letters"; render(true);
+}
+function ltTeamOf(pid) { const g = S.game; return g.teams[0].includes(pid) ? 0 : g.teams[1].includes(pid) ? 1 : -1; }
+function ltNbrs(i) {
+  const r = Math.floor(i / 5), c = i % 5, out = [], odd = r % 2 === 1;
+  const add = (rr, cc) => { if (rr >= 0 && rr < 5 && cc >= 0 && cc < 5) out.push(rr * 5 + cc); };
+  add(r, c - 1); add(r, c + 1);
+  if (odd) { add(r - 1, c); add(r - 1, c + 1); add(r + 1, c); add(r + 1, c + 1); }
+  else { add(r - 1, c - 1); add(r - 1, c); add(r + 1, c - 1); add(r + 1, c); }
+  return out;
+}
+function ltWon(team) {   // team 0: يمين ↔ يسار · team 1: فوق ↔ تحت
+  const b = S.game.board, start = [], seen = new Set();
+  for (let k = 0; k < 5; k++) { const i = team === 0 ? k * 5 : k; if (b[i].o === team) start.push(i); }
+  const stack = start.slice(); start.forEach(i => seen.add(i));
+  while (stack.length) {
+    const i = stack.pop(), r = Math.floor(i / 5), c = i % 5;
+    if (team === 0 ? c === 4 : r === 4) return true;
+    for (const n of ltNbrs(i)) if (!seen.has(n) && b[n].o === team) { seen.add(n); stack.push(n); }
+  }
+  return false;
+}
+function ltPick(i) {
+  const g = S.game; if (!g || g.phase !== "pick") return;
+  i = +i; const cell = g.board[i]; if (!cell || cell.o >= 0) return;
+  g.sel = i; g.lastFocus = "hx-" + i; ltQuestion(); 
+}
+function ltQuestion() {
+  const g = S.game, L = g.board[g.sel].l;
+  const fresh = g.pool.filter(it => normL(it.l) === L && !Used.has("letters", it) && it !== (g.q && g.q.it));
+  const any = g.pool.filter(it => normL(it.l) === L && it !== (g.q && g.q.it));
+  const it = fresh[0] ? fresh[Math.floor(Math.random() * fresh.length)] : any[0] ? any[Math.floor(Math.random() * any.length)] : null;
+  if (it) { Used.add("letters", it); g.q = {it, q: it.q, a: it.a}; }
+  else g.q = {it: null, q: LT_ASK[Math.floor(Math.random() * LT_ASK.length)] + " يبدأ بحرف «" + L + "»", a: "أي إجابة صحيحة تبدأ بحرف «" + L + "»"};
+  g.phase = "q"; g.buzz = []; g.showA = false;
+  startTimer(cfg("letters").secs, () => { const gg = S.game; if (gg && gg.phase === "q") { gg.showA = true; beep("end"); render(); } });
+  render(true);
+}
+function ltBuzz(pid) {
+  const g = S.game; if (!g || g.type !== "letters" || g.phase !== "q" || g.buzz.includes(pid)) return;
+  g.buzz.push(pid); if (g.buzz.length === 1) { beep("ok"); pauseTimer(); }
+  render();
+}
+function ltAward(team) {
+  const g = S.game; if (!g || g.phase !== "q") return;
+  team = +team; stopTimer();
+  g.board[g.sel].o = team;
+  const first = g.buzz.find(pid => ltTeamOf(pid) === team);
+  if (first) award(first, 50); else g.teams[team].forEach(pid => award(pid, 10));
+  beep("ok");
+  if (ltWon(team)) {
+    g.wins[team]++; g.winner = team; g.phase = "won";
+    g.teams[team].forEach(pid => award(pid, 150)); beep("end");
+  } else { g.phase = "pick"; g.sel = null; }
+  render(true);
+}
+function ltCancel() { const g = S.game; if (!g || g.phase !== "q") return; stopTimer(); g.phase = "pick"; g.sel = null; render(true); }
+function ltNextRound() {
+  const g = S.game; if (!g) return;
+  if (g.round >= g.rounds) { endGame(); return; }
+  g.round++; g.board = ltBoard(); g.phase = "pick"; g.sel = null; g.winner = null; render(true);
+}
+function ltSwap(pid) {   // نقل لاعب للفريق الثاني
+  const g = S.game, t = ltTeamOf(pid); if (t < 0) return;
+  g.teams[t] = g.teams[t].filter(x => x !== pid); g.teams[1 - t].push(pid); render();
+}
+function screenLetters() {
+  const g = S.game, left = timeLeft(), W = 88, H = Math.round(W * 1.1547), VY = Math.round(H * 0.75);
+  const hexes = g.board.map((c, i) => {
+    const r = Math.floor(i / 5), col = i % 5, x = col * W + (r % 2 ? W / 2 : 0) + 26, y = r * VY + 22;
+    const own = c.o >= 0 ? LT_TEAMS[c.o].color : i === g.sel ? "#ffd43b" : "#f5f2ff";
+    const can = g.phase === "pick" && c.o < 0;
+    return `<button class="hex ${can ? "f" : ""}" ${can ? `data-f="hx-${i}" data-act="ltPick" data-v="${i}"` : ""} style="left:${x}px;top:${y}px;width:${W - 4}px;height:${H - 4}px;background:${own};color:${c.o >= 0 ? "#fff" : "#1b1540"}">${c.l}</button>`;
+  }).join("");
+  const bw = 5.5 * W + 52, bh = 4 * VY + H + 44;
+  const board = `<div class="lt-board" style="width:${bw}px;height:${bh}px">
+      <i class="lt-side" style="right:0;background:${LT_TEAMS[0].color}"></i><i class="lt-side" style="left:0;background:${LT_TEAMS[0].color}"></i>
+      <i class="lt-top" style="top:0;background:${LT_TEAMS[1].color}"></i><i class="lt-top" style="bottom:0;background:${LT_TEAMS[1].color}"></i>${hexes}</div>`;
+  const teamBox = t => `<div class="lt-team" style="border-color:${LT_TEAMS[t].color};background:${LT_TEAMS[t].soft}">
+      <div class="lt-tn"><b style="color:${LT_TEAMS[t].color}">${LT_TEAMS[t].name}</b> <span>${t === 0 ? "↔ يمين ويسار" : "↕ فوق وتحت"}</span> <span class="lt-w">🏆 ${g.wins[t]}</span></div>
+      <div class="minis">${g.teams[t].map(pid => { const p = playerById(pid); return p ? `<button class="mini ${g.phase === "pick" ? "f" : ""}" ${g.phase === "pick" ? `data-f="sw-${pid}" data-act="ltSwap" data-v="${pid}"` : ""}>${av(p)}${esc(p.name)}</button>` : ""; }).join("") || '<span class="pill">بدون لاعبين</span>'}</div></div>`;
+  let panel;
+  if (g.phase === "pick") panel = `<div class="lt-q"><div class="lt-big">🔤</div><h2>اختاروا حرف من اللوحة</h2><p class="tv-sub">تحرك بالأسهم واضغط OK على الحرف · اضغط على لاعب لنقله للفريق الثاني</p></div>`;
+  else if (g.phase === "q") {
+    const L = g.board[g.sel].l, b0 = g.buzz[0] && playerById(g.buzz[0]), bt = b0 ? ltTeamOf(b0.id) : -1;
+    panel = `<div class="lt-q"><div class="tv-row" style="justify-content:space-between"><span class="lt-letter">${L}</span><div class="timer ${timed() && left <= 5 ? "low" : ""}" id="tTimer">${tl(left)}</div></div>
+      <div class="lt-qt">${esc(g.q.q)}</div>
+      ${b0 ? `<div class="lt-buzz" style="border-color:${bt >= 0 ? LT_TEAMS[bt].color : "#fff"}">🔔 ${av(b0)} ${esc(b0.name)} ضغط الجرس أول!</div>` : `<p class="tv-sub">📱 اللي يعرف يضغط الجرس في جواله</p>`}
+      ${g.showA ? `<div class="lt-ans">✓ ${esc(g.q.a)}</div>` : ""}
+      <div class="tv-row" style="flex-wrap:wrap;gap:10px;margin-top:auto">
+        <button class="tv-btn f" data-f="lt-a0" data-act="ltAward" data-v="0" ${bt === 0 || bt < 0 ? 'data-auto="1"' : ""} style="background:${LT_TEAMS[0].color};color:#fff">✓ صح للبرتقالي</button>
+        <button class="tv-btn f" data-f="lt-a1" data-act="ltAward" data-v="1" ${bt === 1 ? 'data-auto="1"' : ""} style="background:${LT_TEAMS[1].color};color:#fff">✓ صح للأخضر</button>
+        <button class="tv-btn ghost f" data-f="lt-sa" data-act="ltShow">👁 الجواب</button>
+        <button class="tv-btn ghost f" data-f="lt-nq" data-act="ltNewQ">🔄 سؤال ثاني</button>
+        <button class="tv-btn ghost f" data-f="lt-cx" data-act="ltCancel">↩ رجوع</button></div></div>`;
+  } else {
+    panel = `<div class="lt-q" style="text-align:center;justify-content:center"><div class="lt-big">🏆</div><h2 style="color:${LT_TEAMS[g.winner].color}">${LT_TEAMS[g.winner].name} فاز بالجولة!</h2>
+      <p class="tv-sub">+150 لكل لاعب في الفريق</p><button class="tv-btn go f" data-f="lt-next" data-act="ltNextRound" data-auto="1" style="margin:16px auto 0">${g.round >= g.rounds ? "النتائج 🏆" : "الجولة التالية ←"}</button></div>`;
+  }
+  return `<div class="screen">${head(`${catPill()} · الجولة ${g.round} من ${g.rounds}`)}
+    <div class="lt-wrap">${board}<div class="lt-panel">${teamBox(0)}${teamBox(1)}${panel}</div></div></div>`;
 }
 
 // ---------------------------------------------------------- game start / end
 function startGame(type, cat) {
   cat = {id: cat.id, name: cat.name, emoji: cat.emoji, type: cat.type, items: cat.items.slice()};
   if (!cat.items.length) return;
-  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw, pics: startPics})[type](cat);
+  ({qa: startQA, charades: startCharades, salfa: startSalfa, fib: startFib, draw: startDraw, pics: startPics, letters: startLetters})[type](cat);
 }
 function endGame() { stopTimer(); S.game = null; beep("end"); go("scores"); }
 function gameReady(type) {
@@ -888,19 +1037,16 @@ function screenHome() {
       <div><p class="tv-sub" style="font-size:24px;color:#fff;font-weight:800;margin:0">ألعاب الجَمعات 🎉</p><p class="tv-sub" style="font-size:18px"><span class="live-dot"></span> ${Bank.mode === "db" ? "الأسئلة متزامنة أونلاين" : ONLINE ? "متصل" : "بدون إنترنت"}</p></div></div>
       <div class="tv-row"><button class="hbtn f" data-f="h-pl" data-act="choose" data-v="">👥 اللاعبين <b>${n}</b></button><button class="hbtn f" data-f="h-sc" data-act="go" data-v="scores">🏆 النقاط</button></div></div>
     <div class="home-grid" style="margin-top:22px">
-      ${card("gc1", "g-charades", "choose", "charades", "🎭", "بدون كلام", GAMES.charades.desc)}
-      ${card("gc2", "g-qa", "choose", "qa", "❓", "سؤال وجواب", GAMES.qa.desc)}
-      ${card("gc5", "g-salfa", "choose", "salfa", "🕵️", "برا السالفة", GAMES.salfa.desc)}
-      ${card("gc6", "g-fib", "choose", "fib", "🤥", "اكذب صح", GAMES.fib.desc)}
-      ${card("gc7", "g-draw", "choose", "draw", "🎨", "ارسم وخمّن", GAMES.draw.desc)}
-      ${card("gc8", "g-pics", "choose", "pics", "🖼️", "تحدي الصور", GAMES.pics.desc)}
+      ${[["gc1", "charades"], ["gc2", "qa"], ["gc5", "salfa"], ["gc6", "fib"], ["gc7", "draw"], ["gc8", "pics"], ["gc9", "letters"]]
+        .filter(([, t]) => !(Bank.games[t] && Bank.games[t].hidden)).map(([cl, t]) => card(cl, "g-" + t, "choose", t, GAMES[t].icon, GAMES[t].name, GAMES[t].desc)).join("")}
+      ${Bank.sections.filter(x => x.enabled !== false).map(x => card("gcx gt-" + x.type, "sec-" + esc(x.id), "choose", x.type + "|" + esc(x.id), esc(x.emoji || GAMES[x.type].icon), esc(x.name), GAMES[x.type].icon + " " + GAMES[x.type].name)).join("")}
     </div>
     <div class="home-foot" style="margin-top:auto"><span>رمز الغرفة: <b style="direction:ltr;display:inline-block">${ROOM}</b></span><span>© 2026 WAEL</span></div>
   </div>`;
 }
 
 function screenLobby() {
-  const ps = S.players, G = GAMES[S.next], title = G ? `${G.icon} ${G.name}` : "👥 اللاعبين";
+  const ps = S.players, G = GAMES[S.next], si = secInfo(), title = G ? (si ? `${esc(si.icon)} ${esc(si.name)}` : `${G.icon} ${G.name}`) : "👥 اللاعبين";
   const ready = gameReady(S.next);
   const cards = ps.map(p => `<div class="pcard">${av(p, "avatar")}<div class="nm">${esc(p.name)}</div><div class="via">${p.phone ? "📱 من الجوال" : "🎮 بالريموت"} · ${p.score}</div>
       <button class="pdel f" data-f="pd-${p.id}" data-act="delPlayer" data-v="${p.id}" title="حذف">✕</button></div>`).join("");
@@ -925,13 +1071,14 @@ function screenLobby() {
 
 function screenCats() {
   const type = S.next, G = GAMES[type], cats = Bank.usable(type);
-  const empty = Bank.cats.filter(c => c.type === type && c.enabled && !(c.items || []).length);
+  const empty = Bank.cats.filter(c => Bank.inSec(c, type, S.sec) && c.enabled && !(c.items || []).length);
+  const si = secInfo();
   const tiles = cats.map(c => { const fresh = c.items.length - Used.count(type, c.items);
       return `<button class="cat f" data-f="c-${esc(c.id)}" data-act="pickCat" data-v="${esc(c.id)}"><span class="e">${esc(c.emoji || "⭐")}</span><span><div class="n">${esc(c.name)}</div><div class="c">${fresh ? fresh + " " + G.unit + " جديدة" : "🔁 انلعبت كلها — بتبدأ من جديد"}</div></span></button>`; }).join("")
     + empty.map(c => `<div class="cat" style="opacity:.45"><span class="e">${esc(c.emoji || "⭐")}</span><span><div class="n">${esc(c.name)}</div><div class="c">فاضي — أضف له من لوحة التحكم</div></span></div>`).join("");
   const random = cats.length > 1 ? `<button class="cat f" data-f="c-rand" data-act="pickCat" data-v="__random" style="background:linear-gradient(150deg,#ffffff18,#ffffff08)"><span class="e">🎲</span><span><div class="n">عشوائي</div><div class="c">من كل الفئات</div></span></button>` : "";
   return `<div class="screen">
-    <h1 class="tv-title">اختر الفئة</h1><p class="tv-sub">${G.icon} ${G.name} · الفئات المفعّلة من لوحة التحكم</p>
+    <h1 class="tv-title">اختر الفئة</h1><p class="tv-sub">${si ? esc(si.icon) + " " + esc(si.name) + " · " : ""}${G.icon} ${G.name} · الفئات المفعّلة من لوحة التحكم</p>
     ${cats.length ? `<div class="cat-grid">${tiles}${random}</div>` : `<div class="empty-state">لا توجد فئات مفعّلة لـ«${G.name}» بعد<br>أضفها من ⚙️ لوحة التحكم على جهازك — وتظهر هنا فوراً</div>`}
   </div>`;
 }
@@ -1153,7 +1300,7 @@ function modalQuit() {
 
 let lastScreenKey = "";
 function render(resetFocus) {
-  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, setup: screenSetup, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, pics: screenPics, scores: screenScores};
+  const map = {home: screenHome, lobby: screenLobby, cats: screenCats, setup: screenSetup, qa: screenQA, charades: screenCharades, salfa: screenSalfa, fib: screenFib, draw: screenDraw, pics: screenPics, letters: screenLetters, scores: screenScores};
   if (S.game && !map[S.screen]) S.screen = "home";
   const keep = focusKey();
   tv.innerHTML = (map[S.screen] || screenHome)()
@@ -1192,7 +1339,7 @@ function focusables() {
   if (S.modal) list = list.filter(el => el.closest(".tv-modal"));
   return list;
 }
-function setFocus(el) { if (cur) cur.classList.remove("focus"); cur = el; if (el) el.classList.add("focus"); }
+function setFocus(el) { if (cur) cur.classList.remove("focus"); cur = el; if (el) { el.classList.add("focus"); if (el.closest(".home-grid")) try { el.scrollIntoView({block: "nearest", behavior: "smooth"}); } catch (e) { } } }
 function restoreFocus(key) {
   const list = focusables();
   let el = key && list.find(e => e.dataset.f === key);
@@ -1240,7 +1387,7 @@ document.querySelectorAll(".remote [data-key]").forEach(b => b.addEventListener(
 // ---------------------------------------------------------- TV actions
 function act(name, v, el) {
   switch (name) {
-    case "choose": chooseGame(v || null); break;
+    case "choose": { const [t, sec] = String(v || "").split("|"); chooseGame(t || null, sec); break; }
     case "go": go(v); break;
     case "toCats": if (gameReady(S.next).ok) go("cats"); break;
     case "addRemote": S.modal = "addPlayer"; render(true); break;
@@ -1257,6 +1404,13 @@ function act(name, v, el) {
     case "picsWin": picsWin(v); break;
     case "picsReveal": picsReveal(); break;
     case "picsNext": picsNext(); break;
+    case "ltPick": ltPick(v); break;
+    case "ltAward": ltAward(v); break;
+    case "ltCancel": ltCancel(); break;
+    case "ltShow": if (S.game) { S.game.showA = true; render(); } break;
+    case "ltNewQ": if (S.game && S.game.phase === "q") ltQuestion(); break;
+    case "ltNextRound": ltNextRound(); break;
+    case "ltSwap": ltSwap(v); break;
     case "pickCat": {
       let cat;
       if (v === "__random") { const cs = Bank.usable(S.next); cat = {id: "__random", name: "عشوائي", emoji: "🎲", type: S.next, items: cs.flatMap(c => c.items.map(it => Object.assign({t: c.name}, it)))}; }
@@ -1346,6 +1500,17 @@ function phoneHTML(ph) {
     }
     const ok = a && a.choice === g.correct;
     return who + center(!a ? "⌛" : ok ? "🎉" : "😅", !a ? "ما جاوبت" : ok ? "صح! +" + a.pts : "خطأ", "الإجابة: " + esc(g.options[g.correct]));
+  }
+  if (g && g.type === "letters") {
+    const t = ltTeamOf(p.id), tm = t >= 0 ? `<div class="ph-dim" style="text-align:center;color:${LT_TEAMS[t].color};font-weight:800">${LT_TEAMS[t].name}</div>` : "";
+    if (g.phase === "q") {
+      const i = g.buzz.indexOf(p.id);
+      if (i === 0) return who + tm + center("🔔", "أنت الأول!", "جاوب بصوتك الحين");
+      if (i > 0) return who + tm + center("⏳", "ترتيبك " + (i + 1), "انتظر — " + esc((playerById(g.buzz[0]) || {}).name || "") + " ضغط قبلك");
+      return who + tm + `<div class="ph-title" style="font-size:40px">حرف ${g.board[g.sel].l}</div><button class="buzz" data-ph-act="buzz">🔔<br>جرس</button>`;
+    }
+    if (g.phase === "won") return who + tm + center("🏆", LT_TEAMS[g.winner].name + " فاز!", "");
+    return who + tm + center("🔤", "اختاروا حرف", "انتظر السؤال على التلفزيون");
   }
   if (g && g.type === "pics") {
     const it = g.items[g.idx], a = g.answers[p.id];
@@ -1440,6 +1605,7 @@ function phoneAct(ph, a, v) {
   const g = S.game;
   if (a === "ans") return phoneAnswer(ph.pid, +v);
   if (a === "pans") return picsAnswer(ph.pid, +v);
+  if (a === "buzz") return ltBuzz(ph.pid);
   if (a === "chSkip") return chSkip();
   if (a === "seen") return salfaSeen(ph.pid);
   if (a === "vote") return salfaPhoneVote(ph.pid, v);

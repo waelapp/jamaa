@@ -345,6 +345,52 @@ body.tvmode .screen.enter{animation-duration:.2s}
 .th{position:relative}.th img{width:72px;height:72px;object-fit:cover;border-radius:10px;display:block}
 .th button{position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;border:none;background:#ff6b6b;color:#fff;font-size:11px}
 .card2 h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.side-h{margin:2px 0 10px;font-size:15px}.side-h .muted{font-size:12px;font-weight:400}
+.side-sub{font-size:13px;color:var(--dim,#a9a3c9);margin:14px 4px 6px;font-weight:700}
+.cat-item.sec{cursor:pointer}
+.sec-head h3{font-size:22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{border:1px solid #ffffff1c;background:#ffffff0d;color:#fff;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer}
+.chip b{background:#ffffff1f;border-radius:999px;padding:0 7px;margin-inline-start:4px;font-size:12px}
+.chip.sel{background:linear-gradient(90deg,#7b61ff,#ff5fa2);border-color:transparent}
+.chip.off{opacity:.55}.chip.add{border-style:dashed;color:#cbbcff}
+.vis{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--dim,#a9a3c9);white-space:nowrap}
+.mv{display:inline-flex;gap:3px}.mv button{border:none;background:#ffffff14;color:#fff;border-radius:6px;width:30px;height:30px}
+.mv button:disabled{opacity:.3}
+.th{position:relative;display:block;flex:none;width:96px;height:96px;cursor:grab;touch-action:none;border-radius:12px;transition:transform .12s}
+.th img{width:96px!important;height:96px!important}
+.th.drag{opacity:.45}.th.over{transform:scale(1.08);outline:3px solid #ffc94d}
+.th-n{position:absolute;bottom:4px;right:4px;background:#000a;color:#fff;font-style:normal;font-size:12px;border-radius:6px;padding:0 6px}
+.th-mv{position:absolute;bottom:4px;left:4px;display:flex;gap:2px}
+.th-mv button{position:static!important;width:22px!important;height:22px!important;border-radius:6px!important;background:#000a!important;font-size:10px!important}
+.th-mv button:disabled{opacity:.3}
+.ltr-b{display:inline-grid;place-items:center;min-width:30px;height:30px;border-radius:8px;background:#ffd43b;color:#1b1540;margin-left:6px}
+.admin-body{grid-template-columns:1fr!important}
+.editor{max-width:1200px;width:100%;margin:0 auto}
+.page-h h2{margin:4px 0;font-size:28px}
+.grp{margin:22px 0 10px;font-size:18px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:14px}
+.scard{position:relative;border-radius:20px;padding:18px;min-height:140px;cursor:pointer;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;background:#ffffff10;border:1px solid #ffffff14;transition:transform .12s}
+.scard:hover{transform:translateY(-3px)}
+.scard .se{position:absolute;top:12px;right:14px;font-size:44px}
+.scard .switch{position:absolute;top:14px;left:14px}
+.scard .sn{font-size:22px;font-weight:800}
+.scard .st{font-size:13px;opacity:.85;margin-top:4px}
+.scard.off{opacity:.5;filter:grayscale(.6)}
+.scard.add{border:2px dashed #ffffff33;background:transparent;align-items:center;text-align:center;justify-content:center}
+.scard.add .se{position:static;font-size:40px;color:#cbbcff}
+.scard.add.open{cursor:default;align-items:stretch;text-align:right;justify-content:flex-start;grid-column:span 2}
+.scard.add.open:hover{transform:none}
+.ccard{min-height:120px;background:#ffffff0d}
+.gt-qa{background:linear-gradient(150deg,#6366f1,#0ea5e9)}.gt-charades{background:linear-gradient(150deg,#fb7185,#f97316)}
+.gt-salfa{background:linear-gradient(150deg,#a855f7,#ec4899)}.gt-fib{background:linear-gradient(150deg,#f59e0b,#ef4444)}
+.gt-draw{background:linear-gradient(150deg,#06b6d4,#2563eb)}.gt-pics{background:linear-gradient(150deg,#10b981,#0e7490)}.gt-letters{background:linear-gradient(150deg,#e11d48,#ca8a04)}
+.crumbs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:15px}
+.crumbs button{border:none;background:#ffffff12;color:#fff;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.crumbs button:disabled{background:none;cursor:default;padding:8px 4px}
+.crumbs span{color:var(--faint)}
+details.card2 summary{cursor:pointer}
+@media (max-width:600px){.scard.add.open{grid-column:auto}.sgrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -356,7 +402,7 @@ body.tvmode .screen.enter{animation-duration:.2s}
     <button class="btn" id="signOut">خروج</button><button class="btn pri" id="closeAdmin">فتح اللعبة ↗</button>
   </div>
   <div class="admin-body">
-    <div class="cat-list" id="catList"></div>
+    <div class="cat-list" id="catList" style="display:none"></div>
     <div class="editor" id="editor"></div>
   </div>
 </div>
@@ -385,11 +431,12 @@ const GAMES = {
   fib:      {name: "اكذب صح", icon: "🤥", min: 2, minPhones: 2, unit: "سؤال", desc: "اكتب كذبة مقنعة ولا تنخدع بكذبات الباقين"},
   draw:     {name: "ارسم وخمّن", icon: "🎨", min: 2, minPhones: 1, unit: "كلمة", desc: "ارسم بجوالك والرسمة تطلع على التلفزيون"},
   pics:     {name: "تحدي الصور", icon: "🖼️", min: 1, minPhones: 0, unit: "تحدي", desc: "صورتين أو ثلاث… وش يجمعها؟"},
+  letters:  {name: "الحروف", icon: "🔤", min: 2, minPhones: 0, unit: "سؤال", desc: "فريقين على لوحة الحروف السداسية"},
 };
-const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور"};
+const TYPE_LABEL = {qa: "سؤال وجواب", charades: "بدون كلام", salfa: "برا السالفة", fib: "اكذب صح", draw: "ارسم وخمّن", pics: "تحدي الصور", letters: "الحروف"};
 
 
-const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}, {"id": "c-pics-emoji", "name": "إيموجي", "emoji": "😀", "type": "pics", "enabled": true, "order": 50, "items": [{"q": "وش يجمع هذي الصور؟", "e": ["🌧️", "☂️", "⛈️"], "a": "مطر", "w": ["شمس", "ثلج", "رياح"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🎂", "🎈", "🎁"], "a": "عيد ميلاد", "w": ["عرس", "تخرج", "رمضان"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌙", "🕌", "🍽️"], "a": "رمضان", "w": ["عيد", "حج", "سفر"]}, {"q": "وش يجمع هذي الصور؟", "e": ["✈️", "🧳", "🛂"], "a": "سفر", "w": ["مدرسة", "دوام", "تسوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["⚽", "🥅", "🏟️"], "a": "كورة", "w": ["سباحة", "تنس", "سلة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🐪", "🏜️", "⛺"], "a": "كشتة", "w": ["بحر", "سوق", "مطعم"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🍿", "🎬", "🎟️"], "a": "سينما", "w": ["ملعب", "مكتبة", "مدرسة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["📚", "✏️", "🎒"], "a": "مدرسة", "w": ["مستشفى", "مطار", "سوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🔥", "🥩", "🍢"], "a": "شوي", "w": ["قلي", "سلق", "خبز"]}, {"q": "وش يجمع هذي الصور؟", "e": ["❄️", "⛄", "🧣"], "a": "شتاء", "w": ["صيف", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌊", "🏖️", "☀️"], "a": "صيف", "w": ["شتاء", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["💍", "👰", "🎉"], "a": "عرس", "w": ["تخرج", "عيد ميلاد", "سفر"]}]}];
+const STARTER = [{"id": "c-general", "name": "ثقافة عامة", "emoji": "🧠", "type": "qa", "enabled": true, "order": 1, "items": [{"a": "طوكيو", "q": "ما عاصمة اليابان؟", "w": ["أوساكا", "كيوتو", "سيول"]}, {"a": "11", "q": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟", "w": ["10", "9", "12"]}, {"a": "المشتري", "q": "ما أكبر كوكب في المجموعة الشمسية؟", "w": ["زحل", "الأرض", "نبتون"]}, {"a": "الجمل", "q": "ما الحيوان الملقب بسفينة الصحراء؟", "w": ["الحصان", "الماعز", "الغزال"]}, {"a": "366", "q": "كم عدد أيام السنة الكبيسة؟", "w": ["365", "364", "360"]}, {"a": "7", "q": "كم عدد قارات العالم؟", "w": ["5", "6", "8"]}, {"a": "ثاني أكسيد الكربون", "q": "ما الغاز الذي تحتاجه النباتات لصنع غذائها؟", "w": ["الأكسجين", "النيتروجين", "الهيليوم"]}, {"a": "الكبسة", "q": "ما الطبق السعودي الشهير الذي يتكون من الأرز واللحم أو الدجاج ويُطبخ مع البهارات ويشتهر في منطقة الحجاز باسم «المندي» أو «الكبسة»؟ ما الطبق الوطني الأكثر شهرة في السعودية؟", "w": ["المنسف", "المقلوبة", "الثريد"]}, {"a": "كانبرا", "q": "ما هي عاصمة أستراليا؟", "w": ["سيدني", "ملبورن", "بيرث"]}, {"a": "ألكسندر فليمنغ", "q": "من هو العالم الذي اكتشف البنسلين؟", "w": ["لويس باستور", "إسحاق نيوتن", "ألبرت أينشتاين"]}, {"a": "الحديد", "q": "ما هو العنصر الكيميائي الذي رمزه Fe؟", "w": ["الفضة", "الذهب", "النحاس"]}, {"a": "الأردن", "q": "في أي دولة تقع مدينة البتراء الأثرية؟", "w": ["مصر", "العراق", "سوريا"]}, {"a": "206", "q": "كم عدد عظام جسم الإنسان البالغ عادةً؟", "w": ["208", "210", "201"]}, {"a": "الفهد الصياد", "q": "ما هو أسرع حيوان بري في العالم؟", "w": ["الأسد", "النمر", "الغزال"]}, {"a": "فيكتور هوغو", "q": "من هو مؤلف رواية البؤساء؟", "w": ["تشارلز ديكنز", "ليو تولستوي", "شكسبير"]}, {"a": "البحر الأحمر", "q": "ما هو البحر الذي يفصل بين السعودية والسودان؟", "w": ["بحر العرب", "البحر المتوسط", "بحر قزوين"]}, {"a": "7", "q": "كم عدد ألوان قوس قزح التقليدية؟", "w": ["5", "6", "8"]}, {"a": "الفرنك السويسري", "q": "ما هي العملة الرسمية في سويسرا؟", "w": ["اليورو", "الدولار", "الكرونة"]}, {"a": "ليوناردو دا فينشي", "q": "من هو الرسام الذي رسم لوحة الموناليزا؟", "w": ["بابلو بيكاسو", "فان غوخ", "مايكل أنجلو"]}, {"a": "زحل", "q": "ما هو الكوكب الذي يشتهر بحلقاته الواضحة؟", "w": ["أورانوس", "المريخ", "عطارد"]}, {"a": "أمريكا الجنوبية", "q": "في أي قارة تقع دولة الأرجنتين؟", "w": ["أوروبا", "أفريقيا", "آسيا"]}, {"a": "القلب", "q": "ما هو العضو المسؤول عن ضخ الدم في جسم الإنسان؟", "w": ["الكبد", "الرئة", "الكلى"]}, {"a": "2", "q": "ما هو أصغر عدد أولي؟", "w": ["1", "3", "5"]}, {"a": "فرنسا", "q": "أي دولة أهدت تمثال الحرية للولايات المتحدة؟", "w": ["بريطانيا", "إيطاليا", "إسبانيا"]}, {"a": "الزئبق", "q": "ما هو المعدن السائل في درجة حرارة الغرفة العادية؟", "w": ["الحديد", "الألمنيوم", "القصدير"]}, {"a": "روسيا", "q": "ما هي أكبر دولة في العالم من حيث المساحة؟", "w": ["كندا", "الصين", "الولايات المتحدة"]}, {"a": "البارومتر", "q": "ما اسم الجهاز المستخدم لقياس الضغط الجوي؟", "w": ["الترمومتر", "الأنيمومتر", "الهيجرومتر"]}, {"a": "1945", "q": "في أي عام انتهت الحرب العالمية الثانية؟", "w": ["1944", "1939", "1950"]}]}, {"id": "c-saudi", "name": "السعودية", "emoji": "🇸🇦", "type": "qa", "enabled": true, "order": 2, "items": [{"a": "جبل السودة", "q": "ما أعلى قمة جبلية في السعودية؟", "w": ["جبل طويق", "جبل أحد", "جبل شدا"]}, {"a": "الريال", "q": "ما اسم العملة السعودية؟", "w": ["الدينار", "الدرهم", "الجنيه"]}, {"a": "1932", "q": "في أي عام تأسست المملكة العربية السعودية بمسماها الحالي؟", "w": ["1902", "1945", "1953"]}, {"a": "جدة", "q": "أي مدينة تُلقب بعروس البحر الأحمر؟", "w": ["ينبع", "الوجه", "جازان"]}, {"a": "الربع الخالي", "q": "ما أكبر صحراء رملية في السعودية؟", "w": ["النفود الكبير", "الدهناء", "الجافورة"]}]}, {"id": "c-football", "name": "كورة", "emoji": "⚽", "type": "qa", "enabled": true, "order": 3, "items": [{"a": "45 دقيقة", "q": "كم مدة شوط المباراة في كرة القدم؟", "w": ["40 دقيقة", "50 دقيقة", "30 دقيقة"]}, {"a": "الأرجنتين", "q": "أي دولة فازت بكأس العالم 2022؟", "w": ["فرنسا", "البرازيل", "كرواتيا"]}, {"a": "السعودية", "q": "من فاز على الأرجنتين في كأس العالم 2022 في دور المجموعات؟", "w": ["المكسيك", "بولندا", "أستراليا"]}, {"a": "5", "q": "كم لاعب احتياط يُسمح بتبديلهم في المباراة الرسمية حالياً؟", "w": ["3", "4", "6"]}]}, {"id": "c-movies", "name": "أفلام ومسلسلات", "emoji": "🎬", "type": "charades", "enabled": true, "order": 10, "items": [{"w": "طاش ما طاش"}, {"w": "الأسد الملك"}, {"w": "تايتنك"}, {"w": "سبايدرمان"}, {"w": "باب الحارة"}, {"w": "هاري بوتر"}, {"w": "شباب البومب"}, {"w": "علاء الدين"}]}, {"id": "c-actions", "name": "أفعال وحركات", "emoji": "🤸", "type": "charades", "enabled": true, "order": 11, "items": [{"w": "يصب قهوة"}, {"w": "يصيد سمك"}, {"w": "يسوق سيارة"}, {"w": "يلعب بلوت"}, {"w": "يطبخ كبسة"}, {"w": "يصور سيلفي"}, {"w": "يركب جمل"}, {"w": "يرقص عرضة"}, {"w": "يغسل سيارة"}, {"w": "يشوي لحم"}]}, {"id": "c-animals", "name": "حيوانات", "emoji": "🐪", "type": "charades", "enabled": true, "order": 12, "items": [{"w": "صقر"}, {"w": "قرد"}, {"w": "بطريق"}, {"w": "فيل"}, {"w": "ثعبان"}, {"w": "كنغر"}, {"w": "ديك"}, {"w": "زرافة"}]}, {"id": "c-places", "name": "أماكن", "emoji": "📍", "type": "salfa", "enabled": true, "order": 20, "items": [{"w": "مطار", "t": "مكان سفر"}, {"w": "مستشفى", "t": "مكان خدمي"}, {"w": "مدرسة", "t": "مكان تعليمي"}, {"w": "ملعب", "t": "مكان رياضي"}, {"w": "مطعم", "t": "مكان أكل"}, {"w": "شاليه", "t": "مكان طلعات"}, {"w": "سينما", "t": "مكان ترفيهي"}, {"w": "مسجد", "t": "مكان عبادة"}, {"w": "حديقة حيوان", "t": "مكان سياحي"}, {"w": "صالون حلاقة", "t": "محل خدمات"}, {"w": "مكتبة", "t": "مكان ثقافي"}, {"w": "سوق خضار", "t": "مكان تسوق"}, {"w": "بحر", "t": "مكان طبيعي"}, {"w": "صيدلية", "t": "مكان خدمي"}]}, {"id": "c-food", "name": "أكلات", "emoji": "🍛", "type": "salfa", "enabled": true, "order": 21, "items": [{"w": "كبسة"}, {"w": "مندي"}, {"w": "جريش"}, {"w": "مطازيز"}, {"w": "شاورما"}, {"w": "بيتزا"}, {"w": "سوشي"}, {"w": "فلافل"}, {"w": "كنافة"}, {"w": "لقيمات"}, {"w": "برجر"}, {"w": "سمبوسة"}]}, {"id": "c-jobs", "name": "مهن", "emoji": "👷", "type": "salfa", "enabled": true, "order": 22, "items": [{"w": "طبيب"}, {"w": "طيار"}, {"w": "معلم"}, {"w": "شيف"}, {"w": "حلاق"}, {"w": "مهندس"}, {"w": "رجل إطفاء"}, {"w": "مذيع"}, {"w": "لاعب كورة"}, {"w": "ميكانيكي"}]}, {"id": "c-fib", "name": "معلومات غريبة", "emoji": "🤯", "type": "fib", "enabled": true, "order": 30, "items": [{"a": "3", "q": "الأخطبوط عنده ____ قلوب"}, {"a": "يقفز", "q": "الفيل هو الحيوان الثديي الوحيد اللي ما يقدر ____"}, {"a": "5", "q": "النحلة عندها ____ عيون"}, {"a": "206", "q": "عدد عظام جسم الإنسان البالغ ____ عظمة"}, {"a": "العسل", "q": "الأكلة اللي ما تخرب تقريبًا أبدًا هي ____"}, {"a": "جسمها", "q": "لسان الحرباء ممكن يكون أطول من ____"}, {"a": "أزرق", "q": "دم الأخطبوط لونه ____"}]}, {"id": "c-things", "name": "أشياء", "emoji": "✏️", "type": "draw", "enabled": true, "order": 40, "items": [{"w": "شمس"}, {"w": "بيت"}, {"w": "سيارة"}, {"w": "شجرة"}, {"w": "نظارة"}, {"w": "سمكة"}, {"w": "قمر"}, {"w": "طيارة"}, {"w": "ساعة"}, {"w": "كرة"}, {"w": "مظلة"}, {"w": "خيمة"}]}, {"id": "c-draw-animals", "name": "حيوانات للرسم", "emoji": "🐢", "type": "draw", "enabled": true, "order": 41, "items": [{"w": "قطة"}, {"w": "سلحفاة"}, {"w": "زرافة"}, {"w": "ثعبان"}, {"w": "عنكبوت"}, {"w": "بطة"}, {"w": "فيل"}, {"w": "حلزون"}]}, {"id": "c-pics-emoji", "name": "إيموجي", "emoji": "😀", "type": "pics", "enabled": true, "order": 50, "items": [{"q": "وش يجمع هذي الصور؟", "e": ["🌧️", "☂️", "⛈️"], "a": "مطر", "w": ["شمس", "ثلج", "رياح"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🎂", "🎈", "🎁"], "a": "عيد ميلاد", "w": ["عرس", "تخرج", "رمضان"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌙", "🕌", "🍽️"], "a": "رمضان", "w": ["عيد", "حج", "سفر"]}, {"q": "وش يجمع هذي الصور؟", "e": ["✈️", "🧳", "🛂"], "a": "سفر", "w": ["مدرسة", "دوام", "تسوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["⚽", "🥅", "🏟️"], "a": "كورة", "w": ["سباحة", "تنس", "سلة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🐪", "🏜️", "⛺"], "a": "كشتة", "w": ["بحر", "سوق", "مطعم"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🍿", "🎬", "🎟️"], "a": "سينما", "w": ["ملعب", "مكتبة", "مدرسة"]}, {"q": "وش يجمع هذي الصور؟", "e": ["📚", "✏️", "🎒"], "a": "مدرسة", "w": ["مستشفى", "مطار", "سوق"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🔥", "🥩", "🍢"], "a": "شوي", "w": ["قلي", "سلق", "خبز"]}, {"q": "وش يجمع هذي الصور؟", "e": ["❄️", "⛄", "🧣"], "a": "شتاء", "w": ["صيف", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["🌊", "🏖️", "☀️"], "a": "صيف", "w": ["شتاء", "ربيع", "خريف"]}, {"q": "وش يجمع هذي الصور؟", "e": ["💍", "👰", "🎉"], "a": "عرس", "w": ["تخرج", "عيد ميلاد", "سفر"]}]}, {"id": "c-letters", "name": "حروف عامة", "emoji": "🔤", "type": "letters", "enabled": true, "order": 60, "items": [{"l": "أ", "q": "ما هي أكبر قارة في العالم؟", "a": "آسيا"}, {"l": "أ", "q": "دولة أوروبية عاصمتها مدريد؟", "a": "إسبانيا"}, {"l": "ب", "q": "عاصمة فرنسا؟", "a": "باريس"}, {"l": "ب", "q": "طائر أبيض وأسود لا يطير ويعيش في القطب الجنوبي؟", "a": "بطريق"}, {"l": "ت", "q": "ثمرة النخيل اللي تشتهر فيها السعودية؟", "a": "تمر"}, {"l": "ت", "q": "دولة عربية في شمال أفريقيا عاصمتها تحمل نفس اسمها؟", "a": "تونس"}, {"l": "ث", "q": "حيوان ماكر في القصص ذيله كثيف؟", "a": "ثعلب"}, {"l": "ث", "q": "نبات فصوصه بيضاء ورائحته قوية يُستخدم في الطبخ؟", "a": "ثوم"}, {"l": "ج", "q": "عاصمة إندونيسيا؟", "a": "جاكرتا"}, {"l": "ج", "q": "حيوان يُلقب بسفينة الصحراء؟", "a": "جمل"}, {"l": "ح", "q": "حيوان يصهل ويُستخدم في السباقات؟", "a": "حصان"}, {"l": "ح", "q": "ركن من أركان الإسلام يؤدى في مكة؟", "a": "حج"}, {"l": "خ", "q": "حيوان يُربى ونأخذ منه الصوف؟", "a": "خروف"}, {"l": "خ", "q": "أكلة أساسية تُصنع من الطحين وتُخبز في الفرن أو التنور؟", "a": "خبز"}, {"l": "د", "q": "عاصمة سوريا؟", "a": "دمشق"}, {"l": "د", "q": "طائر يصيح وقت الفجر؟", "a": "ديك"}, {"l": "ذ", "q": "معدن ثمين لونه أصفر؟", "a": "ذهب"}, {"l": "ذ", "q": "حشرة مزعجة تطير حول الأكل؟", "a": "ذبابة"}, {"l": "ر", "q": "عاصمة إيطاليا؟", "a": "روما"}, {"l": "ر", "q": "شهر الصيام عند المسلمين؟", "a": "رمضان"}, {"l": "ز", "q": "حيوان رقبته طويلة جداً؟", "a": "زرافة"}, {"l": "ز", "q": "شجرة يُستخرج من ثمارها زيت مشهور؟", "a": "زيتون"}, {"l": "س", "q": "عاصمة كوريا الجنوبية؟", "a": "سيول"}, {"l": "س", "q": "حيوان يعيش في الماء ويتنفس بالخياشيم؟", "a": "سمك"}, {"l": "ش", "q": "النجم اللي تدور حوله الأرض؟", "a": "شمس"}, {"l": "ش", "q": "مشروب ساخن يُحضّر من أوراق نبات ويُقدم مع النعناع؟", "a": "شاي"}, {"l": "ص", "q": "طائر جارح يُستخدم في الصيد ويحبه أهل الخليج؟", "a": "صقر"}, {"l": "ص", "q": "المكان اللي نشتري منه الأدوية؟", "a": "صيدلية"}, {"l": "ض", "q": "حيوان برمائي ينقّ؟", "a": "ضفدع"}, {"l": "ض", "q": "عكس كلمة «ظلام»؟", "a": "ضوء"}, {"l": "ط", "q": "عاصمة اليابان؟", "a": "طوكيو"}, {"l": "ط", "q": "الشخص اللي يعالج المرضى؟", "a": "طبيب"}, {"l": "ظ", "q": "عكس كلمة «نور»؟", "a": "ظلام"}, {"l": "ظ", "q": "حيوان رشيق يشبه الغزال ويكثر ذكره في الشعر العربي؟", "a": "ظبي"}, {"l": "ع", "q": "عاصمة الأردن؟", "a": "عمّان"}, {"l": "ع", "q": "حشرة تنسج شبكة لصيد فرائسها؟", "a": "عنكبوت"}, {"l": "غ", "q": "طائر أسود ورد في قصة ابني آدم؟", "a": "غراب"}, {"l": "غ", "q": "حيوان رشيق وسريع يعيش في الصحراء وله قرون؟", "a": "غزال"}, {"l": "ف", "q": "حيوان ضخم له خرطوم؟", "a": "فيل"}, {"l": "ف", "q": "دولة أوروبية عاصمتها باريس؟", "a": "فرنسا"}, {"l": "ق", "q": "الجرم اللي يدور حول الأرض ويضيء بالليل؟", "a": "قمر"}, {"l": "ق", "q": "حيوان أليف يموء؟", "a": "قطة"}, {"l": "ك", "q": "حيوان يحمل صغيره في جيب ببطنه؟", "a": "كنغر"}, {"l": "ك", "q": "أشهر أكلة سعودية من الرز واللحم؟", "a": "كبسة"}, {"l": "ل", "q": "عاصمة بريطانيا؟", "a": "لندن"}, {"l": "ل", "q": "فاكهة صفراء حامضة؟", "a": "ليمون"}, {"l": "م", "q": "عاصمة روسيا؟", "a": "موسكو"}, {"l": "م", "q": "المدينة اللي فيها المسجد الحرام؟", "a": "مكة"}, {"l": "ن", "q": "حشرة تصنع العسل؟", "a": "نحلة"}, {"l": "ن", "q": "حيوان مفترس جلده مخطط أو مرقط من فصيلة القطط؟", "a": "نمر"}, {"l": "هـ", "q": "جهاز نتصل فيه ونحمله في جيبنا؟", "a": "هاتف"}, {"l": "هـ", "q": "يظهر في السماء أول الشهر القمري؟", "a": "هلال"}, {"l": "و", "q": "زهرة مشهورة برائحتها الجميلة؟", "a": "وردة"}, {"l": "و", "q": "حيوان ضخم له قرن واحد على أنفه؟", "a": "وحيد القرن"}, {"l": "ي", "q": "العضو اللي نكتب ونمسك فيه الأشياء؟", "a": "يد"}, {"l": "ي", "q": "حجر كريم ثمين لونه أحمر غالباً؟", "a": "ياقوت"}]}];
 const FB_CONFIG = {apiKey: "AIzaSyCS4Ma_0YzpzDxoXVqNpY71ZVJjCJQpaUU", authDomain: "jamaa-3b3e9.firebaseapp.com", databaseURL: "https://jamaa-3b3e9-default-rtdb.europe-west1.firebasedatabase.app", projectId: "jamaa-3b3e9", storageBucket: "jamaa-3b3e9.firebasestorage.app", messagingSenderId: "186594515809", appId: "1:186594515809:web:48a3133bd4a4b37fe74320"};
 firebase.initializeApp(FB_CONFIG);
 const auth = firebase.auth(), fdb = firebase.database();
@@ -401,6 +448,8 @@ const Bank = {
       const v = snap.val() || {};
       this.loading = false;
       autoSeed(snap.val());
+      this.sections = Object.entries(v._sections || {}).map(([id, x]) => Object.assign({id}, x)).filter(x => x && x.type && GAMES[x.type]).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      this.games = v._games || {};
       this.cats = Object.entries(v).map(([id, c]) => Object.assign({id}, c, {items: Array.isArray(c.items) ? c.items.filter(Boolean) : Object.values(c.items || {})})).filter(c => c.type);
       this.cats.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name).localeCompare(String(b.name), "ar"));
       this.emit("remote");
@@ -408,31 +457,42 @@ const Bank = {
   },
   async save(cat) {
     const body = {name: cat.name, emoji: cat.emoji || "⭐", type: cat.type, enabled: !!cat.enabled, order: cat.order ?? Date.now(), items: cat.items || []};
+    if (cat.sec) body.sec = cat.sec;
     await fdb.ref("bank/" + cat.id).set(body);
   },
   async remove(id) { await fdb.ref("bank/" + id).remove(); },
-  get(id) { return this.cats.find(c => c.id === id); }
+  get(id) { return this.cats.find(c => c.id === id); },
+  sections: [], games: {},
+  secOf(key) {   // "g:qa" = لعبة أساسية · "s:<id>" = قسم رئيسي مضاف
+    if (!key) return null;
+    const [k, id] = key.split(":");
+    if (k === "g" && GAMES[id]) return {key, builtin: true, type: id, name: GAMES[id].name, emoji: GAMES[id].icon, enabled: !(this.games[id] && this.games[id].hidden)};
+    const x = this.sections.find(z => z.id === id);
+    return x ? {key, builtin: false, id, type: x.type, name: x.name, emoji: x.emoji || GAMES[x.type].icon, enabled: x.enabled !== false, order: x.order} : null;
+  },
+  catsOf(sec) { return this.cats.filter(c => c.type === sec.type && (sec.builtin ? !c.sec : c.sec === sec.id)); }
 };
 const Used = {count: () => 0, forget() {}};
 const S = {settings: {}};
 function render() {}
 // ---------------------------------------------------------- admin panel (controlled from the owner's device)
-let selCat = null, adminMsg = "";
+let selCat = null, selSec = null, adminMsg = "", newCatOpen = false;
 function openAdmin() { $("#admin").classList.add("open"); if (!selCat && Bank.cats[0]) selCat = Bank.cats[0].id; renderAdmin(); }
 function closeAdmin() { location.href = "./"; }
 $("#closeAdmin").addEventListener("click", closeAdmin);
 
-async function createCat(type, name, emoji) {
+async function createCat(type, name, emoji, secId) {
   if (!Bank.canWrite) return setMsg("ما عندك صلاحية تعديل الأسئلة في هذه الصفحة.");
-  const icons = {qa: "❓", charades: "🎭", salfa: "🕵️", fib: "🤥", draw: "🎨", pics: "🖼️"};
+  const icons = {qa: "❓", charades: "🎭", salfa: "🕵️", fib: "🤥", draw: "🎨", pics: "🖼️", letters: "🔤"};
   const maxOrder = Math.max(0, ...Bank.cats.map(c => c.order || 0));
-  const cat = {id: uid("c-"), name: name || "قسم جديد", emoji: emoji || icons[type], type, enabled: true, order: maxOrder + 1, items: []};
+  const cat = {id: uid("c-"), name: name || "فئة جديدة", emoji: emoji || icons[type], type, enabled: true, order: maxOrder + 1, items: []};
+  if (secId) cat.sec = secId;
   selCat = cat.id;
-  try { await Bank.save(cat); setMsg("✅ تمت إضافة القسم «" + cat.name + "» — أضف له عناصر وبيظهر في اللعبة فوراً"); renderAdmin(); }
+  try { await Bank.save(cat); setMsg("✅ تمت إضافة التصنيف «" + cat.name + "» — أضف له أسئلة وبيظهر في اللعبة فوراً"); renderAdmin(); }
   catch (e) { setMsg("تعذّر الحفظ: " + (e.message || e.code)); }
 }
 async function moveCat(id, dir) {
-  const list = Bank.cats.slice(), i = list.findIndex(c => c.id === id), j = i + dir;
+  const c0 = Bank.get(id), sec = Bank.secOf(selSec), list = sec ? Bank.catsOf(sec) : Bank.cats.slice(), i = list.findIndex(c => c.id === id), j = i + dir;
   if (i < 0 || j < 0 || j >= list.length) return;
   const a = list[i], b = list[j];
   const oa = a.order ?? i, ob = b.order ?? j;
@@ -452,7 +512,40 @@ function renderBadges() {
     b.querySelector("span").textContent = Bank.mode === "db" ? (Bank.loading ? "جاري التحميل..." : "متزامن عبر الإنترنت") : "تخزين محلي";
   }
 }
+const AR_L = ["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"];
 let editIdx = null, picImgs = [];
+const MAX_PICS = 4;
+function keepPicFields(fn) {
+  const keep = {}; ["nq", "ne", "nurl", "na", "nw1", "nw2", "nw3"].forEach(k => { const el = $("#" + k); if (el) keep[k] = el.value; });
+  fn(); renderAdmin(); Object.entries(keep).forEach(([k, val]) => { const el = $("#" + k); if (el) el.value = val; });
+}
+function movePic(from, to) { if (to < 0 || to >= picImgs.length || from === to) return; const [x] = picImgs.splice(from, 1); picImgs.splice(to, 0, x); }
+function wirePics() {
+  const f = $("#nimgf");
+  if (f) f.onchange = async () => {
+    const files = [...f.files].slice(0, MAX_PICS - picImgs.length), got = [];
+    for (const file of files) { try { got.push(await shrinkImage(file)); } catch (err) { setMsg("تعذّر قراءة الصورة"); } }
+    if (f.files.length > files.length) setMsg("الحد " + MAX_PICS + " صور لكل تحدي");
+    keepPicFields(() => picImgs.push(...got));
+  };
+  const box = $("#thumbs"); if (!box) return;
+  let from = null;
+  box.querySelectorAll("[data-th]").forEach(el => {
+    el.addEventListener("dragstart", ev => { from = +el.dataset.th; el.classList.add("drag"); try { ev.dataTransfer.setData("text/plain", String(from)); ev.dataTransfer.effectAllowed = "move"; } catch (e) { } });
+    el.addEventListener("dragend", () => el.classList.remove("drag"));
+    el.addEventListener("dragover", ev => { ev.preventDefault(); el.classList.add("over"); });
+    el.addEventListener("dragleave", () => el.classList.remove("over"));
+    el.addEventListener("drop", ev => { ev.preventDefault(); const to = +el.dataset.th; if (from != null) keepPicFields(() => movePic(from, to)); from = null; });
+    // touch (phone): long-press-free drag with pointer events
+    el.addEventListener("pointerdown", ev => {
+      if (ev.pointerType === "mouse" || ev.target.closest("button")) return;
+      const start = +el.dataset.th; let over = start; el.classList.add("drag"); el.setPointerCapture(ev.pointerId);
+      const mv = e2 => { const t = document.elementFromPoint(e2.clientX, e2.clientY); const th = t && t.closest("[data-th]"); box.querySelectorAll(".over").forEach(x => x.classList.remove("over")); if (th) { over = +th.dataset.th; th.classList.add("over"); } e2.preventDefault(); };
+      const up = () => { el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up); el.removeEventListener("pointercancel", up); keepPicFields(() => movePic(start, over)); };
+      el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+    });
+  });
+}
 function itemFields(type, it) {
   const v = k => esc(it ? (it[k] ?? "") : ""), w = i => esc(it && it.w && it.w[i] || "");
   const btn = it ? `<button class="btn ok" data-a="addItem">💾 حفظ التعديل</button><button class="btn" data-a="cancelEdit">إلغاء</button>` : `<button class="btn pri" data-a="addItem">إضافة</button>`;
@@ -460,12 +553,16 @@ function itemFields(type, it) {
     <div class="form-row" style="margin-top:8px"><input class="in" id="na" placeholder="✓ الإجابة الصحيحة" value="${v("a")}"><input class="in" id="nw1" placeholder="✗ خطأ 1" value="${w(0)}"><input class="in" id="nw2" placeholder="✗ خطأ 2" value="${w(1)}"><input class="in" id="nw3" placeholder="✗ خطأ 3" value="${w(2)}">${btn}</div>`;
   if (type === "fib") return `<div class="form-row"><input class="in" id="nq" placeholder="المعلومة مع ____ مكان الجواب (مثال: الأخطبوط عنده ____ قلوب)" style="flex:3" value="${v("q")}"><input class="in" id="na" placeholder="✓ الحقيقة" value="${v("a")}">${btn}</div>`;
   if (type === "salfa") return `<div class="form-row"><input class="in" id="nwd" placeholder="الكلمة السرية (مثال: حديقة حيوان)" value="${v("w")}"><input class="in" id="ntp" placeholder="الموضوع الظاهر للجميع (مثال: مكان سياحي) — اختياري" value="${v("t")}">${btn}</div>`;
+  if (type === "letters") return `<div class="form-row"><select class="in" id="nl" style="max-width:90px;flex:0 0 90px;font-size:20px">${AR_L.map(l => `<option ${it && it.l === l ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <input class="in" id="nq" placeholder="السؤال (الجواب يبدأ بالحرف المختار)" style="flex:3" value="${v("q")}"><input class="in" id="na" placeholder="✓ الجواب" value="${v("a")}">${btn}</div>`;
   if (type === "pics") {
     return `<div class="form-row"><input class="in" id="nq" placeholder="السؤال (اختياري) — الافتراضي: وش يجمع هذي الصور؟" value="${v("q")}" style="flex:3"></div>
     <div class="form-row" style="margin-top:8px"><input class="in" id="ne" placeholder="إيموجي بدل الصور (مثال: 🌧️ ☂️ ⛈️)" value="${esc(it && it.e ? it.e.join(" ") : "")}" style="flex:2">
       <label class="btn" style="cursor:pointer">📷 رفع صور<input type="file" id="nimgf" accept="image/*" multiple hidden></label></div>
-    <div class="form-row" style="margin-top:8px"><input class="in" id="nurl" placeholder="أو روابط صور مفصولة بمسافة (https://...)" style="flex:3"></div>
-    <div class="thumbs" id="thumbs">${picImgs.map((src, i) => `<span class="th"><img src="${esc(src)}" alt=""><button data-rmimg="${i}">✕</button></span>`).join("")}</div>
+    <div class="form-row" style="margin-top:8px"><input class="in" id="nurl" placeholder="أو رابط صورة (https://...)" style="flex:3"><button class="btn" data-a="addUrl">＋ رابط</button></div>
+    <p class="muted" style="margin:8px 0 0">الصور (${picImgs.length}/${MAX_PICS}) — ${picImgs.length > 1 ? "اسحب الصورة لترتيبها أو استخدم الأسهم، الترتيب هنا = الترتيب على التلفزيون" : "أضف صورتين أو أكثر"}</p>
+    <div class="thumbs" id="thumbs">${picImgs.map((src, i) => `<span class="th" draggable="true" data-th="${i}"><i class="th-n">${i + 1}</i><img src="${esc(src)}" alt="" draggable="false"><button data-rmimg="${i}">✕</button>
+      <span class="th-mv"><button data-mvimg="${i}" data-d="-1" ${i === 0 ? "disabled" : ""}>▶</button><button data-mvimg="${i}" data-d="1" ${i === picImgs.length - 1 ? "disabled" : ""}>◀</button></span></span>`).join("")}</div>
     <div class="form-row" style="margin-top:8px"><input class="in" id="na" placeholder="✓ الإجابة الصحيحة" value="${v("a")}"><input class="in" id="nw1" placeholder="✗ خطأ 1" value="${w(0)}"><input class="in" id="nw2" placeholder="✗ خطأ 2" value="${w(1)}"><input class="in" id="nw3" placeholder="✗ خطأ 3" value="${w(2)}">${btn}</div>`;
   }
   const ph = {charades: "كلمة أو عبارة تنمثّل (فيلم، فعل، مثل شعبي...)", draw: "شيء سهل يترسم (شمس، بيت، قطة...)"}[type];
@@ -477,6 +574,7 @@ function itemRow(type, it, i) {
   if (type === "qa") return `<div class="${cls}"><span class="q">${esc(it.q)}<div class="a">✓ ${esc(it.a)} <span style="color:var(--faint)">· ✗ ${(it.w || []).map(esc).join(" · ")}</span></div></span>${tools}</div>`;
   if (type === "fib") return `<div class="${cls}"><span class="q">${esc(it.q)}<div class="a">✓ ${esc(it.a)}</div></span>${tools}</div>`;
   if (type === "salfa") return `<div class="${cls}"><span class="q">🕵️ ${esc(it.w)}<div class="a" style="color:var(--amber)">🧭 ${esc(it.t || "الموضوع = اسم الفئة")}</div></span>${tools}</div>`;
+  if (type === "letters") return `<div class="${cls}"><span class="q"><b class="ltr-b">${esc(it.l)}</b> ${esc(it.q)}<div class="a">✓ ${esc(it.a)}</div></span>${tools}</div>`;
   if (type === "pics") {
     const media = it.imgs && it.imgs.length ? it.imgs.slice(0, 3).map(src => `<img src="${esc(src)}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-left:4px">`).join("") : (it.e || []).map(esc).join(" ");
     return `<div class="${cls}"><span class="q">${media}<div class="a">✓ ${esc(it.a)} <span style="color:var(--faint)">· ✗ ${(it.w || []).map(esc).join(" · ")}</span></div></span>${tools}</div>`;
@@ -495,79 +593,156 @@ function shrinkImage(file) {
     r.onerror = rej; r.readAsDataURL(file);
   });
 }
-const BULK_HINT = {qa: "كل سطر: <b>السؤال | الإجابة الصحيحة | خطأ | خطأ | خطأ</b>", fib: "كل سطر: <b>المعلومة مع ____ | الحقيقة</b>", charades: "كل سطر كلمة أو عبارة", salfa: "كل سطر: <b>الكلمة | الموضوع</b> (الموضوع اختياري — بدونه يكون اسم الفئة)", draw: "كل سطر كلمة", pics: "كل سطر: <b>إيموجي بمسافات | الإجابة | خطأ | خطأ | خطأ</b> — مثال: 🌧️ ☂️ ⛈️ | مطر | شمس | ثلج | رياح"};
+const BULK_HINT = {qa: "كل سطر: <b>السؤال | الإجابة الصحيحة | خطأ | خطأ | خطأ</b>", fib: "كل سطر: <b>المعلومة مع ____ | الحقيقة</b>", charades: "كل سطر كلمة أو عبارة", salfa: "كل سطر: <b>الكلمة | الموضوع</b> (الموضوع اختياري — بدونه يكون اسم الفئة)", draw: "كل سطر كلمة", letters: "كل سطر: <b>الحرف | السؤال | الجواب</b> — مثال: ب | عاصمة فرنسا؟ | باريس", pics: "كل سطر: <b>إيموجي بمسافات | الإجابة | خطأ | خطأ | خطأ</b> — مثال: 🌧️ ☂️ ⛈️ | مطر | شمس | ثلج | رياح"};
 let newOpen = false;
+let view = "home";   // home → sec → cat
+function secCard(sec) {
+  const cs = Bank.catsOf(sec), n = cs.reduce((t, c) => t + (c.items || []).length, 0);
+  return `<div class="scard gt-${sec.type} ${sec.enabled ? "" : "off"}" data-sec="${esc(sec.key)}">
+      <span class="se">${esc(sec.emoji)}</span>
+      <button class="switch ${sec.enabled ? "on" : ""}" data-sectoggle="${esc(sec.key)}" title="إظهار/إخفاء في اللعبة"></button>
+      <div class="sn">${esc(sec.name)}</div>
+      <div class="st">${sec.builtin ? "" : `${GAMES[sec.type].icon} ${TYPE_LABEL[sec.type]} · `}${cs.length} تصنيف · ${n} ${GAMES[sec.type].unit}${sec.enabled ? "" : " · 🙈 مخفي"}</div></div>`;
+}
+function crumbs(sec, c) {
+  return `<div class="crumbs"><button data-nav="home">🏠 الأقسام الرئيسية</button>${sec ? `<span>›</span><button data-nav="sec" ${c ? "" : "disabled"}>${esc(sec.emoji)} ${esc(sec.name)}</button>` : ""}${c ? `<span>›</span><b>${esc(c.emoji || "")} ${esc(c.name)}</b>` : ""}</div>`;
+}
 function renderAdmin() {
   renderBadges();
   if (!$("#admin").classList.contains("open")) return;
-  if (selCat && !Bank.get(selCat)) selCat = Bank.cats[0] ? Bank.cats[0].id : null;
-  const keepNew = $("#ncName") ? {n: $("#ncName").value, e: $("#ncEmoji").value, t: $("#ncType").value} : {n: "", e: "", t: "qa"};
-  $("#catList").innerHTML = `<button class="btn pri addcat-btn" data-opennew="1">${newOpen ? "✕ إغلاق" : "＋ إضافة قسم جديد"}</button>
-    <div class="card2 newcat" style="${newOpen ? "" : "display:none"}"><h4>قسم جديد</h4>
-      <div class="form-row"><input class="in" id="ncEmoji" placeholder="🙂" maxlength="4" style="max-width:56px;flex:0 0 56px;text-align:center;font-size:18px"><input class="in" id="ncName" placeholder="اسم القسم (مثال: دوري روشن)"></div>
-      <div class="form-row" style="margin-top:8px"><select class="in" id="ncType">${Object.keys(TYPE_LABEL).map(k => `<option value="${k}">${GAMES[k].icon} ${TYPE_LABEL[k]}</option>`).join("")}</select><button class="btn pri" data-newcat="1">إضافة</button></div></div>`
-    + (Bank.cats.length ? Bank.cats.map((c, i) => `<div class="cat-item ${c.id === selCat ? "sel" : ""} ${c.enabled ? "" : "off"}" data-cat="${esc(c.id)}">
-      <span class="e">${esc(c.emoji || "⭐")}</span><span style="flex:1;min-width:0"><div class="n">${esc(c.name)}</div><div class="t"><span class="tag ${c.type === "qa" || c.type === "fib" ? "qa" : "ch"}">${TYPE_LABEL[c.type] || c.type}</span> ${(c.items || []).length} عنصر${c.enabled ? "" : " · مخفي"}</div></span>
-      <span class="mv"><button data-move="${esc(c.id)}" data-dir="-1" title="فوق" ${i === 0 ? "disabled" : ""}>▲</button><button data-move="${esc(c.id)}" data-dir="1" title="تحت" ${i === Bank.cats.length - 1 ? "disabled" : ""}>▼</button></span>
-      <button class="switch ${c.enabled ? "on" : ""}" data-toggle="${esc(c.id)}" title="إظهار/إخفاء في اللعبة"></button></div>`).join("")
-    : `<p class="muted">${Bank.loading ? "جاري التحميل..." : "لا توجد فئات بعد. أضف فئة من الأعلى."}</p>`)
-    + `<p class="muted" style="margin-top:14px">${esc(storeLabel())}</p>`;
-  $("#ncName").value = keepNew.n; $("#ncEmoji").value = keepNew.e; $("#ncType").value = keepNew.t;
-  const c = Bank.get(selCat);
-  if (!c) { $("#editor").innerHTML = `<p class="muted">اختر فئة أو أنشئ فئة جديدة.</p>`; return; }
+  const ed = $("#editor"), msg = `<div class="status-line" id="adminMsg">${esc(adminMsg)}</div>`;
+  let sec = Bank.secOf(selSec);
+  if (!sec) { view = "home"; selSec = null; }
+  // ---------- 1) الأقسام الرئيسية
+  if (view === "home") {
+    const keepNew = $("#ncName") ? {n: $("#ncName").value, e: $("#ncEmoji").value, t: $("#ncType").value} : {n: "", e: "", t: "qa"};
+    ed.innerHTML = `<div class="page-h"><h2>الأقسام الرئيسية</h2><p class="muted">هذي الأقسام اللي تظهر في الصفحة الرئيسية للعبة على التلفزيون — اضغط على أي قسم لإضافة تصنيفات وأسئلة. الزر يخفي القسم من اللعبة.</p></div>
+      <div class="sgrid">${Object.keys(GAMES).map(t => secCard(Bank.secOf("g:" + t))).join("")}</div>
+      ${Bank.sections.length ? `<h3 class="grp">⭐ أقسامك</h3><div class="sgrid">${Bank.sections.map(x => secCard(Bank.secOf("s:" + x.id))).join("")}</div>` : ""}
+      <div class="sgrid" style="margin-top:16px"><div class="scard add ${newOpen ? "open" : ""}" ${newOpen ? "" : 'data-opennew="1"'}>
+        ${newOpen ? `<div class="sn" style="margin-bottom:8px">قسم رئيسي جديد</div>
+          <div class="form-row"><input class="in" id="ncEmoji" placeholder="🙂" maxlength="4" style="max-width:56px;flex:0 0 56px;text-align:center;font-size:18px"><input class="in" id="ncName" placeholder="اسم القسم (مثال: رمضان)"></div>
+          <p class="muted" style="margin:8px 0 4px">طريقة اللعب:</p>
+          <div class="form-row"><select class="in" id="ncType">${Object.keys(TYPE_LABEL).map(k => `<option value="${k}">${GAMES[k].icon} ${TYPE_LABEL[k]}</option>`).join("")}</select></div>
+          <div class="form-row" style="margin-top:8px"><button class="btn pri" data-newsec="1">إضافة القسم</button><button class="btn" data-opennew="1">إلغاء</button></div>`
+        : `<span class="se">＋</span><div class="sn">قسم رئيسي جديد</div><div class="st">مثال: رمضان، دوري روشن…</div>`}</div></div>
+      <p class="muted" style="margin-top:16px">${esc(storeLabel())}</p>${msg}`;
+    if ($("#ncName")) { $("#ncName").value = keepNew.n; $("#ncEmoji").value = keepNew.e; $("#ncType").value = keepNew.t; }
+    return;
+  }
+  const cats = Bank.catsOf(sec);
+  if (view === "cat" && !cats.find(c => c.id === selCat)) view = "sec";
+  const secHead = `<div class="card2 sec-head"><div class="form-row" style="align-items:center">
+      <span style="font-size:40px">${esc(sec.emoji)}</span>
+      ${sec.builtin ? `<h3 style="margin:0;flex:1">${esc(sec.name)} <span class="muted" style="font-size:14px">· ${esc(GAMES[sec.type].desc)}</span></h3>`
+        : `<input class="in" id="seEmoji" value="${esc(sec.emoji)}" style="max-width:60px;flex:0 0 60px;text-align:center;font-size:20px"><input class="in" id="seName" value="${esc(sec.name)}">
+           <span class="tag" style="flex:none">${GAMES[sec.type].icon} ${TYPE_LABEL[sec.type]}</span><button class="btn ok" data-a="saveSec">حفظ</button><button class="btn danger" data-a="delSec">حذف القسم</button>`}
+      <label class="vis"><button class="switch ${sec.enabled ? "on" : ""}" data-a="toggleSec"></button>${sec.enabled ? "ظاهر في اللعبة" : "مخفي من اللعبة"}</label></div></div>`;
+  // ---------- 2) تصنيفات القسم
+  if (view === "sec") {
+    ed.innerHTML = crumbs(sec) + secHead + `<h3 class="grp">التصنيفات (${cats.length})</h3>
+      <div class="sgrid">${cats.map(x => `<div class="scard ccard ${x.enabled ? "" : "off"}" data-cat="${esc(x.id)}"><span class="se">${esc(x.emoji || "⭐")}</span>
+          <button class="switch ${x.enabled ? "on" : ""}" data-cattoggle="${esc(x.id)}" title="إظهار/إخفاء"></button>
+          <div class="sn">${esc(x.name)}</div><div class="st">${(x.items || []).length} ${GAMES[sec.type].unit}${x.enabled ? "" : " · 🙈 مخفي"}</div></div>`).join("")}
+        <div class="scard add ${newCatOpen ? "open" : ""}" ${newCatOpen ? "" : 'data-a="openNewCat"'}>
+          ${newCatOpen ? `<div class="sn" style="margin-bottom:8px">تصنيف جديد</div>
+            <div class="form-row"><input class="in" id="ncatEmoji" placeholder="🙂" maxlength="4" style="max-width:56px;flex:0 0 56px;text-align:center;font-size:18px"><input class="in" id="ncatName" placeholder="اسم التصنيف (مثال: تاريخ)"></div>
+            <div class="form-row" style="margin-top:8px"><button class="btn pri" data-a="newCat">إضافة</button><button class="btn" data-a="openNewCat">إلغاء</button></div>`
+          : `<span class="se">＋</span><div class="sn">تصنيف جديد</div><div class="st">ثم أضف له ${GAMES[sec.type].unit === "سؤال" ? "أسئلة" : "عناصر"}</div>`}</div></div>${msg}`;
+    return;
+  }
+  // ---------- 3) أسئلة التصنيف
+  const c = Bank.get(selCat), ci = cats.findIndex(x => x.id === c.id);
   const items = (c.items || []).map((it, i) => itemRow(c.type, it, i)).join("");
   const keepBulk = $("#bulk") ? $("#bulk").value : "";
-  $("#editor").innerHTML = `
-    <div class="card2"><h4>بيانات الفئة</h4>
-      <div class="form-row"><input class="in" id="ceEmoji" value="${esc(c.emoji)}" style="max-width:70px;flex:0 0 70px;text-align:center;font-size:20px">
-        <input class="in" id="ceName" value="${esc(c.name)}"><span class="tag" style="flex:none">${TYPE_LABEL[c.type] || c.type}</span>
-        <button class="btn ok" data-a="saveMeta">حفظ</button><button class="btn danger" data-a="delCat">حذف الفئة</button></div></div>
-    <div class="card2 ${editIdx != null ? "edit-card" : ""}" id="formCard"><h4>${editIdx != null ? "✎ تعديل العنصر رقم " + (editIdx + 1) : "➕ إضافة يدوية"}</h4>${itemFields(c.type, editIdx != null ? c.items[editIdx] : null)}</div>
-    <div class="card2"><h4>🤖 إضافة تلقائية بالذكاء الاصطناعي</h4>
-      ${Bank.sample ? `<div class="form-row"><input class="in" id="aiTopic" placeholder="موضوع إضافي (اختياري) مثل: دوري روشن، أكلات شعبية..." style="flex:3">
-        <select class="in" id="aiCount" style="max-width:110px"><option>5</option><option selected>10</option><option>20</option></select>
-        <button class="btn pri" data-a="aiGen">✨ ولّد</button></div>`
-      : `<p class="muted">اكتب لـClaude في المحادثة مثلاً: «أضف 20 كلمة لبرا السالفة عن الأكلات» ويضيفها لك هنا مباشرة.</p>`}
-    </div>
-    <div class="card2"><h4>📋 استيراد جماعي (لصق)</h4><p class="muted">${BULK_HINT[c.type]}</p>
-      <textarea class="in" id="bulk"></textarea>
-      <div class="form-row" style="margin-top:8px"><button class="btn pri" data-a="bulkAdd">استيراد</button><button class="btn" data-a="copyJson">نسخ الفئة JSON</button></div></div>
+  ed.innerHTML = crumbs(sec, c) + `
+    <div class="card2"><h4>بيانات التصنيف</h4>
+      <div class="form-row" style="align-items:center"><input class="in" id="ceEmoji" value="${esc(c.emoji)}" style="max-width:70px;flex:0 0 70px;text-align:center;font-size:20px">
+        <input class="in" id="ceName" value="${esc(c.name)}">
+        <span class="mv" title="الترتيب"><button data-a="catUp" ${ci === 0 ? "disabled" : ""}>▶</button><button data-a="catDown" ${ci === cats.length - 1 ? "disabled" : ""}>◀</button></span>
+        <label class="vis"><button class="switch ${c.enabled ? "on" : ""}" data-a="toggleCat"></button>${c.enabled ? "ظاهر" : "مخفي"}</label>
+        <button class="btn ok" data-a="saveMeta">حفظ</button><button class="btn danger" data-a="delCat">حذف التصنيف</button></div></div>
+    <div class="card2 ${editIdx != null ? "edit-card" : ""}" id="formCard"><h4>${editIdx != null ? "✎ تعديل رقم " + (editIdx + 1) : "➕ إضافة " + (GAMES[c.type].unit === "سؤال" ? "سؤال" : GAMES[c.type].unit)}</h4>${itemFields(c.type, editIdx != null ? c.items[editIdx] : null)}</div>
     <div class="card2"><h4>العناصر (${(c.items || []).length}) <span class="tag">🔁 التلفزيون ما يكرر أي عنصر انلعب</span>
-      ${(c.items || []).length ? `<button class="btn danger" data-a="delAllItems" style="margin-inline-start:auto;padding:6px 12px;font-size:13px">🗑 حذف كل العناصر</button>` : ""}</h4><div class="items">${items || '<p class="muted">فاضية — أضف من الأعلى.</p>'}</div></div>
-    <div class="status-line" id="adminMsg">${esc(adminMsg)}</div>
-`;
+      ${(c.items || []).length ? `<button class="btn danger" data-a="delAllItems" style="margin-inline-start:auto;padding:6px 12px;font-size:13px">🗑 حذف كل العناصر</button>` : ""}</h4><div class="items">${items || '<p class="muted">فاضي — أضف من الأعلى.</p>'}</div></div>
+    <details class="card2"><summary><b>📋 استيراد جماعي (لصق)</b></summary><p class="muted">${BULK_HINT[c.type]}</p>
+      <textarea class="in" id="bulk"></textarea>
+      <div class="form-row" style="margin-top:8px"><button class="btn pri" data-a="bulkAdd">استيراد</button><button class="btn" data-a="copyJson">نسخ JSON</button></div></details>
+    ${msg}`;
   $("#bulk").value = keepBulk;
-  const f = $("#nimgf");
-  if (f) f.onchange = async () => {
-    for (const file of [...f.files].slice(0, 3 - picImgs.length)) { try { picImgs.push(await shrinkImage(file)); } catch (err) { setMsg("تعذّر قراءة الصورة"); } }
-    const keep = {}; ["nq", "ne", "nurl", "na", "nw1", "nw2", "nw3"].forEach(k => { const el = $("#" + k); if (el) keep[k] = el.value; });
-    renderAdmin(); Object.entries(keep).forEach(([k, val]) => { const el = $("#" + k); if (el) el.value = val; });
-  };
+  wirePics();
 }
-$("#catList").addEventListener("click", async e => {
+async function sideClick(e) {
+  const nav = e.target.closest("[data-nav]");
+  if (nav) { view = nav.dataset.nav; editIdx = null; picImgs = []; adminMsg = ""; renderAdmin(); $("#editor").scrollTop = 0; return true; }
+  const ct = e.target.closest("[data-cattoggle]");
+  if (ct) { e.stopPropagation(); const c = Bank.get(ct.dataset.cattoggle); if (c) try { await Bank.save(Object.assign({}, c, {enabled: !c.enabled})); } catch (err) { setMsg("تعذّر الحفظ"); } return true; }
+  if (e.target.closest("[data-sectoggle]") || e.target.closest("[data-opennew]") || e.target.closest("[data-newsec]") || e.target.closest("[data-sec]")) { await secClick(e); return true; }
+  return false;
+}
+async function secClick(e) {
   if (e.target.closest("[data-opennew]")) { newOpen = !newOpen; renderAdmin(); if (newOpen) $("#ncName").focus(); return; }
-  if (e.target.closest("[data-newcat]")) {
+  if (e.target.closest("[data-newsec]")) {
+    if (!Bank.canWrite) return setMsg("ما عندك صلاحية.");
     const name = $("#ncName").value.trim(); if (!name) { setMsg("اكتب اسم القسم"); $("#ncName").focus(); return; }
-    $("#ncName").value = ""; newOpen = false; await createCat($("#ncType").value, name, $("#ncEmoji").value.trim()); $("#ncEmoji").value = ""; return;
+    const type = $("#ncType").value, id = uid("s-"), order = Math.max(0, ...Bank.sections.map(x => x.order || 0)) + 1;
+    try {
+      await fdb.ref("bank/_sections/" + id).set({name, emoji: $("#ncEmoji").value.trim() || GAMES[type].icon, type, enabled: true, order});
+      $("#ncName").value = ""; $("#ncEmoji").value = ""; newOpen = false; selSec = "s:" + id; selCat = null; newCatOpen = true; view = "sec";
+      setMsg("✅ تمت إضافة القسم «" + name + "» — أضف له فئة وأسئلة، ويظهر في الصفحة الرئيسية للعبة");
+      renderAdmin();
+    } catch (err) { setMsg("تعذّر الحفظ: " + (err.message || err.code)); }
+    return;
   }
-  const mv = e.target.closest("[data-move]");
-  if (mv) { e.stopPropagation(); await moveCat(mv.dataset.move, +mv.dataset.dir); return; }
-  const t = e.target.closest("[data-toggle]");
-  if (t) { e.stopPropagation(); const c = Bank.get(t.dataset.toggle); if (!c) return;
-    try { await Bank.save(Object.assign({}, c, {enabled: !c.enabled})); } catch (err) { setMsg("تعذّر الحفظ"); } return; }
-  const it = e.target.closest("[data-cat]"); if (it) { selCat = it.dataset.cat; adminMsg = ""; editIdx = null; picImgs = []; $("#editor").innerHTML = ""; renderAdmin(); }
-});
+  const t = e.target.closest("[data-sectoggle]");
+  if (t) { e.stopPropagation(); await toggleSec(t.dataset.sectoggle); return; }
+  const it = e.target.closest("[data-sec]"); if (it) { selSec = it.dataset.sec; selCat = null; adminMsg = ""; editIdx = null; picImgs = []; newCatOpen = false; view = "sec"; renderAdmin(); $("#editor").scrollTop = 0; }
+}
+async function toggleSec(key) {
+  const sec = Bank.secOf(key); if (!sec || !Bank.canWrite) return;
+  try {
+    if (sec.builtin) await fdb.ref("bank/_games/" + sec.type).set({hidden: sec.enabled});
+    else await fdb.ref("bank/_sections/" + sec.id + "/enabled").set(!sec.enabled);
+    setMsg(sec.enabled ? "🙈 «" + sec.name + "» صار مخفي من الصفحة الرئيسية للعبة" : "👁 «" + sec.name + "» ظاهر في اللعبة");
+  } catch (err) { setMsg("تعذّر الحفظ"); }
+}
 $("#editor").addEventListener("change", e => {
   const k = e.target.dataset && e.target.dataset.set;
   if (k) { const v = parseInt(e.target.value, 10); if (v > 0) S.settings[k] = v; }
 });
 $("#editor").addEventListener("click", async e => {
+  if (await sideClick(e)) return;
+  const chip = e.target.closest("[data-cat]");
+  if (chip && !e.target.closest("[data-a]")) { selCat = chip.dataset.cat; adminMsg = ""; editIdx = null; picImgs = []; view = "cat"; renderAdmin(); $("#editor").scrollTop = 0; return; }
+  const b0 = e.target.closest("[data-a]"), a0 = b0 && b0.dataset.a, sec = Bank.secOf(selSec);
+  if (a0 === "openNewCat") { newCatOpen = !newCatOpen; renderAdmin(); if (newCatOpen) $("#ncatName").focus(); return; }
+  if (!sec) return;
+  if (a0 === "newCat") { const name = $("#ncatName").value.trim(); if (!name) { setMsg("اكتب اسم الفئة"); return; }
+    newCatOpen = false; view = "cat"; await createCat(sec.type, name, $("#ncatEmoji").value.trim(), sec.builtin ? null : sec.id); return; }
+  if (a0 === "toggleSec") return toggleSec(selSec);
+  if (a0 === "saveSec" && sec && !sec.builtin) { try { await fdb.ref("bank/_sections/" + sec.id).update({name: $("#seName").value.trim() || sec.name, emoji: $("#seEmoji").value.trim() || sec.emoji}); setMsg("تم حفظ القسم ✓"); } catch (err) { setMsg("تعذّر الحفظ"); } return; }
+  if (a0 === "delSec" && sec && !sec.builtin) {
+    const cs = Bank.catsOf(sec);
+    if (b0.dataset.confirm !== "1") { b0.dataset.confirm = "1"; b0.textContent = `متأكد؟ بينحذف القسم و${cs.length} فئة`; return; }
+    const upd = {["_sections/" + sec.id]: null}; cs.forEach(x => upd[x.id] = null);
+    try { await fdb.ref("bank").update(upd); selSec = null; selCat = null; view = "home"; adminMsg = "تم حذف القسم"; renderAdmin(); } catch (err) { setMsg("تعذّر الحذف"); } return;
+  }
   const c = Bank.get(selCat); if (!c) return;
+  if (a0 === "toggleCat") { try { await Bank.save(Object.assign({}, c, {enabled: !c.enabled})); setMsg(c.enabled ? "🙈 الفئة صارت مخفية من اللعبة" : "👁 الفئة ظاهرة في اللعبة"); } catch (err) { setMsg("تعذّر الحفظ"); } return; }
+  if (a0 === "catUp" || a0 === "catDown") { await moveCat(c.id, a0 === "catUp" ? -1 : 1); return; }
   const del = e.target.closest("[data-del]");
   const ed = e.target.closest("[data-edit]");
   if (ed) { editIdx = +ed.dataset.edit; const it = c.items[editIdx] || {}; picImgs = (it.imgs || []).slice(); renderAdmin(); $("#formCard").scrollIntoView({behavior: "smooth", block: "center"}); return; }
   const rm = e.target.closest("[data-rmimg]");
-  if (rm) { picImgs.splice(+rm.dataset.rmimg, 1); rm.closest(".th").remove(); return; }
+  if (rm) { keepPicFields(() => picImgs.splice(+rm.dataset.rmimg, 1)); return; }
+  const mvi = e.target.closest("[data-mvimg]");
+  if (mvi) { const i = +mvi.dataset.mvimg; keepPicFields(() => movePic(i, i + +mvi.dataset.d)); return; }
+  if (e.target.closest('[data-a="addUrl"]')) {
+    const u = $("#nurl").value.trim();
+    if (!/^https?:\/\//.test(u)) return setMsg("الصق رابط صورة يبدأ بـ https://");
+    if (picImgs.length >= MAX_PICS) return setMsg("الحد " + MAX_PICS + " صور لكل تحدي");
+    keepPicFields(() => { picImgs.push(u); }); $("#nurl").value = ""; return;
+  }
   const btn = e.target.closest("[data-a]"), a = btn && btn.dataset.a;
   if (a === "cancelEdit") { editIdx = null; picImgs = []; renderAdmin(); return; }
   if (!del && !a) return;
@@ -579,15 +754,19 @@ $("#editor").addEventListener("click", async e => {
     copy.items = []; editIdx = null; picImgs = []; return save("تم حذف كل العناصر — أضف عناصر جديدة"); }
   if (a === "saveMeta") { copy.name = $("#ceName").value.trim() || c.name; copy.emoji = $("#ceEmoji").value.trim() || c.emoji; return save("تم حفظ الفئة ✓"); }
   if (a === "delCat") { if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "متأكد؟ اضغط مرة ثانية"; return; }
-    try { await Bank.remove(c.id); selCat = null; adminMsg = "تم حذف الفئة"; renderAdmin(); } catch (err) { setMsg("تعذّر الحذف"); } return; }
+    try { await Bank.remove(c.id); selCat = null; view = "sec"; adminMsg = "تم حذف التصنيف"; renderAdmin(); } catch (err) { setMsg("تعذّر الحذف"); } return; }
   if (a === "addItem") {
     let item;
-    if (c.type === "pics") {
+    if (c.type === "letters") {
+      const l = $("#nl").value, q = $("#nq").value.trim(), ans = $("#na").value.trim();
+      if (!q || !ans) return setMsg("اكتب السؤال والجواب");
+      item = {l, q, a: ans};
+    } else if (c.type === "pics") {
       const q = $("#nq").value.trim(), ans = $("#na").value.trim(), w = ["#nw1", "#nw2", "#nw3"].map(s => $(s).value.trim()).filter(Boolean);
-      const e2 = $("#ne").value.trim().split(/\s+/).filter(Boolean).slice(0, 3);
+      const e2 = $("#ne").value.trim().split(/\s+/).filter(Boolean).slice(0, MAX_PICS);
       const urls = $("#nurl").value.trim().split(/\s+/).filter(u => /^https?:\/\//.test(u));
-      const imgs = picImgs.concat(urls).slice(0, 3);
-      if (!imgs.length && e2.length < 2) return setMsg("أضف صورتين أو ثلاث (رفع أو روابط) أو إيموجي");
+      const imgs = picImgs.concat(urls).slice(0, MAX_PICS);
+      if (imgs.length < 2 && e2.length < 2) return setMsg("أضف صورتين أو أكثر (رفع أو روابط) أو إيموجي");
       if (!ans || w.length < 3) return setMsg("اكتب الإجابة الصحيحة وثلاث إجابات خاطئة");
       item = {a: ans, w}; if (q) item.q = q; if (imgs.length) item.imgs = imgs; if (e2.length) item.e = e2;
     } else if (c.type === "qa") {
@@ -615,6 +794,7 @@ $("#editor").addEventListener("click", async e => {
       if (c.type === "qa") { if (p.length >= 5) { copy.items.push({q: p[0], a: p[1], w: p.slice(2, 5)}); n++; } }
       else if (c.type === "fib") { if (p.length >= 2 && /_{2,}/.test(p[0])) { copy.items.push({q: p[0], a: p[1]}); n++; } }
       else if (c.type === "salfa" && p.length >= 2) { copy.items.push({w: p[0], t: p[1]}); n++; }
+      else if (c.type === "letters") { if (p.length >= 3 && AR_L.includes(p[0] === "ه" ? "هـ" : p[0])) { copy.items.push({l: p[0] === "ه" ? "هـ" : p[0], q: p[1], a: p[2]}); n++; } }
       else if (c.type === "pics") { if (p.length >= 5) { copy.items.push({e: p[0].split(/\s+/).slice(0, 3), a: p[1], w: p.slice(2, 5)}); n++; } }
       else { copy.items.push({w: p[0] || ln}); n++; }
     }
@@ -677,7 +857,7 @@ auth.onAuthStateChanged(u => {
   }
 });
 // first time (or after an update adds new starter sections): put the built-in sections in the database so they show here
-const SEED_V = 3;
+const SEED_V = 4;
 async function autoSeed(v) {
   if (Bank.seeding || !Bank.canWrite) return;
   if (v && v._seedv >= SEED_V) return;
