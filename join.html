@@ -67,6 +67,36 @@ canvas[data-ph-canvas]{width:100%;height:auto;aspect-ratio:300/190;background:#f
 footer{color:var(--faint);font-size:11px;text-align:center;margin-top:12px}
 .buzz{border:none;border-radius:50%;width:min(70vw,280px);height:min(70vw,280px);margin:18px auto;display:block;font-size:64px;font-weight:900;line-height:1.1;color:#fff;background:radial-gradient(circle at 35% 30%,#ff8a8a,#e11d48 60%,#9f1239);box-shadow:0 14px 0 #7f1d1d,0 24px 40px #0008}
 .buzz:active{transform:translateY(10px);box-shadow:0 4px 0 #7f1d1d}
+.teams2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.tbtn{border:3px solid transparent;border-radius:20px;padding:18px 8px;font-size:20px;font-weight:800;background:#ffffff10;line-height:1.4;min-height:150px}
+.tbtn small{display:block;font-size:13px;color:var(--dim);font-weight:500;margin-top:6px}
+.tbtn.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 30%,transparent)}
+.pbtn.ghost{line-height:1.4}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+/* iPad / large screens: centered column, bigger targets */
+@media (min-width:700px){
+  body{align-items:center;padding-left:24px;padding-right:24px}
+  header,#app,footer{width:100%;max-width:640px}
+  header img{width:56px;height:56px}header .t{font-size:30px}
+  .big{font-size:110px}.ph-title{font-size:30px}.ph-dim{font-size:19px}
+  .popts{gap:16px}.popts button{min-height:170px;font-size:26px;border-radius:24px}
+  .plist button{font-size:22px;padding:18px}
+  .pbtn,.go{font-size:24px;padding:20px}
+  .avs button{font-size:36px}
+  .buzz{width:340px;height:340px;font-size:80px}
+  .tbtn{min-height:200px;font-size:26px}
+  canvas[data-ph-canvas]{max-height:60vh;width:auto;max-width:100%;margin-inline:auto}
+}
+/* phone in landscape: use the width */
+@media (orientation:landscape) and (max-height:520px){
+  header{margin-bottom:6px}header img{width:34px;height:34px}footer{display:none}
+  .big{font-size:52px}.popts{grid-template-columns:repeat(4,1fr)}.popts button{min-height:80px;font-size:17px}
+  .buzz{width:min(55vh,220px);height:min(55vh,220px);font-size:44px;margin:8px auto}
+  .tbtn{min-height:100px}
+}
+.awake{position:fixed;bottom:calc(8px + env(safe-area-inset-bottom));left:8px;font-size:11px;color:var(--faint);opacity:.7;pointer-events:none}
 </style>
 </head>
 <body>
@@ -274,6 +304,31 @@ function setupCanvas(cv) {
 }
 
 start();
+
+// ---------------------------------------------------------- keep the phone screen on while playing
+const Awake = {
+  lock: null, video: null,
+  async on() {
+    try {
+      if ("wakeLock" in navigator) {
+        if (!this.lock && document.visibilityState === "visible") { this.lock = await navigator.wakeLock.request("screen"); this.lock.addEventListener("release", () => { this.lock = null; }); }
+        return;
+      }
+    } catch (e) { }
+    // older iPhone/iPad: a silent looping inline video keeps the screen awake
+    if (!this.video) {
+      const v = document.createElement("video");
+      v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.muted = true; v.loop = true;
+      v.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;left:0";
+      v.src = "data:video/mp4;base64,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AAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDAAAAAIZnJlZQAABExtZGF03gIATGF2YzYwLjMxLjEwMgACMEAOAAACrQYF//+p3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NCByMzEwOCAzMWUxOWY5IC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTEgZGVibG9jaz0xOi0zOi0zIGFuYWx5c2U9MHgzOjB4MyBtZT1oZXggc3VibWU9MiBwc3k9MSBwc3lfcmQ9Mi4wMDowLjcwIG1peGVkX3JlZj0wIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MCA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0wIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MSBrZXlpbnQ9MjUwIGtleWludF9taW49MjUgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD0xMCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjIwAIAAAAATZYiEABHOf+J/Bd7+77k4W5//gQAAAAlBmiQYghnP/uAAAAAJQZ5CQh2c/7eBARggBwAAAAkBnmFENzn/uoAAAAAJAZ5jRDc5/7qBAAAACkGaaDRMQQzn/uEBGCAHAAAAC0GehkURLDs5/7eBAAAACQGepUQ3Of+6gQAAAAkBnqdENzn/uoABGCAHAAAACkGarDRMQQzn/uAAAAALQZ7KRRUsOzn/t4EAAAAJAZ7pRDc5/7qAARggBwAAAAkBnutENzn/uoAAAAAKQZrwNExBDOf+4QAAAAtBnw5FFSw7Of+3gQEYIAcAAAAJAZ8tRDc5/7qBAAAACQGfL0Q3Of+6gAAAAApBmzQ0TEPzn/7gAAAAC0GfUkUVLDs5/7eBARggBwAAAAkBn3FENzn/uoAAAAAJAZ9zRDc5/7qAAAAACkGbeDRMQ3Of/uEBGCAHAAAAC0GflkUVLDs5/7eAAAAACQGftUQ3Of+6gQAAAAkBn7dENzn/uoEBGCAH";
+      document.body.appendChild(v); this.video = v;
+    }
+    try { await this.video.play(); } catch (e) { }
+  }
+};
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") Awake.on(); });
+["click", "touchend"].forEach(ev => document.addEventListener(ev, () => Awake.on(), {passive: true}));
+Awake.on();
 </script>
 </body>
 </html>

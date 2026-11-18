@@ -407,6 +407,17 @@ body.tvmode .screen.enter{animation-duration:.2s}
 .lt-buzz{border:2px solid;border-radius:14px;padding:8px 12px;font-size:22px;font-weight:800}
 .lt-ans{background:#22c55e26;border-radius:14px;padding:8px 12px;font-size:24px;font-weight:800;color:#86efac}
 .lt-q .tv-btn{font-size:18px;padding:10px 16px}
+
+/* ---------- v6 ---------- */
+.lt-rdy{border:2px solid;border-radius:999px;padding:8px 16px;font-size:20px;font-weight:800;opacity:.7}
+.lt-rdy.on{opacity:1;background:#ffffff14}
+.lt-buzz.lock{background:#ffffff0a}
+.lt-buzz.open{border-color:#86efac;color:#86efac;animation:pulse 1s infinite alternate}
+@keyframes pulse{to{background:#22c55e22}}
+.phone .teams2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+.phone .tbtn{border:2px solid transparent;border-radius:12px;padding:8px 4px;font-size:12px;font-weight:800;background:#ffffff10;color:#fff;line-height:1.3}
+.phone .tbtn small{display:block;font-size:10px;color:var(--dim)}.phone .tbtn.sel{border-color:var(--c)}
+.phone .buzz{border:none;border-radius:50%;width:110px;height:110px;margin:8px auto;display:block;font-size:24px;font-weight:900;color:#fff;background:radial-gradient(circle at 35% 30%,#ff8a8a,#e11d48 60%,#9f1239)}
 </style>
 </head>
 <body>
@@ -902,8 +913,26 @@ function ltBoard() { return shuffle(AR_LETTERS).slice(0, 25).map(l => ({l, o: -1
 function startLetters(cat) {
   const ids = S.players.map(p => p.id), teams = [[], []];
   ids.forEach((id, i) => teams[i % 2].push(id));
-  S.game = {type: "letters", cat, pool: cat.items.slice(), board: ltBoard(), teams, wins: [0, 0], round: 1, rounds: cfg("letters").rounds, phase: "pick", sel: null, q: null, buzz: [], lastFocus: null};
+  S.game = {type: "letters", cat, pool: cat.items.slice(), board: ltBoard(), teams, wins: [0, 0], round: 1, rounds: cfg("letters").rounds, phase: "teams", ready: [false, false], sel: null, q: null, buzz: [], lastFocus: null};
   S.screen = "letters"; render(true);
+}
+function ltJoinTeam(pid, t) {
+  const g = S.game; if (!g || g.type !== "letters" || g.phase !== "teams") return;
+  t = +t; if (t !== 0 && t !== 1) return;
+  const was = ltTeamOf(pid); if (was === t) return;
+  g.teams = g.teams.map(arr => arr.filter(x => x !== pid)); g.teams[t].push(pid);
+  g.ready = [false, false]; beep("tick"); render();
+}
+function ltReady(pid) {   // one player from each team presses «فريقنا جاهز» → the game starts
+  const g = S.game; if (!g || g.type !== "letters" || g.phase !== "teams") return;
+  const t = ltTeamOf(pid); if (t < 0 || !g.teams[t].length) return;
+  g.ready[t] = !g.ready[t]; beep(g.ready[t] ? "ok" : "tick");
+  if (g.ready[0] && g.ready[1]) ltBegin(); else render();
+}
+function ltBegin() {
+  const g = S.game; if (!g || g.phase !== "teams") return;
+  if (!g.teams[0].length || !g.teams[1].length) { beep("bad"); return; }
+  g.phase = "pick"; beep("end"); render(true);
 }
 function ltTeamOf(pid) { const g = S.game; return g.teams[0].includes(pid) ? 0 : g.teams[1].includes(pid) ? 1 : -1; }
 function ltNbrs(i) {
@@ -937,20 +966,41 @@ function ltQuestion() {
   const it = fresh[0] ? fresh[Math.floor(Math.random() * fresh.length)] : any[0] ? any[Math.floor(Math.random() * any.length)] : null;
   if (it) { Used.add("letters", it); g.q = {it, q: it.q, a: it.a}; }
   else g.q = {it: null, q: LT_ASK[Math.floor(Math.random() * LT_ASK.length)] + " يبدأ بحرف «" + L + "»", a: "أي إجابة صحيحة تبدأ بحرف «" + L + "»"};
-  g.phase = "q"; g.buzz = []; g.showA = false;
+  clearInterval(g.lockTick); g.phase = "q"; g.buzz = []; g.buzzer = null; g.wrong = []; g.lock = null; g.open = false; g.showA = false;
   startTimer(cfg("letters").secs, () => { const gg = S.game; if (gg && gg.phase === "q") { gg.showA = true; beep("end"); render(); } });
   render(true);
 }
+const LT_LOCK = 10;   // ثواني انتظار الفريق اللي غلط
+function ltLockLeft() { const g = S.game; return g && g.lock ? Math.max(0, Math.ceil((g.lock.until - Date.now()) / 1000)) : 0; }
 function ltBuzz(pid) {
-  const g = S.game; if (!g || g.type !== "letters" || g.phase !== "q" || g.buzz.includes(pid)) return;
-  g.buzz.push(pid); if (g.buzz.length === 1) { beep("ok"); pauseTimer(); }
-  render();
+  const g = S.game; if (!g || g.type !== "letters" || g.phase !== "q" || g.buzzer) return;
+  const t = ltTeamOf(pid);
+  if (g.lock && ltLockLeft() > 0 && g.lock.team === t) return;          // فريقه ينتظر 10 ثواني
+  if ((g.wrong || []).includes(pid)) return;                             // نفس اللاعب ما يعيد على نفس السؤال
+  g.buzzer = pid; g.buzz.push(pid); beep("ok"); pauseTimer();
+  render(true);
+}
+function ltJudge(ok) {
+  const g = S.game; if (!g || g.phase !== "q" || !g.buzzer) return;
+  const pid = g.buzzer, t = ltTeamOf(pid);
+  if (ok) { ltAward(t); return; }
+  beep("bad"); g.buzzer = null; (g.wrong = g.wrong || []).push(pid);
+  if (t >= 0) {
+    g.lock = {team: t, until: Date.now() + LT_LOCK * 1000};
+    clearInterval(g.lockTick);
+    g.lockTick = setInterval(() => {
+      const gg = S.game; if (!gg || gg !== g) { clearInterval(g.lockTick); return; }
+      if (ltLockLeft() <= 0) { clearInterval(g.lockTick); g.lock = null; g.open = true; beep("tick"); }
+      render();
+    }, 1000);
+  }
+  resumeTimer(); render(true);
 }
 function ltAward(team) {
   const g = S.game; if (!g || g.phase !== "q") return;
-  team = +team; stopTimer();
+  team = +team; stopTimer(); clearInterval(g.lockTick); g.lock = null;
   g.board[g.sel].o = team;
-  const first = g.buzz.find(pid => ltTeamOf(pid) === team);
+  const first = g.buzzer && ltTeamOf(g.buzzer) === team ? g.buzzer : g.buzz.find(pid => ltTeamOf(pid) === team && !(g.wrong || []).includes(pid));
   if (first) award(first, 50); else g.teams[team].forEach(pid => award(pid, 10));
   beep("ok");
   if (ltWon(team)) {
@@ -959,7 +1009,7 @@ function ltAward(team) {
   } else { g.phase = "pick"; g.sel = null; }
   render(true);
 }
-function ltCancel() { const g = S.game; if (!g || g.phase !== "q") return; stopTimer(); g.phase = "pick"; g.sel = null; render(true); }
+function ltCancel() { const g = S.game; if (!g || g.phase !== "q") return; stopTimer(); clearInterval(g.lockTick); g.phase = "pick"; g.sel = null; render(true); }
 function ltNextRound() {
   const g = S.game; if (!g) return;
   if (g.round >= g.rounds) { endGame(); return; }
@@ -967,7 +1017,7 @@ function ltNextRound() {
 }
 function ltSwap(pid) {   // نقل لاعب للفريق الثاني
   const g = S.game, t = ltTeamOf(pid); if (t < 0) return;
-  g.teams[t] = g.teams[t].filter(x => x !== pid); g.teams[1 - t].push(pid); render();
+  g.teams[t] = g.teams[t].filter(x => x !== pid); g.teams[1 - t].push(pid); if (g.ready) g.ready = [false, false]; render();
 }
 function screenLetters() {
   const g = S.game, left = timeLeft(), W = 88, H = Math.round(W * 1.1547), VY = Math.round(H * 0.75);
@@ -982,19 +1032,30 @@ function screenLetters() {
       <i class="lt-side" style="right:0;background:${LT_TEAMS[0].color}"></i><i class="lt-side" style="left:0;background:${LT_TEAMS[0].color}"></i>
       <i class="lt-top" style="top:0;background:${LT_TEAMS[1].color}"></i><i class="lt-top" style="bottom:0;background:${LT_TEAMS[1].color}"></i>${hexes}</div>`;
   const teamBox = t => `<div class="lt-team" style="border-color:${LT_TEAMS[t].color};background:${LT_TEAMS[t].soft}">
-      <div class="lt-tn"><b style="color:${LT_TEAMS[t].color}">${LT_TEAMS[t].name}</b> <span>${t === 0 ? "↔ يمين ويسار" : "↕ فوق وتحت"}</span> <span class="lt-w">🏆 ${g.wins[t]}</span></div>
-      <div class="minis">${g.teams[t].map(pid => { const p = playerById(pid); return p ? `<button class="mini ${g.phase === "pick" ? "f" : ""}" ${g.phase === "pick" ? `data-f="sw-${pid}" data-act="ltSwap" data-v="${pid}"` : ""}>${av(p)}${esc(p.name)}</button>` : ""; }).join("") || '<span class="pill">بدون لاعبين</span>'}</div></div>`;
+      <div class="lt-tn"><b style="color:${LT_TEAMS[t].color}">${LT_TEAMS[t].name}</b> <span>${t === 0 ? "↔ يمين ويسار" : "↕ فوق وتحت"}</span> <span class="lt-w">${g.phase === "teams" ? (g.ready[t] ? "✅ جاهز" : "⏳") : "🏆 " + g.wins[t]}</span></div>
+      <div class="minis">${g.teams[t].map(pid => { const p = playerById(pid); return p ? `<button class="mini ${g.phase === "pick" || g.phase === "teams" ? "f" : ""}" ${g.phase === "pick" || g.phase === "teams" ? `data-f="sw-${pid}" data-act="ltSwap" data-v="${pid}"` : ""}>${av(p)}${esc(p.name)}</button>` : ""; }).join("") || '<span class="pill">بدون لاعبين</span>'}</div></div>`;
   let panel;
-  if (g.phase === "pick") panel = `<div class="lt-q"><div class="lt-big">🔤</div><h2>اختاروا حرف من اللوحة</h2><p class="tv-sub">تحرك بالأسهم واضغط OK على الحرف · اضغط على لاعب لنقله للفريق الثاني</p></div>`;
+  if (g.phase === "teams") panel = `<div class="lt-q"><h2>👥 اختاروا فرقكم</h2>
+      <p class="tv-sub" style="font-size:19px">📱 من الجوال: كل لاعب يختار فريقه، وبعدها لاعب من كل فريق يضغط «✅ فريقنا جاهز» وتبدأ اللعبة.<br>🎮 أو بالريموت: اضغط على أي لاعب لنقله.</p>
+      <div class="tv-row" style="gap:12px;justify-content:center">${[0, 1].map(t => `<span class="lt-rdy ${g.ready[t] ? "on" : ""}" style="border-color:${LT_TEAMS[t].color}">${g.ready[t] ? "✅" : "⏳"} ${LT_TEAMS[t].name}</span>`).join("")}</div>
+      <button class="tv-btn go f" data-f="lt-begin" data-act="ltBegin" data-auto="1" style="margin:auto auto 0" ${g.teams[0].length && g.teams[1].length ? "" : "disabled"}>ابدأ اللعب ▶</button></div>`;
+  else if (g.phase === "pick") panel = `<div class="lt-q"><div class="lt-big">🔤</div><h2>اختاروا حرف من اللوحة</h2><p class="tv-sub">تحرك بالأسهم واضغط OK على الحرف</p></div>`;
   else if (g.phase === "q") {
-    const L = g.board[g.sel].l, b0 = g.buzz[0] && playerById(g.buzz[0]), bt = b0 ? ltTeamOf(b0.id) : -1;
+    const L = g.board[g.sel].l, b0 = g.buzzer && playerById(g.buzzer), bt = b0 ? ltTeamOf(b0.id) : -1, lk = ltLockLeft();
+    let status;
+    if (b0) status = `<div class="lt-buzz" style="border-color:${bt >= 0 ? LT_TEAMS[bt].color : "#fff"}">🔔 ${av(b0)} ${esc(b0.name)} ${bt >= 0 ? `<small style="color:${LT_TEAMS[bt].color}">(${LT_TEAMS[bt].name})</small>` : ""} ضغط الجرس — جاوب!</div>`;
+    else if (g.lock && lk > 0) status = `<div class="lt-buzz lock" style="border-color:${LT_TEAMS[1 - g.lock.team].color}">⏳ ${LT_TEAMS[g.lock.team].name} ينتظر <b>${lk}</b> ثانية — الفرصة لـ<b style="color:${LT_TEAMS[1 - g.lock.team].color}">${LT_TEAMS[1 - g.lock.team].name}</b></div>`;
+    else if (g.open) status = `<div class="lt-buzz open">🔓 مفتوح للجميع — اللي يعرف يضغط الجرس!</div>`;
+    else status = `<p class="tv-sub">📱 اللي يعرف يضغط الجرس في جواله</p>`;
+    const judge = b0 ? `<button class="tv-btn f" data-f="lt-ok" data-act="ltJudge" data-v="1" data-auto="1" style="background:#22c55e;color:#fff">✓ صح</button>
+        <button class="tv-btn f" data-f="lt-no" data-act="ltJudge" data-v="0" style="background:#ef4444;color:#fff">✗ خطأ</button>`
+      : `<button class="tv-btn f" data-f="lt-a0" data-act="ltAward" data-v="0" data-auto="1" style="background:${LT_TEAMS[0].color};color:#fff">✓ صح للبرتقالي</button>
+        <button class="tv-btn f" data-f="lt-a1" data-act="ltAward" data-v="1" style="background:${LT_TEAMS[1].color};color:#fff">✓ صح للأخضر</button>`;
     panel = `<div class="lt-q"><div class="tv-row" style="justify-content:space-between"><span class="lt-letter">${L}</span><div class="timer ${timed() && left <= 5 ? "low" : ""}" id="tTimer">${tl(left)}</div></div>
       <div class="lt-qt">${esc(g.q.q)}</div>
-      ${b0 ? `<div class="lt-buzz" style="border-color:${bt >= 0 ? LT_TEAMS[bt].color : "#fff"}">🔔 ${av(b0)} ${esc(b0.name)} ضغط الجرس أول!</div>` : `<p class="tv-sub">📱 اللي يعرف يضغط الجرس في جواله</p>`}
+      ${status}
       ${g.showA ? `<div class="lt-ans">✓ ${esc(g.q.a)}</div>` : ""}
-      <div class="tv-row" style="flex-wrap:wrap;gap:10px;margin-top:auto">
-        <button class="tv-btn f" data-f="lt-a0" data-act="ltAward" data-v="0" ${bt === 0 || bt < 0 ? 'data-auto="1"' : ""} style="background:${LT_TEAMS[0].color};color:#fff">✓ صح للبرتقالي</button>
-        <button class="tv-btn f" data-f="lt-a1" data-act="ltAward" data-v="1" ${bt === 1 ? 'data-auto="1"' : ""} style="background:${LT_TEAMS[1].color};color:#fff">✓ صح للأخضر</button>
+      <div class="tv-row" style="flex-wrap:wrap;gap:10px;margin-top:auto">${judge}
         <button class="tv-btn ghost f" data-f="lt-sa" data-act="ltShow">👁 الجواب</button>
         <button class="tv-btn ghost f" data-f="lt-nq" data-act="ltNewQ">🔄 سؤال ثاني</button>
         <button class="tv-btn ghost f" data-f="lt-cx" data-act="ltCancel">↩ رجوع</button></div></div>`;
@@ -1346,9 +1407,30 @@ function restoreFocus(key) {
   if (!el) el = list.find(e => e.dataset.auto) || list.find(e => e.dataset.f !== "x-quit") || list[0] || null;
   setFocus(el);
 }
+let hexAnchorX = null;
+function hexMove(dir, list) {
+  const hexes = list.filter(el => el.classList.contains("hex")), scale = tvScale();
+  const pos = el => { const r = el.getBoundingClientRect(); return {x: (r.left + r.right) / 2 / scale, y: (r.top + r.bottom) / 2 / scale}; };
+  const c = pos(cur);
+  if (dir === "ArrowLeft" || dir === "ArrowRight") {
+    hexAnchorX = null;
+    const same = hexes.filter(el => el !== cur && Math.abs(pos(el).y - c.y) < 10 && (dir === "ArrowRight" ? pos(el).x > c.x : pos(el).x < c.x));
+    if (!same.length) return null;   // نهاية الصف → خلّ الحركة العادية (تطلع للأزرار)
+    return same.sort((a, b) => Math.abs(pos(a).x - c.x) - Math.abs(pos(b).x - c.x))[0];
+  }
+  const up = dir === "ArrowUp";
+  const rows = hexes.filter(el => up ? pos(el).y < c.y - 10 : pos(el).y > c.y + 10);
+  if (!rows.length) return null;
+  const nextY = rows.map(el => pos(el).y).sort((a, b) => up ? b - a : a - b)[0];   // أقرب صف فقط
+  const row = rows.filter(el => Math.abs(pos(el).y - nextY) < 10);
+  if (hexAnchorX == null) hexAnchorX = c.x;
+  return row.sort((a, b) => (Math.abs(pos(a).x - hexAnchorX) - Math.abs(pos(b).x - hexAnchorX)) || (pos(a).x - pos(b).x))[0];
+}
 function moveFocus(dir) {
   const list = focusables();
   if (!cur || !cur.isConnected || !list.includes(cur)) { restoreFocus(null); return; }
+  if (cur.classList.contains("hex")) { const h = hexMove(dir, list); if (h) { setFocus(h); beep("tick"); return; } }
+  else hexAnchorX = null;
   const scale = tvScale();
   const r0 = cur.getBoundingClientRect(), cx = (r0.left + r0.right) / 2, cy = (r0.top + r0.bottom) / 2;
   let best = null, bestScore = Infinity;
@@ -1411,6 +1493,8 @@ function act(name, v, el) {
     case "ltNewQ": if (S.game && S.game.phase === "q") ltQuestion(); break;
     case "ltNextRound": ltNextRound(); break;
     case "ltSwap": ltSwap(v); break;
+    case "ltBegin": ltBegin(); break;
+    case "ltJudge": ltJudge(v === "1"); break;
     case "pickCat": {
       let cat;
       if (v === "__random") { const cs = Bank.usable(S.next); cat = {id: "__random", name: "عشوائي", emoji: "🎲", type: S.next, items: cs.flatMap(c => c.items.map(it => Object.assign({t: c.name}, it)))}; }
@@ -1503,11 +1587,16 @@ function phoneHTML(ph) {
   }
   if (g && g.type === "letters") {
     const t = ltTeamOf(p.id), tm = t >= 0 ? `<div class="ph-dim" style="text-align:center;color:${LT_TEAMS[t].color};font-weight:800">${LT_TEAMS[t].name}</div>` : "";
+    if (g.phase === "teams") return who + `<div class="ph-title">اختر فريقك</div>
+      <div class="teams2">${[0, 1].map(k => `<button class="tbtn ${t === k ? "sel" : ""}" data-ph-act="team" data-v="${k}" style="--c:${LT_TEAMS[k].color}">${k === 0 ? "🟠" : "🟢"}<br>${LT_TEAMS[k].name}<small>${g.teams[k].map(id => esc((playerById(id) || {}).name || "")).join("، ") || "—"}</small></button>`).join("")}</div>
+      ${t >= 0 ? `<button class="pbtn ${g.ready[t] ? "ghost" : ""}" data-ph-act="ready">${g.ready[t] ? "✅ فريقكم جاهز — ننتظر الفريق الثاني (اضغط للإلغاء)" : "✅ فريقنا جاهز — ابدأ"}</button>` : ""}`;
     if (g.phase === "q") {
-      const i = g.buzz.indexOf(p.id);
-      if (i === 0) return who + tm + center("🔔", "أنت الأول!", "جاوب بصوتك الحين");
-      if (i > 0) return who + tm + center("⏳", "ترتيبك " + (i + 1), "انتظر — " + esc((playerById(g.buzz[0]) || {}).name || "") + " ضغط قبلك");
-      return who + tm + `<div class="ph-title" style="font-size:40px">حرف ${g.board[g.sel].l}</div><button class="buzz" data-ph-act="buzz">🔔<br>جرس</button>`;
+      const lk = ltLockLeft();
+      if (g.buzzer === p.id) return who + tm + center("🔔", "أنت الأسرع!", "جاوب بصوتك الحين");
+      if (g.buzzer) return who + tm + center("✋", esc((playerById(g.buzzer) || {}).name || "") + " ضغط قبلك", "انتظر حكم المضيف");
+      if ((g.wrong || []).includes(p.id)) return who + tm + center("❌", "جاوبت غلط", "انتظر السؤال الجاي");
+      if (g.lock && lk > 0 && g.lock.team === t) return who + tm + center("⏳", "فريقكم ينتظر " + lk + " ثانية", "الفرصة للفريق الثاني");
+      return who + tm + `<div class="ph-title" style="font-size:40px">حرف ${g.board[g.sel].l}</div>${g.open ? '<div class="ph-dim" style="font-weight:800;color:#86efac">🔓 مفتوح للجميع</div>' : ""}<button class="buzz" data-ph-act="buzz">🔔<br>جرس</button>`;
     }
     if (g.phase === "won") return who + tm + center("🏆", LT_TEAMS[g.winner].name + " فاز!", "");
     return who + tm + center("🔤", "اختاروا حرف", "انتظر السؤال على التلفزيون");
@@ -1606,6 +1695,8 @@ function phoneAct(ph, a, v) {
   if (a === "ans") return phoneAnswer(ph.pid, +v);
   if (a === "pans") return picsAnswer(ph.pid, +v);
   if (a === "buzz") return ltBuzz(ph.pid);
+  if (a === "team") return ltJoinTeam(ph.pid, v);
+  if (a === "ready") return ltReady(ph.pid);
   if (a === "chSkip") return chSkip();
   if (a === "seen") return salfaSeen(ph.pid);
   if (a === "vote") return salfaPhoneVote(ph.pid, v);
@@ -1719,6 +1810,10 @@ async function initOnline() {
   } catch (e) { console.warn("offline:", e); ONLINE = false; }
   render();
 }
+// keep the screen awake (browser / tablet as host)
+let wakeLock = null;
+async function keepAwake() { try { if ("wakeLock" in navigator && document.visibilityState === "visible" && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch (e) { } }
+document.addEventListener("visibilitychange", keepAwake); document.addEventListener("click", keepAwake, {once: true}); keepAwake();
 window.addEventListener("pagehide", () => { try { if (roomRef) roomRef.child("meta").update({online: false}); } catch (e) { } });
 
 // ---------------------------------------------------------- intro (logo animation, never blocks the game)
